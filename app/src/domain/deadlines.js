@@ -58,6 +58,18 @@ export function firstRevisionDate(registrationDate) {
 }
 
 /**
+ * Revisione da proporre alla creazione del veicolo: la prima (fine mese di immatricolazione
+ * + 4 anni) oppure, se già passata, la successiva ogni 24 mesi che cade da oggi in poi.
+ */
+export function proposedRevisionDate(registrationDate, today) {
+  let due = firstRevisionDate(registrationDate);
+  if (!due) return null;
+  const todayKey = toDateKey(today);
+  while (due < todayKey) due = endOfMonth(addMonths(due, 24));
+  return due;
+}
+
+/**
  * Nuova scadenza proposta dopo "Segna come rinnovato".
  * bollo +12 mesi · assicurazione +12 (o +6) · revisione: la prima a fine mese di
  * immatricolazione + 4 anni, le successive +24 mesi (sempre a fine mese).
