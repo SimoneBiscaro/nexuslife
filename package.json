@@ -1,0 +1,9 @@
+{
+  "name": "nexuslife",
+  "private": true,
+  "type": "module",
+  "description": "NexusLife PWA — nessuna dipendenza, nessun build step.",
+  "scripts": {
+    "test": "node --test tests/"
+  }
+}
