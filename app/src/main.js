@@ -3,6 +3,8 @@ import { html } from './ui/html.js';
 import { useSignal } from './store/state.js';
 import { route, startRouter, navigate, SECTIONS } from './router.js';
 import { registerServiceWorker } from './pwa.js';
+import { getRepo } from './store/repo.js';
+import { seedDefaults, startupMaintenance } from './store/seed.js';
 import { Background } from './ui/Background.js';
 import { Sidebar } from './ui/Sidebar.js';
 import { Topbar } from './ui/Topbar.js';
@@ -98,3 +100,16 @@ document.body.appendChild(toastRoot);
 render(html`<${ToastHost} />`, toastRoot);
 
 registerServiceWorker();
+
+/* ---------- Dati locali ---------- */
+async function initData() {
+  try {
+    const repo = await getRepo();
+    await seedDefaults(repo);
+    await startupMaintenance(repo);
+  } catch (err) {
+    // Es. navigazione privata senza IndexedDB: l'interfaccia resta usabile, senza dati salvati.
+    console.warn('Archivio locale non disponibile:', err);
+  }
+}
+initData();
