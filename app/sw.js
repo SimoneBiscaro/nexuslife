@@ -1,5 +1,5 @@
 /* NexusLife — service worker. Incrementare CACHE_VERSION a ogni modifica dell'app shell. */
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const SHELL_CACHE = `nexuslife-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = 'nexuslife-runtime';
 
@@ -37,6 +37,7 @@ const SHELL = [
   './src/store/seed.js',
   './src/store/settings.js',
   './src/store/queries.js',
+  './src/store/home.js',
   './src/domain/dates.js',
   './src/domain/deadlines.js',
   './src/domain/service.js',
@@ -47,6 +48,7 @@ const SHELL = [
   './src/domain/reminders.js',
   './src/domain/dedupe.js',
   './src/domain/overview.js',
+  './src/domain/home.js',
   './src/ui/html.js',
   './src/ui/icons.js',
   './src/ui/haptics.js',
@@ -67,6 +69,8 @@ const SHELL = [
   './src/ui/forms.js',
   './src/ui/LineChart.js',
   './src/ui/DigitalTwin.js',
+  './src/ui/BarChart.js',
+  './src/ui/palette.js',
   './src/views/oggi/OggiView.js',
   './src/views/auto/AutoView.js',
   './src/views/auto/gauges.js',
@@ -78,7 +82,23 @@ const SHELL = [
   './src/views/auto/ExpensesCard.js',
   './src/views/auto/ExpenseSheet.js',
   './src/views/casa/CasaView.js',
+  './src/views/casa/RentCard.js',
+  './src/views/casa/ContractSheet.js',
+  './src/views/casa/PaySheet.js',
+  './src/views/casa/BillsCard.js',
+  './src/views/casa/BillSheet.js',
+  './src/views/casa/MaintenanceCard.js',
+  './src/views/casa/MaintenanceSheet.js',
+  './src/views/casa/HomePurchasesCard.js',
+  './src/views/casa/HomePurchaseSheet.js',
   './src/views/spesa/SpesaView.js',
+  './src/views/spesa/QuickAdd.js',
+  './src/views/spesa/GroceryList.js',
+  './src/views/spesa/Suggestions.js',
+  './src/views/spesa/feedback.js',
+  './src/views/spesa/ItemSheet.js',
+  './src/views/spesa/CategoryEditor.js',
+  './src/views/spesa/HistorySheet.js',
   './src/views/salute/SaluteView.js',
   './src/views/impostazioni/ImpostazioniView.js',
   './src/views/impostazioni/DesignView.js',

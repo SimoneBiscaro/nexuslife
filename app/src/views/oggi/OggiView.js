@@ -5,7 +5,7 @@ import { HudGauge } from '../../ui/HudGauge.js';
 import { Banner } from '../../ui/Banner.js';
 import { NeonBadge } from '../../ui/NeonBadge.js';
 import { Icon } from '../../ui/icons.js';
-import { formatDueDate, formatWeekdayDate } from '../../ui/format.js';
+import { formatDueDate, formatEuro, formatWeekdayDate } from '../../ui/format.js';
 import { ALL_SECTION_ENTITIES, useEntities } from '../../store/queries.js';
 import { updateSettings } from '../../store/settings.js';
 import { DEFAULT_SETTINGS } from '../../store/seed.js';
@@ -14,6 +14,9 @@ import { toDateKey } from '../../domain/dates.js';
 import { dismissBanner, todayBanners } from '../../domain/deadlines.js';
 import { collectDeadlines, daysLabel, greeting, upcomingDeadlines, vehicleOverview } from '../../domain/overview.js';
 import { vehicleGauges } from '../auto/gauges.js';
+import { activeContract, currentInstallment, homePurchasesTotal, paymentBadge } from '../../domain/home.js';
+import { urgencyGlow } from '../../domain/groceries.js';
+import { suggestGroceries } from '../../domain/suggestions.js';
 
 const SECTION_ICON = { auto: 'auto', casa: 'casa', spesa: 'spesa', salute: 'salute' };
 
@@ -46,9 +49,19 @@ export function OggiView() {
     ? vehicleGauges(vehicleOverview(vehicle, { deadlines: data.vehicleDeadlines, readings: data.mileageReadings }, today), vehicle, today)
     : [];
 
-  const casa = items.filter((i) => i.section === 'casa').sort((a, b) => (a.date < b.date ? -1 : 1))[0];
   const salute = items.filter((i) => i.section === 'salute').sort((a, b) => (a.date < b.date ? -1 : 1))[0];
-  const openItems = (data?.groceryItems || []).filter((i) => !i.archived);
+  const openItems = (data?.groceryItems || []).filter((i) => !i.archived && !i.checkedAt);
+  const urgent = openItems.filter((i) => urgencyGlow(i, now)).length;
+  const suggested = data ? suggestGroceries({
+    purchases: data.groceryPurchases, openItems: data.groceryItems.filter((i) => !i.archived), feedback: data.suggestionFeedback, today,
+  }).length : 0;
+  const contract = data ? activeContract(data.rentContracts) : null;
+  const rentNow = contract ? currentInstallment(data.rentInstallments, contract.id, today) : null;
+  const rentBadge = rentNow && paymentBadge(rentNow, today);
+  const nextCasa = items.filter((i) => i.section === 'casa' && i.kind !== 'affitto').sort((a, b) => (a.date < b.date ? -1 : 1))[0];
+  const toBuy = data ? data.homePurchases.filter((i) => !i.done).length : 0;
+  const toBuyTotal = data ? homePurchasesTotal(data.homePurchases) : 0;
+  const hasCasa = Boolean(rentNow || nextCasa || toBuy);
 
   const hide = (key) => updateSettings({ dismissedBanners: dismissBanner(settings.dismissedBanners, key, new Date()) });
 
@@ -74,11 +87,21 @@ export function OggiView() {
           : html`<span class="summary__placeholder">Aggiungi la tua auto per vedere le scadenze</span>`}
       <//>
       <${SummaryCard} section="casa" title="Casa" accent="var(--mint)" index=${1}>
-        ${casa ? html`<span class="summary__line">${casa.title} · ${daysLabel(casa.days)}</span>` : html`<${Placeholder} />`}
+        ${hasCasa
+          ? html`<span class="summary__lines">
+              ${rentNow && html`<span class="summary__line">Affitto ${formatEuro(rentNow.amount)} <${NeonBadge} status=${rentBadge.status}>${rentBadge.label}<//></span>`}
+              ${nextCasa && html`<span class="summary__sub">${nextCasa.title} · ${daysLabel(nextCasa.days)}</span>`}
+              ${toBuy > 0 && html`<span class="summary__sub">${toBuy} da comprare${toBuyTotal ? ` · ${formatEuro(toBuyTotal)}` : ''}</span>`}
+            </span>`
+          : html`<${Placeholder} />`}
       <//>
       <${SummaryCard} section="spesa" title="Spesa" accent="var(--amber)" index=${2}>
-        ${openItems.length
-          ? html`<span class="summary__line">${openItems.length === 1 ? '1 articolo' : `${openItems.length} articoli`} in lista</span>`
+        ${openItems.length || suggested
+          ? html`<span class="summary__lines">
+              <span class="summary__line">${openItems.length === 1 ? '1 articolo' : `${openItems.length} articoli`} in lista</span>
+              ${urgent > 0 && html`<span class="summary__sub"><${NeonBadge} status="warning">${urgent === 1 ? '1 urgente' : `${urgent} urgenti`}<//></span>`}
+              ${suggested > 0 && html`<span class="summary__sub">${suggested === 1 ? '1 suggerimento' : `${suggested} suggerimenti`} per te</span>`}
+            </span>`
           : html`<${Placeholder} />`}
       <//>
       <${SummaryCard} section="salute" title="Salute" accent="var(--health)" index=${3}>
