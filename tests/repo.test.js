@@ -124,9 +124,21 @@ test('manutenzione all\'avvio: archivia gli spuntati da più di 6 ore come acqui
   const a = await repo.create('groceryItem', { name: 'Latte', normName: 'latte', categoryId: 'c', checkedAt: '2026-11-03T08:00:00.000Z', archived: false });
   const b = await repo.create('groceryItem', { name: 'Pane', normName: 'pane', categoryId: 'c', archived: false });
   clock.set('2026-11-03T14:00:01.000Z');
-  assert.deepEqual(await startupMaintenance(repo, new Date('2026-11-03T14:00:01.000Z')), { purged: 0, archived: 1 });
+  assert.deepEqual(await startupMaintenance(repo, new Date('2026-11-03T14:00:01.000Z')), { purged: 0, archived: 1, installments: 0 });
   assert.equal((await repo.get('groceryItem', a.id)).archived, true);
   assert.equal((await repo.get('groceryItem', b.id)).archived, false);
   const [p] = await repo.list('groceryPurchase');
   assert.deepEqual([p.normName, p.date, p.categoryId], ['latte', '2026-11-03', 'c']);
+});
+
+import { ensureRentInstallments } from '../app/src/store/home.js';
+
+test('rate d\'affitto generate per il contratto attivo, senza doppioni', async () => {
+  const { repo } = setup();
+  assert.equal(await ensureRentInstallments(repo, '2026-11-03'), 0); // nessun contratto
+  await repo.create('rentContract', { totalAmount: 900, personalShare: 450, dueDay: 5, startDate: '2026-01-01' });
+  const [a, b] = await Promise.all([ensureRentInstallments(repo, '2026-11-03'), ensureRentInstallments(repo, '2026-11-03')]);
+  assert.equal(a + b, 2);
+  const list = (await repo.list('rentInstallment')).map((i) => `${i.periodKey}:${i.dueDate}:${i.amount}`).sort();
+  assert.deepEqual(list, ['2026-11:2026-11-05:900', '2026-12:2026-12-05:900']);
 });

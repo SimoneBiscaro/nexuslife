@@ -4,7 +4,8 @@ import { useQuery } from './state.js';
 /** Entità usate da Oggi e Auto. */
 export const ALL_SECTION_ENTITIES = [
   'vehicle', 'vehicleDeadline', 'mileageReading', 'vehicleExpense', 'rentInstallment', 'bill',
-  'homeMaintenance', 'medicalVisit', 'vaccine', 'groceryItem', 'settings',
+  'homeMaintenance', 'medicalVisit', 'vaccine', 'groceryItem', 'groceryPurchase', 'suggestionFeedback',
+  'rentContract', 'homePurchase', 'settings',
 ];
 
 /** Chiave nell'oggetto risultato per ogni entità. */
@@ -12,7 +13,9 @@ const KEY = {
   vehicle: 'vehicles', vehicleDeadline: 'vehicleDeadlines', mileageReading: 'mileageReadings',
   vehicleExpense: 'vehicleExpenses', rentInstallment: 'rentInstallments', bill: 'bills',
   homeMaintenance: 'homeMaintenance', medicalVisit: 'medicalVisits', vaccine: 'vaccines',
-  groceryItem: 'groceryItems', groceryCategory: 'groceryCategories', settings: 'settings',
+  groceryItem: 'groceryItems', groceryCategory: 'groceryCategories', groceryPurchase: 'groceryPurchases',
+  suggestionFeedback: 'suggestionFeedback', rentContract: 'rentContracts', homePurchase: 'homePurchases',
+  settings: 'settings',
 };
 
 /** Carica i record non eliminati delle entità indicate. */

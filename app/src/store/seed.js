@@ -1,5 +1,6 @@
 import { DEFAULT_CATEGORIES, itemsToAutoArchive } from '../domain/groceries.js';
 import { toDateKey } from '../domain/dates.js';
+import { ensureRentInstallments } from './home.js';
 
 export const SETTINGS_ID = 'settings';
 export const DEFAULT_SETTINGS = {
@@ -52,5 +53,6 @@ export async function startupMaintenance(repo, now = new Date()) {
       ...stale.map((i) => ({ entity: 'groceryItem', id: i.id, patch: { archived: true } })),
     ]);
   }
-  return { purged, archived: stale.length };
+  const installments = await ensureRentInstallments(repo, toDateKey(now));
+  return { purged, archived: stale.length, installments };
 }

@@ -193,3 +193,78 @@ export function reassignDeletedCategory(records, deletedCategoryId, altroId) {
 export function findOpenItem(items, normName) {
   return items.find((i) => isOpen(i) && i.normName === normName) || null;
 }
+
+const byOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name).localeCompare(String(b.name), 'it');
+
+/**
+ * Lista aperta raggruppata per categoria, nell'ordine scelto dall'utente.
+ * Gli articoli con una categoria inesistente finiscono in Altro (o nella prima categoria).
+ * @returns {Array<{ category: object, items: Array<object> }>} solo i gruppi non vuoti
+ */
+export function groupByCategory(items, categories) {
+  const cats = categories.filter((c) => !c.deleted).sort(byOrder);
+  const fallback = cats.find((c) => c.normName === 'altro') || cats[0];
+  const groups = new Map(cats.map((c) => [c.id, []]));
+  for (const item of sortOpenItems(items)) {
+    const key = groups.has(item.categoryId) ? item.categoryId : fallback?.id;
+    if (key) groups.get(key).push(item);
+  }
+  return cats.map((category) => ({ category, items: groups.get(category.id) })).filter((g) => g.items.length);
+}
+
+/** Categorie ordinate come le vede l'utente. */
+export function sortCategories(categories) {
+  return categories.filter((c) => !c.deleted).sort(byOrder);
+}
+
+/**
+ * Sposta una categoria di `delta` posizioni e rinumera l'ordine.
+ * @returns {Array<{ id: string, order: number }>} solo le categorie il cui ordine cambia
+ */
+export function reorderCategories(categories, id, delta) {
+  const list = sortCategories(categories);
+  const from = list.findIndex((c) => c.id === id);
+  const to = Math.max(0, Math.min(list.length - 1, from + delta));
+  if (from === -1 || from === to) return [];
+  const [moved] = list.splice(from, 1);
+  list.splice(to, 0, moved);
+  return list.map((c, order) => ({ id: c.id, order, prev: c.order })).filter((c) => c.order !== c.prev)
+    .map(({ id: cid, order }) => ({ id: cid, order }));
+}
+
+/**
+ * Aggiunta rapida di un articolo già in lista: quantità massima, urgenza più alta.
+ * @returns {object|null} le modifiche da applicare, o null se non cambia nulla
+ */
+export function mergeQuickAdd(existing, parsed) {
+  const quantity = Math.max(Number(existing.quantity) || 1, parsed.quantity);
+  const urgency = URGENCY_RANK[parsed.urgency] > URGENCY_RANK[existing.urgency] ? parsed.urgency : existing.urgency;
+  const patch = {};
+  if (quantity !== existing.quantity) patch.quantity = quantity;
+  if (urgency !== existing.urgency) {
+    patch.urgency = urgency;
+    // il conteggio "urgente da più di 2 giorni" parte da quando diventa urgente
+    if (urgency === 'urgente') patch.addedAt = parsed.addedAt;
+  }
+  if (existing.checkedAt) patch.checkedAt = null;
+  return Object.keys(patch).length ? patch : null;
+}
+
+/**
+ * Storico acquisti per prodotto, dal più recente.
+ * @returns {Array<{ normName, name, count, lastDate, dates: string[] }>} date uniche, decrescenti
+ */
+export function purchaseHistory(purchases) {
+  const map = new Map();
+  for (const p of purchases) {
+    if (p.deleted || !p.normName || !p.date) continue;
+    const date = toDateKey(p.date);
+    const entry = map.get(p.normName) || { normName: p.normName, name: p.name, dates: new Set(), lastDate: '' };
+    entry.dates.add(date);
+    if (date >= entry.lastDate) { entry.lastDate = date; entry.name = p.name || entry.name; }
+    map.set(p.normName, entry);
+  }
+  return [...map.values()]
+    .map((e) => ({ normName: e.normName, name: e.name, lastDate: e.lastDate, count: e.dates.size, dates: [...e.dates].sort().reverse() }))
+    .sort((a, b) => (a.lastDate < b.lastDate ? 1 : a.lastDate > b.lastDate ? -1 : a.name.localeCompare(b.name, 'it')));
+}

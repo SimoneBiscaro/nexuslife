@@ -122,3 +122,53 @@ test('lista aperta: ordine e ricerca per nome', () => {
   assert.equal(findOpenItem(items, 'latte').id, 'b');
   assert.equal(findOpenItem(items, 'vino'), null);
 });
+
+import { groupByCategory, mergeQuickAdd, purchaseHistory, reorderCategories, sortCategories } from '../app/src/domain/groceries.js';
+
+test('lista raggruppata per categoria nell\'ordine scelto', () => {
+  const cats = [
+    { id: 'f', name: 'Freschi', normName: 'freschi', order: 1 },
+    { id: 'b', name: 'Bevande', normName: 'bevande', order: 0 },
+    { id: 'a', name: 'Altro', normName: 'altro', order: 2 },
+    { id: 'x', name: 'Eliminata', normName: 'eliminata', order: 3, deleted: true },
+  ];
+  const items = [
+    { id: '1', categoryId: 'f', urgency: 'normale', addedAt: '1' },
+    { id: '2', categoryId: 'b', urgency: 'normale', addedAt: '1' },
+    { id: '3', categoryId: 'x', urgency: 'normale', addedAt: '1' },
+    { id: '4', categoryId: 'f', urgency: 'urgente', addedAt: '2' },
+    { id: '5', categoryId: 'f', urgency: 'normale', addedAt: '1', archived: true },
+  ];
+  const groups = groupByCategory(items, cats);
+  assert.deepEqual(groups.map((g) => [g.category.id, g.items.map((i) => i.id)]), [['b', ['2']], ['f', ['4', '1']], ['a', ['3']]]);
+});
+
+test('riordino delle categorie', () => {
+  const cats = [{ id: 'a', order: 0 }, { id: 'b', order: 1 }, { id: 'c', order: 2 }];
+  assert.deepEqual(reorderCategories(cats, 'c', -1), [{ id: 'c', order: 1 }, { id: 'b', order: 2 }]);
+  assert.deepEqual(reorderCategories(cats, 'a', -1), []);
+  assert.deepEqual(reorderCategories(cats, 'a', 5), [{ id: 'b', order: 0 }, { id: 'c', order: 1 }, { id: 'a', order: 2 }]);
+  assert.deepEqual(sortCategories([{ id: 'z', name: 'Z', order: 1 }, { id: 'y', name: 'Y', order: 1 }]).map((c) => c.id), ['y', 'z']);
+});
+
+test('aggiunta rapida di un articolo già in lista', () => {
+  const existing = { quantity: 2, urgency: 'normale', checkedAt: null };
+  assert.deepEqual(mergeQuickAdd(existing, { quantity: 1, urgency: 'normale' }), null);
+  assert.deepEqual(mergeQuickAdd(existing, { quantity: 3, urgency: 'urgente', addedAt: 'T' }), { quantity: 3, urgency: 'urgente', addedAt: 'T' });
+  assert.deepEqual(mergeQuickAdd({ ...existing, urgency: 'urgente' }, { quantity: 1, urgency: 'scorta' }), null);
+  assert.deepEqual(mergeQuickAdd({ ...existing, checkedAt: 'T' }, { quantity: 1, urgency: 'normale' }), { checkedAt: null });
+});
+
+test('storico acquisti per prodotto', () => {
+  const h = purchaseHistory([
+    { normName: 'latte', name: 'latte', date: '2026-10-01' },
+    { normName: 'latte', name: 'Latte', date: '2026-10-08' },
+    { normName: 'latte', name: 'Latte', date: '2026-10-08' },
+    { normName: 'pane', name: 'Pane', date: '2026-10-05' },
+    { normName: 'vino', name: 'Vino', date: '2026-10-09', deleted: true },
+  ]);
+  assert.deepEqual(h, [
+    { normName: 'latte', name: 'Latte', lastDate: '2026-10-08', count: 2, dates: ['2026-10-08', '2026-10-01'] },
+    { normName: 'pane', name: 'Pane', lastDate: '2026-10-05', count: 1, dates: ['2026-10-05'] },
+  ]);
+});
