@@ -65,9 +65,13 @@ a { color: inherit; text-decoration: none; }
   z-index: 100; padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-pill);
   background: var(--champagne); color: var(--obsidian); font-weight: 700;
-  transform: translateY(-200%);
 }
-.skip-link:focus-visible { transform: none; }
+/* Nascosto finché non riceve il focus da tastiera (lo spostamento in alto non basta col notch di iPhone) */
+.skip-link:not(:focus-visible) {
+  opacity: 0;
+  pointer-events: none;
+  clip-path: inset(50%);
+}
 
 /* ---------- Sfondo dinamico ---------- */
 .aurora {
