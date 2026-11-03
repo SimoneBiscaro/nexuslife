@@ -1,5 +1,5 @@
 /* NexusLife — service worker. Incrementare CACHE_VERSION a ogni modifica dell'app shell. */
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const SHELL_CACHE = `nexuslife-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = 'nexuslife-runtime';
 
@@ -35,6 +35,8 @@ const SHELL = [
   './src/store/db.js',
   './src/store/repo.js',
   './src/store/seed.js',
+  './src/store/settings.js',
+  './src/store/queries.js',
   './src/domain/dates.js',
   './src/domain/deadlines.js',
   './src/domain/service.js',
@@ -44,6 +46,7 @@ const SHELL = [
   './src/domain/suggestions.js',
   './src/domain/reminders.js',
   './src/domain/dedupe.js',
+  './src/domain/overview.js',
   './src/ui/html.js',
   './src/ui/icons.js',
   './src/ui/haptics.js',
@@ -60,8 +63,20 @@ const SHELL = [
   './src/ui/Background.js',
   './src/ui/Page.js',
   './src/ui/ConnectionStatus.js',
+  './src/ui/format.js',
+  './src/ui/forms.js',
+  './src/ui/LineChart.js',
+  './src/ui/DigitalTwin.js',
   './src/views/oggi/OggiView.js',
   './src/views/auto/AutoView.js',
+  './src/views/auto/gauges.js',
+  './src/views/auto/VehicleWizard.js',
+  './src/views/auto/DeadlineSheet.js',
+  './src/views/auto/ServiceSheet.js',
+  './src/views/auto/KmSheet.js',
+  './src/views/auto/MileageCard.js',
+  './src/views/auto/ExpensesCard.js',
+  './src/views/auto/ExpenseSheet.js',
   './src/views/casa/CasaView.js',
   './src/views/spesa/SpesaView.js',
   './src/views/salute/SaluteView.js',
@@ -122,6 +137,15 @@ async function networkFirst(request) {
   }
 }
 
+async function optionalAsset(request) {
+  try {
+    const res = await networkFirst(request);
+    return res.ok ? res : new Response(null, { status: 204 });
+  } catch {
+    return new Response(null, { status: 204 });
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -130,6 +154,11 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(cacheFirst(request, scopeUrl('./index.html')));
+    return;
+  }
+  // Foto opzionale del gemello digitale (D8): se manca rispondiamo 204, senza errori in console.
+  if (url.pathname.endsWith('/assets/tcross.jpg')) {
+    event.respondWith(optionalAsset(request));
     return;
   }
   const clean = `${url.origin}${url.pathname}`;

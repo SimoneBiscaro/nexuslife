@@ -6,10 +6,10 @@ import { Icon } from './icons.js';
  * Intestazione di pagina con titolo serif. Riceve il focus dopo la navigazione
  * (utile a lettori di schermo e tastiera).
  */
-export function PageHeader({ eyebrow, title, lede, actions }) {
+export function PageHeader({ eyebrow, title, lede, actions, docTitle }) {
   const ref = useRef(null);
   useEffect(() => {
-    document.title = `${title} · NexusLife`;
+    document.title = `${docTitle || title} · NexusLife`;
     if (document.documentElement.dataset.navigated === '1') ref.current?.focus({ preventScroll: true });
   }, [title]);
   return html`
