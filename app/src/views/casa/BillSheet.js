@@ -1,5 +1,6 @@
 import { useEffect, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
+import { CalendarButton } from '../../ui/CalendarButton.js';
 import { Sheet } from '../../ui/Sheet.js';
 import { Icon } from '../../ui/icons.js';
 import { TextField, SelectField, TextAreaField, Segmented } from '../../ui/forms.js';
@@ -66,5 +67,6 @@ export function BillSheet({ open, bill, today, onClose }) {
         <div class="span-2"><${TextAreaField} label="Note" value=${form.notes} onValue=${set('notes')} rows=${2} /></div>
         <button type="submit" hidden></button>
       </form>
+      ${bill && !bill.paidAt && bill.dueDate >= today && html`<div class="sheet-actions"><${CalendarButton} uid=${`bill-${bill.id}`} /></div>`}
     <//>`;
 }

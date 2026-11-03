@@ -142,3 +142,17 @@ test('rate d\'affitto generate per il contratto attivo, senza doppioni', async (
   const list = (await repo.list('rentInstallment')).map((i) => `${i.periodKey}:${i.dueDate}:${i.amount}`).sort();
   assert.deepEqual(list, ['2026-11:2026-11-05:900', '2026-12:2026-12-05:900']);
 });
+
+import { buildDemoRecords } from '../app/src/store/demo.js';
+import { DEFAULT_CATEGORIES } from '../app/src/domain/groceries.js';
+
+test('dati demo: tutti marcati, coerenti e relativi a oggi', () => {
+  const categories = DEFAULT_CATEGORIES.map((c) => ({ ...c, id: `c-${c.normName}` }));
+  const demo = buildDemoRecords('2026-11-03', categories);
+  assert.ok(demo.length > 20);
+  assert.ok(demo.every((r) => r.demo === true && r.entity && r.id));
+  const vehicle = demo.find((r) => r.entity === 'vehicle');
+  assert.ok(demo.filter((r) => r.entity === 'vehicleDeadline').every((d) => d.vehicleId === vehicle.id));
+  assert.ok(demo.filter((r) => r.entity === 'groceryItem').every((i) => categories.some((c) => c.id === i.categoryId)));
+  assert.equal(demo.find((r) => r.name === 'Latte').categoryId, 'c-freschi');
+});

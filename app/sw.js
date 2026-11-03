@@ -1,5 +1,5 @@
 /* NexusLife — service worker. Incrementare CACHE_VERSION a ogni modifica dell'app shell. */
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const SHELL_CACHE = `nexuslife-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = 'nexuslife-runtime';
 
@@ -38,6 +38,16 @@ const SHELL = [
   './src/store/settings.js',
   './src/store/queries.js',
   './src/store/home.js',
+  './src/store/lock.js',
+  './src/store/calendar.js',
+  './src/store/backup.js',
+  './src/store/demo.js',
+  './src/sync/crypto.js',
+  './src/backup/zip.js',
+  './src/backup/csv.js',
+  './src/backup/report.js',
+  './src/backup/package.js',
+  './src/backup/restore.js',
   './src/domain/dates.js',
   './src/domain/deadlines.js',
   './src/domain/service.js',
@@ -49,6 +59,8 @@ const SHELL = [
   './src/domain/dedupe.js',
   './src/domain/overview.js',
   './src/domain/home.js',
+  './src/domain/health.js',
+  './src/domain/ics.js',
   './src/ui/html.js',
   './src/ui/icons.js',
   './src/ui/haptics.js',
@@ -71,6 +83,9 @@ const SHELL = [
   './src/ui/DigitalTwin.js',
   './src/ui/BarChart.js',
   './src/ui/palette.js',
+  './src/ui/download.js',
+  './src/ui/CalendarButton.js',
+  './src/ui/PinPad.js',
   './src/views/oggi/OggiView.js',
   './src/views/auto/AutoView.js',
   './src/views/auto/gauges.js',
@@ -100,8 +115,13 @@ const SHELL = [
   './src/views/spesa/CategoryEditor.js',
   './src/views/spesa/HistorySheet.js',
   './src/views/salute/SaluteView.js',
+  './src/views/salute/LockScreen.js',
+  './src/views/salute/VisitSheet.js',
+  './src/views/salute/VaccineSheet.js',
   './src/views/impostazioni/ImpostazioniView.js',
   './src/views/impostazioni/DesignView.js',
+  './src/views/impostazioni/RestoreSheet.js',
+  './src/views/impostazioni/PinCheckSheet.js',
 ];
 
 const scopeUrl = (p) => new URL(p, self.registration.scope).href;

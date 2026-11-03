@@ -1,5 +1,6 @@
 import { useEffect, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
+import { CalendarButton } from '../../ui/CalendarButton.js';
 import { Sheet } from '../../ui/Sheet.js';
 import { NeonBadge } from '../../ui/NeonBadge.js';
 import { TextField } from '../../ui/forms.js';
@@ -78,6 +79,7 @@ export function ServiceSheet({ open, onClose, vehicle, overview, today }) {
           <dd>${s.estimatedKmDate ? formatLongDate(s.estimatedKmDate) : '—'}
             ${s.estimatedKmDate && overview.kmPerDay.generic && html` <span class="tag">stima generica</span>`}</dd></div>
       </dl>
+      ${s.effectiveDate && s.effectiveDate >= today && html`<div class="sheet-actions"><${CalendarButton} uid=${`service-${vehicle.id}`} /></div>`}
       <div class="renew">
         <h3 class="renew__title">Tagliando fatto</h3>
         <form class="form-grid" onSubmit=${(e) => { e.preventDefault(); done(); }} noValidate>

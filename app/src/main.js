@@ -4,7 +4,9 @@ import { useSignal } from './store/state.js';
 import { route, startRouter, navigate, SECTIONS } from './router.js';
 import { registerServiceWorker } from './pwa.js';
 import { getRepo } from './store/repo.js';
-import { seedDefaults, startupMaintenance } from './store/seed.js';
+import { seedDefaults, startupMaintenance, DEFAULT_SETTINGS } from './store/seed.js';
+import { checkTimeout, touchActivity } from './store/lock.js';
+import { loadSettings } from './store/settings.js';
 import { Background } from './ui/Background.js';
 import { Sidebar } from './ui/Sidebar.js';
 import { Topbar } from './ui/Topbar.js';
@@ -91,6 +93,24 @@ route.subscribe(() => {
 
 document.addEventListener('keydown', onShortcut);
 
+/* ---------- Blocco Salute: attività e multitasking ---------- */
+// Ogni interazione rinvia il blocco automatico (5 minuti di inattività).
+for (const type of ['pointerdown', 'keydown', 'wheel', 'touchstart']) {
+  document.addEventListener(type, () => touchActivity(), { passive: true, capture: true });
+}
+let lockEnabled = DEFAULT_SETTINGS.healthLockEnabled;
+document.addEventListener('visibilitychange', async () => {
+  const shield = document.documentElement.classList;
+  if (document.visibilityState === 'hidden') {
+    // Oscura Salute prima che il sistema catturi l'anteprima del multitasking.
+    if (lockEnabled && route.value.section === 'salute') shield.add('privacy-shield');
+  } else {
+    checkTimeout();
+    shield.remove('privacy-shield');
+    lockEnabled = (await loadSettings().catch(() => DEFAULT_SETTINGS)).healthLockEnabled !== false;
+  }
+});
+
 const root = document.getElementById('app');
 root.textContent = '';
 render(html`<${App} />`, root);
@@ -107,6 +127,7 @@ async function initData() {
     const repo = await getRepo();
     await seedDefaults(repo);
     await startupMaintenance(repo);
+    lockEnabled = (await loadSettings()).healthLockEnabled !== false;
   } catch (err) {
     // Es. navigazione privata senza IndexedDB: l'interfaccia resta usabile, senza dati salvati.
     console.warn('Archivio locale non disponibile:', err);

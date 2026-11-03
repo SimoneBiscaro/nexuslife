@@ -154,3 +154,12 @@ export function formatDateKey(key) {
   const { year, month, day } = parseDateKey(key);
   return dayFmt.format(new Date(Date.UTC(year, month - 1, day)));
 }
+
+/**
+ * Ora locale di Roma di un istante, nel formato "AAAAMMGGTHHMMSS" usato da iCalendar.
+ */
+export function toZonedIcs(value, timeZone = TIME_ZONE) {
+  const ms = value instanceof Date ? value.getTime() : Date.parse(value);
+  const p = partsIn(timeZone, ms);
+  return `${makeDateKey(p.year, p.month, p.day).replace(/-/g, '')}T${pad(p.hour)}${pad(p.minute)}${pad(p.second)}`;
+}

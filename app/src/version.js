@@ -1,2 +1,2 @@
 /** Versione dell'app mostrata in Impostazioni. Allineare a CACHE_VERSION in sw.js a ogni rilascio. */
-export const APP_VERSION = '0.4.0';
+export const APP_VERSION = '0.5.0';
