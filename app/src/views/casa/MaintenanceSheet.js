@@ -1,5 +1,6 @@
 import { useEffect, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
+import { CalendarButton } from '../../ui/CalendarButton.js';
 import { Sheet } from '../../ui/Sheet.js';
 import { Icon } from '../../ui/icons.js';
 import { TextField, TextAreaField } from '../../ui/forms.js';
@@ -64,5 +65,6 @@ export function MaintenanceSheet({ open, item, today, onClose }) {
         <div class="span-2"><${TextAreaField} label="Note" value=${form.notes} onValue=${set('notes')} rows=${2} /></div>
         <button type="submit" hidden></button>
       </form>
+      ${item?.lastDoneDate && html`<div class="sheet-actions"><${CalendarButton} uid=${`homeMaintenance-${item.id}`} /></div>`}
     <//>`;
 }

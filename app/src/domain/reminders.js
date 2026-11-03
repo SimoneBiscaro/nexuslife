@@ -67,34 +67,35 @@ export function buildReminderEvents(data, { today, reminderHour = 9 }) {
 
   for (const d of live(data.vehicleDeadlines)) {
     if (!d.dueDate) continue;
-    events.push({ uid: `vehicleDeadline-${d.id}`, kind: 'auto', title: `${DEADLINE_LABEL[d.type] ?? d.type} – ${vName(d.vehicleId)}`, date: d.dueDate });
+    events.push({ uid: `vehicleDeadline-${d.id}`, updatedAt: d.updatedAt, kind: 'auto', title: `${DEADLINE_LABEL[d.type] ?? d.type} – ${vName(d.vehicleId)}`, date: d.dueDate });
   }
   for (const v of vehicles.values()) {
     const readings = live(data.mileageReadings).filter((r) => r.vehicleId === v.id);
     const km = estimateKmPerDay(readings, todayKey).kmPerDay;
     const s = serviceStatus({ ...v, currentKm: latestKm(v, readings) }, todayKey, { kmPerDay: km });
-    if (s.effectiveDate) events.push({ uid: `service-${v.id}`, kind: 'auto', title: `Tagliando – ${vName(v.id)}`, date: s.effectiveDate });
+    if (s.effectiveDate) events.push({ uid: `service-${v.id}`, updatedAt: v.updatedAt, kind: 'auto', title: `Tagliando – ${vName(v.id)}`, date: s.effectiveDate });
   }
   for (const r of live(data.rentInstallments)) {
     if (r.paidAt || !r.dueDate) continue;
-    events.push({ uid: `rentInstallment-${r.id}`, kind: 'rent', title: `Affitto ${formatPeriod(r.periodKey)}`, date: r.dueDate });
+    events.push({ uid: `rentInstallment-${r.id}`, updatedAt: r.updatedAt, kind: 'rent', title: `Affitto ${formatPeriod(r.periodKey)}`, date: r.dueDate });
   }
   for (const b of live(data.bills)) {
     if (b.paidAt || !b.dueDate) continue;
     const kind = BILL_LABEL[b.kind] ?? b.kind ?? '';
-    events.push({ uid: `bill-${b.id}`, kind: 'bill', title: `Bolletta ${kind}`.trim(), date: b.dueDate });
+    events.push({ uid: `bill-${b.id}`, updatedAt: b.updatedAt, kind: 'bill', title: `Bolletta ${kind}`.trim(), date: b.dueDate });
   }
   for (const m of live(data.homeMaintenance)) {
     const next = maintenanceNextDate(m);
-    if (next) events.push({ uid: `homeMaintenance-${m.id}`, kind: 'homeMaintenance', title: `Manutenzione: ${m.title}`, date: next });
+    if (next) events.push({ uid: `homeMaintenance-${m.id}`, updatedAt: m.updatedAt, kind: 'homeMaintenance', title: `Manutenzione: ${m.title}`, date: next });
   }
   for (const v of live(data.medicalVisits)) {
     if (!v.dateTime) continue;
-    events.push({ uid: `medicalVisit-${v.id}`, kind: 'medicalVisit', title: `Visita: ${v.type}`, dateTime: v.dateTime });
+    events.push({ uid: `medicalVisit-${v.id}`, updatedAt: v.updatedAt, kind: 'medicalVisit', title: `Visita: ${v.type}`, dateTime: v.dateTime,
+      location: [v.place, v.doctor].filter(Boolean).join(' · '), description: v.notes || '' });
   }
   for (const v of live(data.vaccines)) {
     if (!v.boosterDate) continue;
-    events.push({ uid: `vaccine-${v.id}`, kind: 'vaccine', title: `Richiamo vaccino: ${v.name}`, date: v.boosterDate });
+    events.push({ uid: `vaccine-${v.id}`, updatedAt: v.updatedAt, kind: 'vaccine', title: `Richiamo vaccino: ${v.name}`, date: v.boosterDate });
   }
 
   return events

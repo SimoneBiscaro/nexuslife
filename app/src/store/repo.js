@@ -122,6 +122,7 @@ export function createRepo(adapter, { clock = () => new Date(), uuid = () => cry
     getMeta: (key) => adapter.metaGet(key),
     setMeta: (key, value) => adapter.metaSet(key, value),
     now: () => stamp(),
+    close: () => adapter.close?.(),
   };
 }
 
@@ -130,4 +131,12 @@ let shared = null;
 export function getRepo() {
   shared ??= openIdbAdapter().then((adapter) => createRepo(adapter));
   return shared;
+}
+
+/** Chiude il database (prima di cancellarlo). */
+export async function closeRepo() {
+  if (!shared) return;
+  const repo = await shared.catch(() => null);
+  shared = null;
+  repo?.close();
 }

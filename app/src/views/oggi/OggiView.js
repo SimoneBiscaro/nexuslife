@@ -12,8 +12,10 @@ import { DEFAULT_SETTINGS } from '../../store/seed.js';
 import { navigate } from '../../router.js';
 import { toDateKey } from '../../domain/dates.js';
 import { dismissBanner, todayBanners } from '../../domain/deadlines.js';
-import { collectDeadlines, daysLabel, greeting, upcomingDeadlines, vehicleOverview } from '../../domain/overview.js';
+import { backupReminder, collectDeadlines, daysLabel, greeting, upcomingDeadlines, vehicleOverview } from '../../domain/overview.js';
 import { vehicleGauges } from '../auto/gauges.js';
+import { useSignal } from '../../store/state.js';
+import { unlocked } from '../../store/lock.js';
 import { activeContract, currentInstallment, homePurchasesTotal, paymentBadge } from '../../domain/home.js';
 import { urgencyGlow } from '../../domain/groceries.js';
 import { suggestGroceries } from '../../domain/suggestions.js';
@@ -41,7 +43,11 @@ export function OggiView() {
   const { data } = useEntities(ALL_SECTION_ENTITIES);
 
   const settings = { ...DEFAULT_SETTINGS, ...(data?.settings?.[0] || {}) };
-  const items = data ? collectDeadlines(data, today) : [];
+  const healthOpen = useSignal(unlocked);
+  // Con il blocco attivo, fuori da Salute non compaiono dettagli sanitari.
+  const maskHealth = settings.healthLockEnabled !== false && !healthOpen;
+  const items = (data ? collectDeadlines(data, today) : []).map((i) => (maskHealth && i.section === 'salute'
+    ? { ...i, title: i.kind === 'visita' ? 'Visita medica' : 'Richiamo vaccino' } : i));
   const banners = todayBanners(items, { today, now, dismissed: settings.dismissedBanners || {} });
   const upcoming = upcomingDeadlines(items, 5);
   const vehicle = data?.vehicles.slice().sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))[0];
@@ -63,13 +69,21 @@ export function OggiView() {
   const toBuyTotal = data ? homePurchasesTotal(data.homePurchases) : 0;
   const hasCasa = Boolean(rentNow || nextCasa || toBuy);
 
+  const hasData = Boolean(data && ['vehicles', 'bills', 'rentContracts', 'groceryItems', 'groceryPurchases', 'medicalVisits', 'vaccines', 'homeMaintenance']
+    .some((k) => data[k]?.length));
+  const backup = data ? backupReminder({ lastBackupAt: settings.lastBackupAt, thresholdDays: Number(settings.backupReminderDays) || 30, hasData }, today) : null;
+  const showBackup = backup && !(settings.dismissedBanners?.[backup.key] && Date.parse(settings.dismissedBanners[backup.key]) > now.getTime());
+
   const hide = (key) => updateSettings({ dismissedBanners: dismissBanner(settings.dismissedBanners, key, new Date()) });
 
   return html`
-    <${PageHeader} eyebrow="Oggi" docTitle="Oggi" title=${`${greeting(now.getHours())}, Simo`} lede=${html`<span class="today-date">${formatWeekdayDate(today)}</span>`} />
+    <${PageHeader} eyebrow="Oggi" docTitle="Oggi" title=${`${greeting(now.getHours())}${settings.profileName ? `, ${settings.profileName}` : ''}`} lede=${html`<span class="today-date">${formatWeekdayDate(today)}</span>`} />
 
-    ${banners.length > 0 && html`
+    ${(banners.length > 0 || showBackup) && html`
       <section class="stack banners" aria-label="Avvisi">
+        ${showBackup && html`<${Banner} key=${backup.key} status="warning" title=${backup.title} onDismiss=${() => hide(backup.key)}>
+          ${backup.text} <a class="inline-link" href="#/impostazioni">Vai al backup</a>
+        <//>`}
         ${banners.map((b) => html`
           <${Banner} key=${b.key} status=${b.status} title=${b.title}
             badge=${html`<${NeonBadge} status=${b.status}>${daysLabel(b.days)}<//>`}

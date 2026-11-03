@@ -8,6 +8,9 @@ export const DEFAULT_SETTINGS = {
   reminderHour: 9,
   dismissedBanners: {},
   lastBackupAt: null,
+  backupHistory: [],
+  backupReminderDays: 30,
+  profileName: 'Simo',
 };
 
 const SEED_FLAG = 'seed.v1';

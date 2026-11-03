@@ -1,5 +1,6 @@
 import { useEffect, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
+import { CalendarButton } from '../../ui/CalendarButton.js';
 import { Sheet } from '../../ui/Sheet.js';
 import { NeonBadge } from '../../ui/NeonBadge.js';
 import { TextField } from '../../ui/forms.js';
@@ -45,6 +46,7 @@ export function PaySheet({ installment, contract, today, onClose }) {
         <div><dt>Scadenza</dt><dd>${formatLongDate(installment.dueDate)}</dd></div>
         ${installment.paidAt && html`<div class="detail-list__wide"><dt>Pagato il</dt><dd>${formatLongDate(installment.paidAt)}</dd></div>`}
       </dl>
+      ${!installment.paidAt && installment.dueDate >= today && html`<div class="sheet-actions"><${CalendarButton} uid=${`rentInstallment-${installment.id}`} /></div>`}
       <div class="renew">
         ${installment.paidAt
           ? html`<button class="btn btn--secondary" type="button" onClick=${() => setPaid(null)}>Segna come non pagato</button>`

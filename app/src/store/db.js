@@ -107,6 +107,9 @@ export function createIdbAdapter(db) {
       }
       await done(tx);
     },
+    close() {
+      db.close();
+    },
     async metaGet(key) {
       return (await promisify(store('meta').get(key)))?.value;
     },

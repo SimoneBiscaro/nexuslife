@@ -115,3 +115,22 @@ export function upcomingDeadlines(items, n = 5) {
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || STATUS_SEVERITY[b.status] - STATUS_SEVERITY[a.status])
     .slice(0, n);
 }
+
+/** Soglie selezionabili per il promemoria del backup (giorni). */
+export const BACKUP_THRESHOLDS = [7, 14, 30, 60];
+
+/**
+ * Promemoria del backup in Oggi: se non c'è mai stato un pacchetto (e ci sono dati)
+ * o se l'ultimo ha più giorni della soglia.
+ * @returns {null|{ key: string, days: number|null, title: string, text: string }}
+ */
+export function backupReminder({ lastBackupAt, thresholdDays = 30, hasData }, today) {
+  if (!lastBackupAt) {
+    return hasData
+      ? { key: 'backup:never', days: null, title: 'Fai il primo backup', text: 'Scarica un pacchetto con tutti i tuoi dati da Impostazioni → Backup.' }
+      : null;
+  }
+  const days = daysBetween(toDateKey(lastBackupAt), today);
+  if (days <= thresholdDays) return null;
+  return { key: `backup:${toDateKey(lastBackupAt)}`, days, title: `Ultimo backup ${days} giorni fa`, text: 'Scarica un pacchetto aggiornato da Impostazioni → Backup.' };
+}

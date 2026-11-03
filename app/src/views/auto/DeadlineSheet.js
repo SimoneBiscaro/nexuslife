@@ -1,5 +1,6 @@
 import { useEffect, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
+import { CalendarButton } from '../../ui/CalendarButton.js';
 import { Sheet } from '../../ui/Sheet.js';
 import { NeonBadge } from '../../ui/NeonBadge.js';
 import { TextField, TextAreaField, Segmented } from '../../ui/forms.js';
@@ -99,6 +100,7 @@ export function DeadlineSheet({ open, onClose, type, record, vehicle, today }) {
           ${type === 'assicurazione' && html`<div><dt>Durata</dt><dd>${record.recurrenceMonths === 6 ? '6 mesi' : '12 mesi'}</dd></div>`}
           <div class="detail-list__wide"><dt>Note</dt><dd>${record.notes || '—'}</dd></div>
         </dl>
+        ${record.dueDate >= today && html`<div class="sheet-actions"><${CalendarButton} uid=${`vehicleDeadline-${record.id}`} /></div>`}
         <div class="renew">
           <h3 class="renew__title">Segna come rinnovato</h3>
           <div class="renew__row">
