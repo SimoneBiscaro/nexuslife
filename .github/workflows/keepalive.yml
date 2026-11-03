@@ -1,0 +1,26 @@
+name: Keepalive Supabase
+
+# Il piano gratuito di Supabase mette in pausa i progetti inattivi per una settimana.
+# Due volte a settimana chiama la funzione ping() (docs/supabase.sql) con la chiave pubblica:
+# nessun dato letto o scritto, nessun segreto necessario.
+on:
+  schedule:
+    - cron: '17 6 * * 1,4'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Chiama ping()
+        run: |
+          URL=$(sed -n "s/^export const SUPABASE_URL = '\(.*\)';/\1/p" app/config.js)
+          KEY=$(sed -n "s/^export const SUPABASE_ANON_KEY = '\(.*\)';/\1/p" app/config.js)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "Supabase non configurato in app/config.js"; exit 0; fi
+          curl -fsS --retry 3 --retry-delay 10 -X POST "$URL/rest/v1/rpc/ping" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}'
+          echo

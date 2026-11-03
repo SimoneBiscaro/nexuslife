@@ -119,6 +119,8 @@ export function createRepo(adapter, { clock = () => new Date(), uuid = () => cry
     purgeTombstones,
     outbox: () => adapter.outboxList(),
     outboxAck: (entries) => adapter.outboxAck(entries),
+    /** Mette in coda record esistenti senza modificarli (primo collegamento al cloud). */
+    enqueue: async (records) => { if (records.length) await adapter.commit([], records.map(outboxEntry)); },
     getMeta: (key) => adapter.metaGet(key),
     setMeta: (key, value) => adapter.metaSet(key, value),
     now: () => stamp(),

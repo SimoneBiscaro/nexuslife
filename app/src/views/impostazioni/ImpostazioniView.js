@@ -23,6 +23,7 @@ import { BACKUP_THRESHOLDS } from '../../domain/overview.js';
 import { CategoryEditor } from '../spesa/CategoryEditor.js';
 import { RestoreSheet } from './RestoreSheet.js';
 import { PinCheckSheet } from './PinCheckSheet.js';
+import { AccountCard } from './AccountCard.js';
 
 const TAPS_TO_UNLOCK = 5;
 const ENTITIES = ['settings', 'groceryCategory', 'groceryItem', 'groceryPurchase'];
@@ -267,6 +268,7 @@ export function ImpostazioniView() {
     <${PageHeader} eyebrow="Preferenze" title="Impostazioni" />
     ${data && html`<div class="settings-grid">
       <${ProfileCard} settings=${settings} />
+      <${AccountCard} index=${1} />
       <${HealthLockCard} settings=${settings} />
       <${RemindersCard} settings=${settings} />
       <${Section} icon="spesa" title="Spesa" index=${3}>

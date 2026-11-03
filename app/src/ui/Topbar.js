@@ -1,8 +1,8 @@
 import { html } from './html.js';
 import { Icon, BrandMark } from './icons.js';
-import { ConnectionDot } from './ConnectionStatus.js';
+import { SyncDot } from './ConnectionStatus.js';
 
-/** Barra superiore compatta (< 900 px): marchio, stato rete, Impostazioni. */
+/** Barra superiore compatta (< 900 px): marchio, stato della sync, Impostazioni. */
 export function Topbar({ path }) {
   return html`
     <header class="topbar">
@@ -10,7 +10,7 @@ export function Topbar({ path }) {
         <${BrandMark} />
         <span aria-hidden="true">NexusLife</span>
       </a>
-      <${ConnectionDot} />
+      <${SyncDot} />
       <a class="icon-btn" href="#/impostazioni" aria-label="Impostazioni"
         aria-current=${path.startsWith('/impostazioni') ? 'page' : undefined}>
         <${Icon} name="impostazioni" />
