@@ -39,16 +39,17 @@ NexusLife è una suite personale di Simo, in italiano, con 5 sezioni fisse: **Og
 │   │   └── components.css
 │   └── src/
 │       ├── main.js           # bootstrap, router, registrazione SW
-│       ├── router.js         # hash router: #/oggi #/auto #/casa #/spesa #/salute #/impostazioni
+│       ├── router.js         # hash router: #/oggi #/auto #/casa #/spesa #/salute #/giardino #/impostazioni
 │       ├── store/            # db.js (IndexedDB), repo.js (CRUD + tombstone), state.js (segnali)
 │       ├── domain/           # logiche PURE e testate (nessun accesso a DOM o IndexedDB)
 │       │   ├── dates.js  deadlines.js  service.js  mileage.js
 │       │   ├── rent.js   groceries.js  suggestions.js  reminders.js
-│       │   └── dedupe.js
+│       │   ├── dedupe.js
+│       │   └── garden.js     # giardino zen: punteggio e stadi delle piante
 │       ├── sync/             # crypto.js, auth.js, api.js, sync.js
 │       ├── backup/           # zip.js (writer/reader STORE + CRC32), csv.js, report.js, package.js, restore.js
-│       ├── ui/               # componenti: GlassCard, HudGauge, DigitalTwin, NeonBadge, Sheet, TabBar, Sidebar, Banner, Toast
-│       └── views/            # oggi/, auto/, casa/, spesa/, salute/, impostazioni/
+│       ├── ui/               # componenti: GlassCard, HudGauge, DigitalTwin, NeonBadge, Sheet, TabBar, Sidebar, Banner, Toast, Plant
+│       └── views/            # oggi/, auto/, casa/, spesa/, salute/, giardino/, impostazioni/
 ├── tests/                    # *.test.js per src/domain
 └── .github/workflows/        # pages.yml, keepalive.yml
 ```
@@ -99,7 +100,8 @@ Più un riflesso radente: pseudo-elemento `::before` con gradiente lineare diago
 - **HudGauge**: anello SVG 270°, traccia titanium-deep, arco colorato per stato con glow (`filter: drop-shadow`), valore centrale grande (giorni o km) e etichetta. **Si svuota** con il tempo: riempimento = porzione di periodo rimanente (D2).
 - **DigitalTwin**: T-Cross grigio metallizzato in **SVG vettoriale disegnato a mano**, vista 3/4 anteriore, ~10 layer (ombra a terra, carrozzeria con gradiente metallico, linea di cintura, vetri scuri con riflesso, cerchi a razze, fari LED con alone champagne, barre portapacchi, specchietti, luce radente animata che scorre sulla carrozzeria). Supporta un'immagine opzionale `app/assets/tcross.jpg` se presente (D8). Intorno, i 4 HudGauge: Bollo, Assicurazione, Revisione, Tagliando.
 - **NeonBadge**: pill con bordo luminoso; urgente = ambra, urgente da > 2 giorni = rosso, con pulsazione lenta.
-- **Navigazione**: su viewport < 900 px TabBar inferiore in vetro con 5 voci fisse (D3) e `env(safe-area-inset-bottom)`; ≥ 900 px Sidebar sinistra in vetro + contenuto a colonna/dettaglio, scorciatoie tastiera `1`–`5` per le sezioni, `N` nuovo elemento, `/` ricerca, `Esc` chiudi sheet.
+- **Navigazione**: su viewport < 900 px TabBar inferiore in vetro con 5 voci fisse (D3) e `env(safe-area-inset-bottom)`; ≥ 900 px Sidebar sinistra in vetro + contenuto a colonna/dettaglio, scorciatoie tastiera `1`–`5` per le sezioni, `G` Giardino, `N` nuovo elemento, `/` ricerca, `Esc` chiudi sheet.
+- **Giardino zen** (`#/giardino`): fuori dalla TabBar (D3 invariata). Ci si arriva dalla card "Giardino" in Oggi, dalla voce in Sidebar, dall'icona nella barra superiore su mobile e con `G`. Piante in SVG disegnato a mano (`ui/Plant.js`), ghiaia rastrellata, pietre titanium, luce champagne; oscillazione nel vento e foglie che cadono, disattivate con reduced-motion. Toccando una pianta si apre uno Sheet con le cause e i link alla sezione.
 - **Sheet**: pannello modale dal basso su mobile, dialog centrato su desktop.
 
 ## 6. Modello dati
@@ -138,6 +140,7 @@ Categorie spesa predefinite (D6): Freschi, Dispensa, Bevande, Cura Casa, Altro +
 - **Normalizzazione nomi**: minuscolo, trim, spazi singoli, senza accenti (NFD), plurali comuni non toccati.
 - **Banner Oggi**: elementi in warning/critical/overdue entro 30 giorni, ordinati per gravità poi data; swipe o ✕ = nascosto 24 h.
 - **Preavvisi** (per export calendario): auto 30/7/1 giorni e giorno stesso; affitto e bollette 3 giorni e giorno stesso; manutenzioni casa 7 giorni; visite 24 h e 2 h; richiami vaccino 30 e 7 giorni; ora predefinita 09:00 Europe/Rome.
+- **Giardino zen** (`domain/garden.js`, solo dati derivati: nessuna entità né campo nuovo). Sei piante: Auto (bollo, assicurazione, revisione, tagliando per data e km), Affitto e bollette (rate e bollette non pagate: contano solo da 7 giorni prima o se scadute), Manutenzioni (rispetto all'intervallo), Spesa (urgente = warning, urgente da > 2 giorni = critical), Salute (visita entro 7 giorni senza note di preparazione = warning, entro 2 giorni = critical; richiami vaccino con gli stati standard), Backup (oltre la soglia warning, oltre 2× critical, oltre 3× overdue; mai fatto = critical). Penalità per elemento: ok/unknown 0 · warning 0,15 · critical 0,40 · overdue 0,70 che sale linearmente fino a 0,95 dopo 30 giorni di ritardo (per il tagliando a km: km in eccesso / km al giorno stimati). Punteggio = Π(1 − penalità), con pavimento: tanti problemi non scendono sotto il punteggio di un singolo problema del livello successivo (pavimento 0 se il peggiore è overdue). Stadi: `fiorita` ≥ 0,9 · `sana` ≥ 0,7 · `assetata` ≥ 0,45 · `appassita` ≥ 0,2 · `secca` sotto; categoria senza dati = `germoglio` neutro. Con il blocco Salute attivo le cause sanitarie usano un testo generico (`maskedTitle`).
 - **Deduplicazione** (dopo sync): veicolo per targa normalizzata; scadenza auto per (veicolo, tipo); rata per (contratto, periodKey) con vince la pagata; feedback per normName (muted OR, snooze max); categoria per normName; articolo aperto per normName (quantità max, urgenza più alta). Il perdente diventa tombstone.
 
 ## 8. Sync e sicurezza

@@ -1,6 +1,6 @@
 # NexusLife
 
-La suite personale di Simo, in italiano: cinque sezioni — **Oggi, Auto, Casa, Spesa, Salute** — più Impostazioni.
+La suite personale di Simo, in italiano: cinque sezioni — **Oggi, Auto, Casa, Spesa, Salute** — più il Giardino zen (una pianta per categoria che mostra a colpo d'occhio cosa è in sospeso) e Impostazioni.
 Scadenze dell'auto con gemello digitale del T-Cross, affitto e bollette, lista della spesa che suggerisce cosa
 ricomprare, visite e vaccini con blocco a PIN o Face ID.
 

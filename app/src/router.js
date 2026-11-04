@@ -9,7 +9,10 @@ export const SECTIONS = [
   { id: 'salute', label: 'Salute', key: '5', accent: 'var(--health)' },
 ];
 
-const VALID = new Set(['oggi', 'auto', 'casa', 'spesa', 'salute', 'impostazioni', 'impostazioni/design']);
+/** Pagine fuori dalla TabBar raggiungibili con una scorciatoia (Sidebar e tastiera). */
+export const EXTRA_PAGES = [{ id: 'giardino', label: 'Giardino', key: 'g' }];
+
+const VALID = new Set(['oggi', 'auto', 'casa', 'spesa', 'salute', 'giardino', 'impostazioni', 'impostazioni/design']);
 export const DEFAULT_PATH = '/oggi';
 
 /**

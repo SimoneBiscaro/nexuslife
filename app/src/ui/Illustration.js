@@ -60,6 +60,17 @@ const SCENES = {
     <ellipse cx="132" cy="44" rx="12" ry="4" class="ill__disc" /><path d="M120 44v8c0 2 5 4 12 4s12-2 12-4v-8M120 52v8c0 2 5 4 12 4s12-2 12-4v-8" />
     ${sparkle(30, 26)}${sparkle(118, 20, 3)}`,
 
+  // Giardino: pianta con fiore su ghiaia rastrellata, pietra e luna
+  giardino: (f) => html`
+    <path class="ill__soft" d="M18 100c30-8 94-8 124 0M30 108c26-6 74-6 100 0M8 92c40-10 104-10 144 0" />
+    <ellipse cx="112" cy="94" rx="14" ry="7" fill=${`url(#${f})`} /><path class="ill__soft" d="M103 90c3-3 9-4 13-2" />
+    <path d="M70 96V50" />
+    <path d="M70 74c-12 0-20-7-20-19 12 0 20 7 20 19Z" class="ill__leaf" />
+    <path d="M70 64c1-11 8-17 19-17 0 11-8 17-19 17Z" class="ill__leaf" />
+    <circle cx="70" cy="42" r="9" fill=${`url(#${f})`} /><path class="ill__soft" d="M70 33v-3M70 54v-3M61 42h-3M82 42h-3" />
+    <path class="ill__soft" d="M122 26a10 10 0 1 0 8 15 8 8 0 0 1-8-15Z" />
+    ${sparkle(36, 34)}${sparkle(140, 62, 3)}`,
+
   // Visite: cartella clinica con battito
   visite: (f) => html`
     <rect x="48" y="20" width="64" height="80" rx="10" fill=${`url(#${f})`} />
