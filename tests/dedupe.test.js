@@ -111,3 +111,14 @@ test('i record già eliminati non partecipano', () => {
   ];
   assert.deepEqual(dedupe(records, NOW), []);
 });
+
+test('veicoli fusi: manutenzioni e acquisti dell\'auto passano al vincitore', () => {
+  const out = dedupe([
+    rec('vehicle', 'v1', { plate: 'GH123XY' }, '2026-11-02T00:00:00.000Z'),
+    rec('vehicle', 'v2', { plate: 'GH123XY' }),
+    rec('vehicleMaintenance', 'vm', { vehicleId: 'v2', title: 'Cambio olio' }),
+    rec('vehiclePurchase', 'vp', { vehicleId: 'v2', name: 'Catene' }),
+  ], NOW);
+  assert.equal(find(out, 'vehicleMaintenance', 'vm').vehicleId, 'v1');
+  assert.equal(find(out, 'vehiclePurchase', 'vp').vehicleId, 'v1');
+});

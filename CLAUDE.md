@@ -45,11 +45,14 @@ NexusLife è una suite personale di Simo, in italiano, con 5 sezioni fisse: **Og
 │       │   ├── dates.js  deadlines.js  service.js  mileage.js
 │       │   ├── rent.js   groceries.js  suggestions.js  reminders.js
 │       │   ├── dedupe.js
+│       │   ├── tyres.js      # cambio gomme stagionale
+│       │   ├── maintenance.js # manutenzioni casa e auto, periodiche e una tantum
 │       │   └── garden.js     # giardino zen: punteggio e stadi delle piante
 │       ├── sync/             # crypto.js, auth.js, api.js, sync.js
 │       ├── backup/           # zip.js (writer/reader STORE + CRC32), csv.js, report.js, package.js, restore.js
 │       ├── ui/               # componenti: GlassCard, HudGauge, DigitalTwin, NeonBadge, Sheet, TabBar, Sidebar, Banner, Toast, Plant
 │       └── views/            # oggi/, auto/, casa/, spesa/, salute/, giardino/, impostazioni/
+│                             # (MaintenanceCard/Sheet e HomePurchasesCard/Sheet di casa/ servono anche Auto, con `entity`)
 ├── tests/                    # *.test.js per src/domain
 └── .github/workflows/        # pages.yml, keepalive.yml
 ```
@@ -109,29 +112,36 @@ Ogni record: `{ id (UUID v4), entity, createdAt, updatedAt (ISO), deleted (bool)
 
 | entity | campi principali |
 |---|---|
-| `vehicle` | name, make, model, plate, color, registrationDate, currentKm, serviceIntervalKm (15000), serviceIntervalMonths (12), lastServiceDate, lastServiceKm, photo (false) |
+| `vehicle` | name, make, model, plate, color, registrationDate, currentKm, serviceIntervalKm (15000), serviceIntervalMonths (12), lastServiceDate, lastServiceKm, photo (false), tyreType? (`estive`/`invernali`/`quattroStagioni`), tyreChangedAt? |
 | `vehicleDeadline` | vehicleId, type (`bollo`/`assicurazione`/`revisione`), dueDate, amount?, provider?, recurrenceMonths?, notes |
 | `mileageReading` | vehicleId, date, km |
 | `vehicleExpense` | vehicleId, date, category (tagliando/riparazione/gomme/carburante/altro), amount, km?, description |
+| `vehicleMaintenance` | vehicleId, title, intervalMonths?, intervalKm?, lastDoneDate?, lastDoneKm? (periodica) · dueDate?, doneAt? (una tantum), notes |
+| `vehiclePurchase` | vehicleId, name, category (accessori/ricambi/pulizia/sicurezza/altro), priority (alta/media/bassa), estimatedPrice?, done |
 | `rentContract` | totalAmount, personalShare, dueDay, startDate, landlord?, notes |
 | `rentInstallment` | contractId, periodKey (`yyyy-MM`), dueDate, amount, paidAt? |
 | `bill` | kind (luce/gas/internet/acqua/rifiuti/altro), dueDate, amount, paidAt?, provider?, notes |
-| `homeMaintenance` | title, intervalMonths, lastDoneDate, notes |
+| `homeMaintenance` | title, intervalMonths? e lastDoneDate (periodica) · dueDate?, doneAt? (una tantum, senza intervalMonths), notes |
 | `homePurchase` | name, category (arredamento/ferramenta/detersivi/bricolage/altro), priority (alta/media/bassa), estimatedPrice?, done |
 | `groceryItem` | name, normName, quantity, urgency (`urgente`/`normale`/`scorta`), categoryId, addedAt, checkedAt?, archived |
 | `groceryPurchase` | normName, name, date, categoryId |
 | `groceryCategory` | name, normName, icon, color, builtin (bool), order |
 | `suggestionFeedback` | normName, muted (bool), snoozeUntil? |
-| `medicalVisit` | type (dentista/oculista/controllo annuale/altro), dateTime, doctor, place, notes, postNotes |
+| `medicalVisit` | type (dentista/oculista/controllo annuale/altro), dateTime, doctor, place, notes, postNotes, planId? (visitPlan collegata) |
+| `visitPlan` | type, doctor?, intervalMonths? (periodica), dueBy? (entro quando / prima scadenza), notes, doneAt? (singola già fatta) |
 | `vaccine` | name, date, lot?, boosterDate?, notes |
 | `settings` | (record unico id fisso `settings`) healthLockEnabled (true, D7), reminderHour (9), dismissedBanners, lastBackupAt |
 
 Categorie spesa predefinite (D6): Freschi, Dispensa, Bevande, Cura Casa, Altro + personalizzate. Nessun allegato (D9).
+Tutte le entità stanno nello stesso archivio IndexedDB (`records`, chiave [entity, id]): aggiungere entità o campi facoltativi non cambia lo schema IndexedDB. `visitPlan` è un dato sanitario (esclusa con "Escludi Salute"). Pacchetto di backup `schemaVersion` 2 (Fase 9): un pacchetto più recente dell'app viene rifiutato.
 
 ## 7. Logiche di dominio (da implementare e testare esattamente così)
 - **Stato scadenza** con `d` = giorni di calendario da oggi: `ok` d>30 · `warning` 8≤d≤30 · `critical` 0≤d≤7 · `overdue` d<0 · `unknown` data mancante.
 - **Tagliando**: `nextDate = lastServiceDate + intervalMonths`; `nextKm = lastServiceKm + intervalKm`; `usedRatio = (currentKm − lastServiceKm)/intervalKm` → ok <0,85 · warning 0,85–0,95 · critical 0,95–1,0 · overdue >1,0. Stato finale = il più grave tra data e km.
 - **Stima km/giorno**: regressione lineare sulle letture degli ultimi 180 giorni (≥ 2 letture distanti ≥ 14 giorni), pendenza limitata a [0, 500]; altrimenti 33 km/giorno con etichetta "stima generica". Serve a stimare la data in cui si raggiungono i km del tagliando.
+- **Cambio gomme** (`domain/tyres.js`, date nazionali): con le estive montate il cambio è verso le invernali entro il 15/11 (finestra dal 15/10; dopo il 15/11 e fino al 14/04 è in ritardo); con le invernali verso le estive entro il 15/05 (finestra dal 15/04; dal 16/05 al 14/10 in ritardo; dal 15/10 valgono fino al 15/05 successivo). Quattro stagioni o tipo mancante: nessun cambio. Stato = stato scadenza della data limite. "Cambio fatto" inverte il tipo e registra `tyreChangedAt` (spesa facoltativa in categoria gomme). Quinto HudGauge "Gomme" (riempimento su 6 mesi).
+- **Manutenzioni** (`domain/maintenance.js`, casa e auto): periodica se `intervalMonths` o `intervalKm` > 0. Data = ultima + mesi; km = ultimi km + intervallo con le soglie del tagliando; stato = il più grave; data effettiva = la prima tra data e stima dai km. Periodica mai fatta = unknown. Una tantum: stato della `dueDate` (unknown senza data), `doneAt` = fatta e chiusa (in fondo all'elenco). "Fatto oggi": periodica → lastDoneDate (e lastDoneKm se a km), una tantum → doneAt. Preavvisi: casa 7 giorni, auto come le scadenze auto.
+- **Visite da prenotare** (`visitPlan`): una visita futura collegata (`planId`) = prenotata; singola con visita passata collegata o `doneAt` = fatta; periodica: prossima scadenza = ultima visita collegata + intervallo, altrimenti `dueBy`. Stato = stato scadenza di "entro". Preavvisi 30 e 7 giorni.
 - **Rinnovi proposti** (dopo "Segna come rinnovato"): bollo +12 mesi; assicurazione +12 mesi (o +6 se `recurrenceMonths=6`); revisione: la prima a fine mese di immatricolazione + 4 anni, le successive +24 mesi.
 - **Affitto**: genera la rata del mese corrente e del successivo (chiave `periodKey`), giorno di scadenza oltre fine mese → ultimo giorno. Stato `paid` se `paidAt`; altrimenti `overdue` se oggi > dueDate; altrimenti `pending`. Mostra totale e quota personale (D5), entrambi chiesti al primo avvio.
 - **Suggerimenti spesa**: storico 180 giorni per `normName`; ≥ 3 acquisti (stesso giorno = 1); `ciclo = mediana(intervalli)`; `variabilità = devstd/media`; `maturità = giorni dall'ultimo acquisto / ciclo`. Suggerisci se maturità ≥ 0,85, non già in lista, non muted, non in snooze. Confidenza alta <0,25, media <0,5, bassa altrimenti (bassa solo con maturità ≥ 1,0). Max 8, ordinati per maturità. Esempio di test obbligatorio: latte ogni 7 giorni, ultimo 6 giorni fa → 0,857 → suggerito.
@@ -140,8 +150,8 @@ Categorie spesa predefinite (D6): Freschi, Dispensa, Bevande, Cura Casa, Altro +
 - **Normalizzazione nomi**: minuscolo, trim, spazi singoli, senza accenti (NFD), plurali comuni non toccati.
 - **Banner Oggi**: elementi in warning/critical/overdue entro 30 giorni, ordinati per gravità poi data; swipe o ✕ = nascosto 24 h.
 - **Preavvisi** (per export calendario): auto 30/7/1 giorni e giorno stesso; affitto e bollette 3 giorni e giorno stesso; manutenzioni casa 7 giorni; visite 24 h e 2 h; richiami vaccino 30 e 7 giorni; ora predefinita 09:00 Europe/Rome.
-- **Giardino zen** (`domain/garden.js`, solo dati derivati: nessuna entità né campo nuovo). Sei piante: Auto (bollo, assicurazione, revisione, tagliando per data e km), Affitto e bollette (rate e bollette non pagate: contano solo da 7 giorni prima o se scadute), Manutenzioni (rispetto all'intervallo), Spesa (urgente = warning, urgente da > 2 giorni = critical), Salute (visita entro 7 giorni senza note di preparazione = warning, entro 2 giorni = critical; richiami vaccino con gli stati standard), Backup (oltre la soglia warning, oltre 2× critical, oltre 3× overdue; mai fatto = critical). Penalità per elemento: ok/unknown 0 · warning 0,15 · critical 0,40 · overdue 0,70 che sale linearmente fino a 0,95 dopo 30 giorni di ritardo (per il tagliando a km: km in eccesso / km al giorno stimati). Punteggio = Π(1 − penalità), con pavimento: tanti problemi non scendono sotto il punteggio di un singolo problema del livello successivo (pavimento 0 se il peggiore è overdue). Stadi: `fiorita` ≥ 0,9 · `sana` ≥ 0,7 · `assetata` ≥ 0,45 · `appassita` ≥ 0,2 · `secca` sotto; categoria senza dati = `germoglio` neutro. Con il blocco Salute attivo le cause sanitarie usano un testo generico (`maskedTitle`).
-- **Deduplicazione** (dopo sync): veicolo per targa normalizzata; scadenza auto per (veicolo, tipo); rata per (contratto, periodKey) con vince la pagata; feedback per normName (muted OR, snooze max); categoria per normName; articolo aperto per normName (quantità max, urgenza più alta). Il perdente diventa tombstone.
+- **Giardino zen** (`domain/garden.js`, solo dati derivati: nessuna entità né campo nuovo). Sei piante: Auto (bollo, assicurazione, revisione, tagliando per data e km, cambio gomme, manutenzioni auto), Affitto e bollette (rate e bollette non pagate: contano solo da 7 giorni prima o se scadute), Manutenzioni (rispetto all'intervallo; una tantum per data, le fatte escluse), Spesa (urgente = warning, urgente da > 2 giorni = critical), Salute (visita entro 7 giorni senza note di preparazione = warning, entro 2 giorni = critical; visite da prenotare e richiami vaccino con gli stati standard), Backup (oltre la soglia warning, oltre 2× critical, oltre 3× overdue; mai fatto = critical). Penalità per elemento: ok/unknown 0 · warning 0,15 · critical 0,40 · overdue 0,70 che sale linearmente fino a 0,95 dopo 30 giorni di ritardo (per il tagliando a km: km in eccesso / km al giorno stimati). Punteggio = Π(1 − penalità), con pavimento: tanti problemi non scendono sotto il punteggio di un singolo problema del livello successivo (pavimento 0 se il peggiore è overdue). Stadi: `fiorita` ≥ 0,9 · `sana` ≥ 0,7 · `assetata` ≥ 0,45 · `appassita` ≥ 0,2 · `secca` sotto; categoria senza dati = `germoglio` neutro. Con il blocco Salute attivo le cause sanitarie usano un testo generico (`maskedTitle`).
+- **Deduplicazione** (dopo sync): veicolo per targa normalizzata (scadenze, letture, spese, manutenzioni e acquisti dell'auto passano al vincitore); scadenza auto per (veicolo, tipo); rata per (contratto, periodKey) con vince la pagata; feedback per normName (muted OR, snooze max); categoria per normName; articolo aperto per normName (quantità max, urgenza più alta). Il perdente diventa tombstone.
 
 ## 8. Sync e sicurezza
 - Tabella unica `records(user_id, entity, id, updated_at, deleted, iv, payload, server_ts)` con RLS `user_id = auth.uid()`. `payload` = JSON del record cifrato AES-GCM, base64. Solo `entity`, `id`, `updated_at`, `deleted` sono in chiaro.

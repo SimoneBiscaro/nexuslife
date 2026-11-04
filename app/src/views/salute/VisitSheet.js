@@ -6,7 +6,7 @@ import { TextField, SelectField, TextAreaField } from '../../ui/forms.js';
 import { CalendarButton } from '../../ui/CalendarButton.js';
 import { showToast } from '../../ui/Toast.js';
 import { getRepo } from '../../store/repo.js';
-import { VISIT_TYPES } from '../../domain/health.js';
+import { VISIT_TYPES, visitPlanLabel } from '../../domain/health.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 /** ISO → valore di <input type="datetime-local"> nell'ora del dispositivo. */
@@ -17,22 +17,26 @@ export function toLocalInput(iso) {
 }
 const fromLocalInput = (value) => (value ? new Date(value).toISOString() : null);
 
-const formFrom = (v) => ({
-  type: v?.type ?? 'dentista', dateTime: toLocalInput(v?.dateTime), doctor: v?.doctor ?? '', place: v?.place ?? '',
-  notes: v?.notes ?? '', postNotes: v?.postNotes ?? '',
+const formFrom = (v, plan) => ({
+  type: v?.type ?? plan?.type ?? 'dentista', dateTime: toLocalInput(v?.dateTime), doctor: v?.doctor ?? plan?.doctor ?? '', place: v?.place ?? '',
+  notes: v?.notes ?? plan?.notes ?? '', postNotes: v?.postNotes ?? '', planId: v?.planId ?? plan?.id ?? '',
 });
 
-export function VisitSheet({ open, visit, onClose }) {
-  const [form, setForm] = useState(formFrom(visit));
+/**
+ * Visita con data e ora. `plan`: visita da prenotare da cui nasce (precompila e collega).
+ * `plans`: visite da prenotare a cui si può collegare (le periodiche ripartono dall'ultima visita).
+ */
+export function VisitSheet({ open, visit, onClose, plan = null, plans = [] }) {
+  const [form, setForm] = useState(formFrom(visit, plan));
   const [error, setError] = useState('');
-  useEffect(() => { if (open) { setForm(formFrom(visit)); setError(''); } }, [open, visit?.id]);
+  useEffect(() => { if (open) { setForm(formFrom(visit, plan)); setError(''); } }, [open, visit?.id, plan?.id]);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const isPast = visit && Date.parse(visit.dateTime) < Date.now();
 
   async function save() {
     const dateTime = fromLocalInput(form.dateTime);
     if (!dateTime || !Number.isFinite(Date.parse(dateTime))) { setError('Indica data e ora'); return; }
-    const fields = { type: form.type, dateTime, doctor: form.doctor.trim(), place: form.place.trim(), notes: form.notes.trim(), postNotes: form.postNotes.trim() };
+    const fields = { type: form.type, dateTime, doctor: form.doctor.trim(), place: form.place.trim(), notes: form.notes.trim(), postNotes: form.postNotes.trim(), planId: form.planId || null };
     const repo = await getRepo();
     if (visit) await repo.update('medicalVisit', visit.id, fields);
     else await repo.create('medicalVisit', fields);
@@ -53,13 +57,16 @@ export function VisitSheet({ open, visit, onClose }) {
     <button class="btn btn--primary" type="button" onClick=${save}>Salva</button>`;
 
   return html`
-    <${Sheet} open=${open} onClose=${onClose} title=${visit ? 'Visita' : 'Nuova visita'} footer=${footer}>
+    <${Sheet} open=${open} onClose=${onClose} title=${visit ? 'Visita' : plan ? 'Prenota la visita' : 'Nuova visita'} footer=${footer}>
       <form class="form-grid" onSubmit=${(e) => { e.preventDefault(); save(); }} noValidate>
         <${SelectField} label="Tipo" value=${form.type} onValue=${set('type')}
           options=${VISIT_TYPES.map((t) => ({ value: t, label: t[0].toUpperCase() + t.slice(1) }))} />
         <${TextField} label="Data e ora" type="datetime-local" value=${form.dateTime} onValue=${set('dateTime')} error=${error} />
         <${TextField} label="Medico" value=${form.doctor} onValue=${set('doctor')} />
         <${TextField} label="Struttura" value=${form.place} onValue=${set('place')} />
+        ${(plans.length > 0 || form.planId) && html`<${SelectField} label="Collegata a" value=${form.planId} onValue=${set('planId')} class="span-2"
+          hint="Una visita da prenotare: le periodiche ripartono da questa visita"
+          options=${[{ value: '', label: 'Nessuna' }, ...plans.filter((p) => !p.deleted).map((p) => ({ value: p.id, label: visitPlanLabel(p) }))]} />`}
         <div class="span-2"><${TextAreaField} label="Note prima della visita" value=${form.notes} onValue=${set('notes')} rows=${2}
           hint="Domande da fare, documenti da portare" /></div>
         <div class="span-2"><${TextAreaField} label="Note dopo la visita" value=${form.postNotes} onValue=${set('postNotes')} rows=${3}

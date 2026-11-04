@@ -2,6 +2,9 @@ import { daysBetween, formatPeriod, toDateKey } from './dates.js';
 import { deadlineStatus, maintenanceNextDate, STATUS_SEVERITY } from './deadlines.js';
 import { serviceStatus } from './service.js';
 import { estimateKmPerDay, latestKm } from './mileage.js';
+import { tyreChange, TYRE_LABEL } from './tyres.js';
+import { maintenancePlan } from './maintenance.js';
+import { openVisitPlans } from './health.js';
 
 export const DEADLINE_TYPES = ['bollo', 'assicurazione', 'revisione'];
 export const DEADLINE_LABEL = { bollo: 'Bollo', assicurazione: 'Assicurazione', revisione: 'Revisione', tagliando: 'Tagliando' };
@@ -76,6 +79,17 @@ export function collectDeadlines(data, today) {
       push({ key: `service:${v.id}:${s.nextDate}:${s.nextKm}`, section: 'auto', kind: 'tagliando',
         title: `Tagliando · ${name}`, date: date || todayKey, status: s.status, href: '#/auto' });
     }
+    const tc = tyreChange(v, todayKey);
+    if (tc) {
+      push({ key: `tyres:${v.id}:${tc.due}`, section: 'auto', kind: 'gomme',
+        title: `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()} · ${name}`, date: tc.due, status: tc.status, href: '#/auto' });
+    }
+    for (const m of live(data.vehicleMaintenance).filter((x) => x.vehicleId === v.id)) {
+      const p = maintenancePlan(m, todayKey, { currentKm: ov.currentKm, kmPerDay: ov.kmPerDay.kmPerDay });
+      if (p.done || !p.date) continue;
+      push({ key: `vehicleMaintenance:${m.id}:${p.date}`, section: 'auto', kind: 'manutenzione auto',
+        title: `${m.title} · ${name}`, date: p.date, status: p.status, href: '#/auto' });
+    }
   }
   for (const r of live(data.rentInstallments)) {
     if (r.paidAt || !r.dueDate) continue;
@@ -99,6 +113,11 @@ export function collectDeadlines(data, today) {
     if (date < todayKey) continue; // una visita passata non è una scadenza
     push({ key: `visit:${v.id}`, section: 'salute', kind: 'visita', title: `Visita ${v.type}`,
       date, status: deadlineStatus(date, todayKey), href: '#/salute' });
+  }
+  for (const x of openVisitPlans(data.visitPlans, data.medicalVisits, todayKey)) {
+    if (x.state !== 'daPrenotare' || !x.dueBy) continue;
+    push({ key: `visitPlan:${x.plan.id}:${x.dueBy}`, section: 'salute', kind: 'prenotazione', title: `Prenotare visita ${x.plan.type || ''}`.trim(),
+      date: x.dueBy, status: x.status, href: '#/salute' });
   }
   for (const v of live(data.vaccines)) {
     if (!v.boosterDate) continue;

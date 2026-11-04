@@ -3,7 +3,7 @@
  * prepara l'anteprima e calcola le modifiche per "Unisci" o "Sostituisci tutto".
  */
 import { readZip } from './zip.js';
-import { decryptPackage, FORMAT, isNxbak } from './package.js';
+import { decryptPackage, FORMAT, isNxbak, SCHEMA_VERSION } from './package.js';
 import { sha256Hex } from '../sync/crypto.js';
 import { dedupe } from '../domain/dedupe.js';
 
@@ -14,16 +14,19 @@ export class PassphraseRequired extends Error {
 }
 
 export const SECTION_OF = {
-  vehicle: 'Auto', vehicleDeadline: 'Auto', mileageReading: 'Auto', vehicleExpense: 'Auto',
+  vehicle: 'Auto', vehicleDeadline: 'Auto', mileageReading: 'Auto', vehicleExpense: 'Auto', vehicleMaintenance: 'Auto', vehiclePurchase: 'Auto',
   rentContract: 'Casa', rentInstallment: 'Casa', bill: 'Casa', homeMaintenance: 'Casa', homePurchase: 'Casa',
   groceryCategory: 'Spesa', groceryItem: 'Spesa', groceryPurchase: 'Spesa', suggestionFeedback: 'Spesa',
-  medicalVisit: 'Salute', vaccine: 'Salute', settings: 'Impostazioni',
+  medicalVisit: 'Salute', visitPlan: 'Salute', vaccine: 'Salute', settings: 'Impostazioni',
 };
 
 function parseJson(bytes) {
   let doc;
   try { doc = JSON.parse(dec.decode(bytes)); } catch { throw new Error('nexuslife.json non è leggibile'); }
   if (doc?.format !== FORMAT || !Array.isArray(doc.records)) throw new Error('Il file non è un backup di NexusLife');
+  if (Number(doc.schemaVersion) > SCHEMA_VERSION) {
+    throw new Error('Il pacchetto viene da una versione più recente di NexusLife: aggiorna l\'app (Ricarica) e riprova');
+  }
   for (const r of doc.records) {
     if (!r || typeof r.entity !== 'string' || typeof r.id !== 'string' || typeof r.updatedAt !== 'string') {
       throw new Error('Il backup contiene record non validi');

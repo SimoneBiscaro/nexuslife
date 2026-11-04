@@ -3,10 +3,12 @@
  */
 import { formatDateKey, formatPeriod } from '../domain/dates.js';
 import { DEADLINE_LABEL, DEADLINE_TYPES, vehicleOverview } from '../domain/overview.js';
-import { BILL_KIND_LABEL, billTotals, maintenanceState, sortHomePurchases } from '../domain/home.js';
+import { BILL_KIND_LABEL, billTotals, sortHomePurchases } from '../domain/home.js';
 import { paymentStatus } from '../domain/rent.js';
 import { deadlineStatus } from '../domain/deadlines.js';
-import { STATUS_IT, splitVisits } from '../domain/health.js';
+import { openVisitPlans, STATUS_IT, splitVisits, visitPlanLabel } from '../domain/health.js';
+import { tyreChange, TYRE_LABEL } from '../domain/tyres.js';
+import { recurrenceLabel, sortMaintenancePlans } from '../domain/maintenance.js';
 
 const eur = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
 const int = new Intl.NumberFormat('it-IT');
@@ -29,6 +31,16 @@ function table(headers, rows, empty) {
 
 const badge = (status) => `<span class="b b-${status}">${e(STATUS_IT[status] ?? status)}</span>`;
 
+/** Manutenzioni (casa o auto), periodiche e una tantum. */
+function maintTable(plans) {
+  return table(['Cosa', 'Frequenza', 'Ultima', 'Prossima', 'Stato'], plans.map((x) => [
+    e(x.item.title), e(recurrenceLabel(x.item, (n) => `${int.format(n)} km`)),
+    x.done ? `fatta ${d(x.item.doneAt)}` : d(x.item.lastDoneDate) + (x.item.lastDoneKm != null ? ` · ${int.format(x.item.lastDoneKm)} km` : ''),
+    x.done ? '—' : d(x.nextDate) + (x.nextKm != null ? ` · ${int.format(x.nextKm)} km` : ''),
+    x.done ? badge('ok') : badge(x.status),
+  ]), '');
+}
+
 /**
  * @param {Array<object>} records record esportati (non eliminati)
  * @param {{ today: string, now: string, appVersion: string, excludeHealth?: boolean }} opts
@@ -48,9 +60,17 @@ export function buildReport(records, { today, now, appVersion, excludeHealth = f
     });
     const s = ov.service;
     rows.push(['Tagliando', d(s.nextDate) + (s.nextKm ? ` · ${int.format(s.nextKm)} km` : ''), badge(s.status), '—']);
+    const tc = tyreChange(v, today);
+    if (tc) rows.push([`Cambio gomme (${e(TYRE_LABEL[tc.target].toLowerCase())})`, d(tc.due), badge(tc.status), '—']);
+    else if (v.tyreType) rows.push(['Gomme', e(TYRE_LABEL[v.tyreType] ?? v.tyreType), '—', '—']);
+    const maint = sortMaintenancePlans(of('vehicleMaintenance').filter((m) => m.vehicleId === v.id), today,
+      { currentKm: ov.currentKm, kmPerDay: ov.kmPerDay.kmPerDay });
+    const buy = sortHomePurchases(of('vehiclePurchase').filter((p) => p.vehicleId === v.id)).filter((p) => !p.done);
     return `<h3>${e(v.name)} ${v.plate ? `<small>${e(v.plate)}</small>` : ''}</h3>
       <p>Chilometri attuali: <strong>${int.format(ov.currentKm)} km</strong> · media ${int.format(Math.round(ov.kmPerDay.kmPerDay))} km/giorno${ov.kmPerDay.generic ? ' (stima generica)' : ''}</p>
-      ${table(['Scadenza', 'Data', 'Stato', 'Importo'], rows, '')}`;
+      ${table(['Scadenza', 'Data', 'Stato', 'Importo'], rows, '')}
+      ${maint.length ? `<h3>Manutenzioni auto</h3>${maintTable(maint)}` : ''}
+      ${buy.length ? `<h3>Da comprare per l'auto</h3>${table(['Cosa', 'Priorità', 'Prezzo stimato'], buy.map((p) => [e(p.name), e(p.priority), money(p.estimatedPrice)]), '')}` : ''}`;
   });
   sections.push(`<section><h2>Auto</h2>${autoParts.join('') || '<p class="empty">Nessun veicolo.</p>'}</section>`);
 
@@ -58,14 +78,14 @@ export function buildReport(records, { today, now, appVersion, excludeHealth = f
   const installments = of('rentInstallment').filter((i) => i.periodKey?.startsWith(year)).sort((a, b) => (a.periodKey < b.periodKey ? -1 : 1));
   const bills = of('bill').filter((b) => b.dueDate?.startsWith(year)).sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1));
   const totals = billTotals(bills, year);
-  const maint = of('homeMaintenance').map((m) => ({ m, ...maintenanceState(m, today) }));
+  const maint = sortMaintenancePlans(of('homeMaintenance'), today);
   sections.push(`<section><h2>Casa</h2>
     <h3>Affitto ${year}</h3>
     ${table(['Mese', 'Scadenza', 'Importo', 'Stato'], installments.map((i) => [e(formatPeriod(i.periodKey)), d(i.dueDate), money(i.amount), e(PAY[paymentStatus(i, today)])]), 'Nessuna rata registrata.')}
     <h3>Bollette ${year} <small>totale ${money(totals.total)}</small></h3>
     ${table(['Tipo', 'Fornitore', 'Scadenza', 'Importo', 'Stato'], bills.map((b) => [e(BILL_KIND_LABEL[b.kind] ?? b.kind), e(b.provider || '—'), d(b.dueDate), money(b.amount), e(PAY[paymentStatus(b, today)])]), 'Nessuna bolletta registrata.')}
     <h3>Manutenzioni</h3>
-    ${table(['Cosa', 'Ogni', 'Ultima', 'Prossima', 'Stato'], maint.map((x) => [e(x.m.title), `${x.m.intervalMonths} mesi`, d(x.m.lastDoneDate), d(x.nextDate), badge(x.status)]), 'Nessuna manutenzione registrata.')}
+    ${maint.length ? maintTable(maint) : '<p class="empty">Nessuna manutenzione registrata.</p>'}
     <h3>Da comprare per la casa</h3>
     ${table(['Cosa', 'Priorità', 'Prezzo stimato'], sortHomePurchases(of('homePurchase')).filter((p) => !p.done).map((p) => [e(p.name), e(p.priority), money(p.estimatedPrice)]), 'Niente da comprare.')}
   </section>`);
@@ -84,6 +104,10 @@ export function buildReport(records, { today, now, appVersion, excludeHealth = f
     sections.push(`<section><h2>Salute</h2>
       <h3>Prossime visite</h3>
       ${table(['Quando', 'Tipo', 'Medico', 'Dove'], upcoming.map((v) => [e(dt.format(new Date(v.dateTime))), e(v.type), e(v.doctor || '—'), e(v.place || '—')]), 'Nessuna visita in programma.')}
+      <h3>Da prenotare</h3>
+      ${table(['Visita', 'Entro', 'Stato'], openVisitPlans(of('visitPlan'), of('medicalVisit'), now).map((x) => [
+        e(visitPlanLabel(x.plan)), x.state === 'prenotata' ? `prenotata per il ${e(dt.format(new Date(x.booked.dateTime)))}` : d(x.dueBy),
+        x.state === 'prenotata' ? badge('ok') : badge(x.status)]), 'Nessuna visita da prenotare.')}
       <h3>Libretto vaccini</h3>
       ${table(['Vaccino', 'Data', 'Lotto', 'Richiamo', 'Stato richiamo'], vaccines.map((v) => [e(v.name), d(v.date), e(v.lot || '—'), d(v.boosterDate), v.boosterDate ? badge(deadlineStatus(v.boosterDate, today)) : '—']), 'Nessun vaccino registrato.')}
     </section>`);

@@ -1099,3 +1099,15 @@ html.privacy-shield #app::after {
 .garden-card { width: 100%; margin-top: var(--space-4); }
 .garden-card__row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-1); align-items: end; }
 .garden-card__plant { display: block; max-width: 84px; justify-self: center; width: 100%; }
+
+/* ======================================================================
+   Fase 9 — Gomme, manutenzioni auto, una tantum, visite da prenotare
+   ====================================================================== */
+.garage { grid-template-areas: "twin twin" "g1 g2" "g3 g4" "g5 g5"; }
+@media (min-width: 720px) { .garage { grid-template-areas: "g1 twin g2" "g3 twin g4" ". g5 ."; } }
+.garage__gauge--5 { grid-area: g5; }
+.tyre-next { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
+.tyre-next__title { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin: 0; font-weight: 700; }
+.tyre-next .card-text { margin: 0; }
+.maint__undo { color: var(--text-secondary); }
+.maint__row.is-done .item-row__title { color: var(--text-secondary); }

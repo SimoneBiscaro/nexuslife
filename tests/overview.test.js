@@ -69,9 +69,22 @@ test('gauge: il tagliando mostra km o giorni, il più grave', () => {
 
 test('gauge: scadenze mancanti restano sconosciute e vuote', () => {
   const g = vehicleGauges(vehicleOverview({ id: 'v1' }, { deadlines: [], readings: [] }, today), { id: 'v1' }, today);
-  assert.deepEqual(g.map((x) => x.status), ['unknown', 'unknown', 'unknown', 'unknown']);
+  assert.deepEqual(g.map((x) => x.key), ['bollo', 'assicurazione', 'revisione', 'tagliando', 'gomme']);
+  assert.deepEqual(g.map((x) => x.status), ['unknown', 'unknown', 'unknown', 'unknown', 'unknown']);
   assert.ok(g.every((x) => x.ratio === 0 && x.value === null));
   assert.equal(g[0].sublabel, 'tocca per impostare');
+  assert.equal(g[4].sublabel, 'tocca per impostare');
+});
+
+test('gauge Gomme: prossimo cambio stagionale o quattro stagioni', () => {
+  const ov = (v) => vehicleOverview(v, { deadlines: [], readings: [] }, today);
+  const summer = { ...vehicle, tyreType: 'estive' };
+  const g = vehicleGauges(ov(summer), summer, today).find((x) => x.key === 'gomme');
+  assert.deepEqual([g.value, g.unit, g.status, g.sublabel], ['12', 'giorni', 'warning', 'invernali entro il 15 nov']);
+  assert.ok(g.ratio > 0 && g.ratio < 0.1);
+  const four = { ...vehicle, tyreType: 'quattroStagioni' };
+  const f = vehicleGauges(ov(four), four, today).find((x) => x.key === 'gomme');
+  assert.deepEqual([f.value, f.status, f.ratio, f.sublabel], ['4S', 'ok', 1, 'quattro stagioni']);
 });
 
 test('gauge: scaduto mostra i giorni passati', () => {

@@ -123,3 +123,32 @@ test('Sostituisci tutto: locali in tombstone, pacchetto con updatedAt nuovo', ()
   assert.deepEqual([get('only-local').deleted, get('only-local').updatedAt], [true, NOW]);
   assert.equal(get('old-tomb'), undefined);
 });
+
+test('Fase 9: nuove entità nel pacchetto, visite da prenotare escluse con "Escludi Salute"', async () => {
+  const more = [
+    ...records,
+    rec('vehicleMaintenance', 'vm1', { vehicleId: 'v1', title: 'Cambio olio', intervalMonths: 12, intervalKm: 15000, lastDoneDate: '2026-01-10', lastDoneKm: 35000 }),
+    rec('vehiclePurchase', 'vp1', { vehicleId: 'v1', name: 'Catene da neve', priority: 'alta', estimatedPrice: 45, done: false }),
+    rec('homeMaintenance', 'hm1', { title: 'Rubinetto', dueDate: '2026-11-20', doneAt: null }),
+    rec('visitPlan', 'vp-oc', { type: 'oculista', dueBy: '2026-12-01' }),
+  ];
+  const pkg = await createBackupPackage(more, opts);
+  const names = readZip(pkg.bytes).map((f) => f.name);
+  assert.ok(['csv/vehicleMaintenance.csv', 'csv/vehiclePurchase.csv', 'csv/homeMaintenance.csv', 'csv/visitPlan.csv'].every((n) => names.includes(n)));
+  const html = dec.decode(readZip(pkg.bytes).find((f) => f.name === 'riepilogo.html').data);
+  assert.match(html, /Cambio olio/);
+  assert.match(html, /Catene da neve/);
+  assert.match(html, /una tantum/);
+  assert.match(html, /Oculista/);
+  const back = await readBackup(pkg.bytes);
+  assert.equal(back.meta.schemaVersion, 2);
+  assert.deepEqual(summarize(back.records), { Auto: 4, Casa: 2, Spesa: 1, Salute: 3 });
+  const noHealth = await createBackupPackage(more, { ...opts, excludeHealth: true });
+  assert.ok(!readZip(noHealth.bytes).some((f) => f.name.includes('visitPlan')));
+  assert.ok(!dec.decode(readZip(noHealth.bytes).find((f) => f.name === 'riepilogo.html').data).includes('Oculista'));
+});
+
+test('un pacchetto di una versione più recente viene rifiutato con un messaggio chiaro', async () => {
+  const doc = { format: 'nexuslife-backup', schemaVersion: 99, records: [] };
+  await assert.rejects(readBackup(new TextEncoder().encode(JSON.stringify(doc))), /versione più recente/);
+});
