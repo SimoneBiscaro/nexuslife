@@ -1,6 +1,6 @@
 import { html } from './html.js';
 import { Icon, BrandMark } from './icons.js';
-import { SECTIONS } from '../router.js';
+import { SECTIONS, EXTRA_PAGES } from '../router.js';
 import { GlassCard } from './GlassCard.js';
 import { SyncDot } from './ConnectionStatus.js';
 
@@ -23,6 +23,13 @@ export function Sidebar({ section, path }) {
               <${Icon} name=${s.id} class="nav-icon" />
               <span>${s.label}</span>
               <kbd aria-hidden="true">${s.key}</kbd>
+            </a>`)}
+          ${EXTRA_PAGES.map((p) => html`
+            <a class="sidebar__item sidebar__item--extra" href=${`#/${p.id}`} key=${p.id}
+              aria-current=${path === `/${p.id}` ? 'page' : undefined} aria-keyshortcuts=${p.key.toUpperCase()}>
+              <${Icon} name=${p.id} class="nav-icon" />
+              <span>${p.label}</span>
+              <kbd aria-hidden="true">${p.key.toUpperCase()}</kbd>
             </a>`)}
         </nav>
         <div class="sidebar__spacer"></div>

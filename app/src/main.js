@@ -1,7 +1,7 @@
 import { render } from '../vendor/preact.mjs';
 import { html } from './ui/html.js';
 import { useSignal } from './store/state.js';
-import { route, startRouter, navigate, SECTIONS } from './router.js';
+import { route, startRouter, navigate, SECTIONS, EXTRA_PAGES } from './router.js';
 import { registerServiceWorker } from './pwa.js';
 import { getRepo } from './store/repo.js';
 import { seedDefaults, startupMaintenance, DEFAULT_SETTINGS } from './store/seed.js';
@@ -21,6 +21,7 @@ import { SpesaView } from './views/spesa/SpesaView.js';
 import { SaluteView } from './views/salute/SaluteView.js';
 import { ImpostazioniView } from './views/impostazioni/ImpostazioniView.js';
 import { DesignView } from './views/impostazioni/DesignView.js';
+import { GiardinoView } from './views/giardino/GiardinoView.js';
 
 const VIEWS = {
   '/oggi': OggiView,
@@ -28,6 +29,7 @@ const VIEWS = {
   '/casa': CasaView,
   '/spesa': SpesaView,
   '/salute': SaluteView,
+  '/giardino': GiardinoView,
   '/impostazioni': ImpostazioniView,
   '/impostazioni/design': DesignView,
 };
@@ -67,6 +69,12 @@ function onShortcut(e) {
   if (section) {
     e.preventDefault();
     navigate(`/${section.id}`);
+    return;
+  }
+  const extra = EXTRA_PAGES.find((p) => p.key === e.key.toLowerCase());
+  if (extra) {
+    e.preventDefault();
+    navigate(`/${extra.id}`);
     return;
   }
   if (e.key === 'n' || e.key === 'N') {

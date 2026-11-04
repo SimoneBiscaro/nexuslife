@@ -21,6 +21,30 @@ import { activeContract, currentInstallment, homePurchasesTotal, paymentBadge } 
 import { urgencyGlow } from '../../domain/groceries.js';
 import { suggestGroceries } from '../../domain/suggestions.js';
 import { useIncremental } from '../../ui/incremental.js';
+import { Plant, flowerColor } from '../../ui/Plant.js';
+import { gardenState } from '../../domain/garden.js';
+
+/** Anteprima del giardino zen: le sei piante in fila, si apre la pagina completa. */
+function GardenCard({ garden, index }) {
+  const text = !garden.hasData ? 'Ogni sezione farà crescere la sua pianta'
+    : garden.healthy === garden.withData ? 'Tutte le piante stanno bene'
+      : `${garden.healthy} ${garden.healthy === 1 ? 'pianta' : 'piante'} su ${garden.withData} in salute`;
+  return html`
+    <${GlassCard} interactive onClick=${() => navigate('/giardino')} class="summary garden-card spring-in"
+      style=${`--i:${index};--accent:var(--mint)`} aria-label=${`Giardino zen: ${text}. Apri il giardino`}>
+      <span class="summary__head">
+        <span class="summary__icon" aria-hidden="true"><${Icon} name="giardino" /></span>
+        <span class="summary__title">Giardino</span>
+        <span class="summary__go" aria-hidden="true"><${Icon} name="back" /></span>
+      </span>
+      <span class="summary__sub">${text}</span>
+      <span class="garden-card__row" aria-hidden="true">
+        ${garden.plants.map((p, i) => html`<span key=${p.id} class="garden-card__plant" data-stage=${p.stage.id}>
+          <${Plant} stage=${p.stage} seed=${p.id} flower=${flowerColor(i)} size="sm" still />
+        </span>`)}
+      </span>
+    <//>`;
+}
 
 const SECTION_ICON = { auto: 'auto', casa: 'casa', spesa: 'spesa', salute: 'salute' };
 
@@ -83,6 +107,8 @@ export function OggiView() {
   const backup = data ? backupReminder({ lastBackupAt: settings.lastBackupAt, thresholdDays: Number(settings.backupReminderDays) || 30, hasData }, today) : null;
   const showBackup = backup && !(settings.dismissedBanners?.[backup.key] && Date.parse(settings.dismissedBanners[backup.key]) > now.getTime());
 
+  const garden = data ? gardenState(data, { today, now, settings }) : null;
+
   const hide = (key) => updateSettings({ dismissedBanners: dismissBanner(settings.dismissedBanners, key, new Date()) });
 
   return html`
@@ -136,10 +162,12 @@ export function OggiView() {
       <//>
     </section>`}
 
+    ${garden && html`<${GardenCard} garden=${garden} index=${4} />`}
+
     ${data && html`<h2 class="section-title">Prossime scadenze</h2>`}
     ${!data ? null : upcoming.length === 0
-      ? html`<${GlassCard} class="spring-in" style="--i:4"><${EmptyNote} art="oggi">Nessuna scadenza in vista. Aggiungi l'auto, l'affitto o una visita e le prossime date compariranno qui.<//><//>`
-      : html`<${GlassCard} class="spring-in" style="--i:4">
+      ? html`<${GlassCard} class="spring-in" style="--i:5"><${EmptyNote} art="oggi">Nessuna scadenza in vista. Aggiungi l'auto, l'affitto o una visita e le prossime date compariranno qui.<//><//>`
+      : html`<${GlassCard} class="spring-in" style="--i:5">
           <ul class="item-list">
             ${upcoming.map((u) => html`
               <li key=${u.key}>
