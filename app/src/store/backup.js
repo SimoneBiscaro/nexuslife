@@ -7,6 +7,7 @@ import { toDateKey } from '../domain/dates.js';
 import { backupFilename, createBackupPackage, encryptPackage } from '../backup/package.js';
 import { planMerge, planReplace, readBackup } from '../backup/restore.js';
 import { saveFile } from '../ui/download.js';
+import { signOutQuietly } from './cloud.js';
 
 /**
  * "Scarica pacchetto di oggi".
@@ -52,6 +53,7 @@ export async function applyRestore(backup, mode) {
 
 /** Cancella il database locale e le preferenze del browser, poi ricarica l'app. */
 export async function clearAllLocalData() {
+  await signOutQuietly();
   await closeRepo();
   try { localStorage.clear(); sessionStorage.clear(); } catch { /* archivio del browser non disponibile */ }
   await new Promise((resolve, reject) => {

@@ -2,6 +2,7 @@ import { html } from './html.js';
 import { Icon } from './icons.js';
 import { SECTIONS } from '../router.js';
 import { haptic } from './haptics.js';
+import { SyncDot } from './ConnectionStatus.js';
 
 /** Barra inferiore in vetro, 5 voci fisse (< 900 px). */
 export function TabBar({ section }) {
@@ -13,5 +14,6 @@ export function TabBar({ section }) {
           <${Icon} name=${s.id} class="nav-icon" />
           <span>${s.label}</span>
         </a>`)}
+      <${SyncDot} class="tabbar__sync" />
     </nav>`;
 }

@@ -2,7 +2,7 @@ import { html } from './html.js';
 import { Icon, BrandMark } from './icons.js';
 import { SECTIONS } from '../router.js';
 import { GlassCard } from './GlassCard.js';
-import { ConnectionDot } from './ConnectionStatus.js';
+import { SyncDot } from './ConnectionStatus.js';
 
 /** Sidebar in vetro (≥ 900 px) con scorciatoie da tastiera. */
 export function Sidebar({ section, path }) {
@@ -13,7 +13,7 @@ export function Sidebar({ section, path }) {
           <${BrandMark} />
           <div>
             <div class="sidebar__name">NexusLife</div>
-            <${ConnectionDot} withLabel=${true} />
+            <${SyncDot} withLabel=${true} />
           </div>
         </div>
         <nav class="sidebar__nav" aria-label="Sezioni">

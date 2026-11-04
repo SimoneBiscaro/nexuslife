@@ -1,5 +1,5 @@
 /* NexusLife — service worker. Incrementare CACHE_VERSION a ogni modifica dell'app shell. */
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const SHELL_CACHE = `nexuslife-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = 'nexuslife-runtime';
 
@@ -42,7 +42,11 @@ const SHELL = [
   './src/store/calendar.js',
   './src/store/backup.js',
   './src/store/demo.js',
+  './src/store/cloud.js',
   './src/sync/crypto.js',
+  './src/sync/auth.js',
+  './src/sync/api.js',
+  './src/sync/sync.js',
   './src/backup/zip.js',
   './src/backup/csv.js',
   './src/backup/report.js',
@@ -122,6 +126,7 @@ const SHELL = [
   './src/views/impostazioni/DesignView.js',
   './src/views/impostazioni/RestoreSheet.js',
   './src/views/impostazioni/PinCheckSheet.js',
+  './src/views/impostazioni/AccountCard.js',
 ];
 
 const scopeUrl = (p) => new URL(p, self.registration.scope).href;

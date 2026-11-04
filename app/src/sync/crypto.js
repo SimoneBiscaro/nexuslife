@@ -55,14 +55,92 @@ export async function deriveKey(passphrase, salt, iterations = PBKDF2_ITERATIONS
   );
 }
 
-export async function encryptBytes(key, bytes) {
+/** AES-GCM con IV casuale da 12 byte. `aad` (facoltativo) lega il cifrato a un contesto. */
+export async function encryptBytes(key, bytes, aad) {
   const iv = randomBytes(12);
-  const data = new Uint8Array(await subtle().encrypt({ name: 'AES-GCM', iv }, key, bytes));
+  const params = aad ? { name: 'AES-GCM', iv, additionalData: aad } : { name: 'AES-GCM', iv };
+  const data = new Uint8Array(await subtle().encrypt(params, key, bytes));
   return { iv, data };
 }
 
-export async function decryptBytes(key, iv, data) {
-  return new Uint8Array(await subtle().decrypt({ name: 'AES-GCM', iv }, key, data));
+export async function decryptBytes(key, iv, data, aad) {
+  const params = aad ? { name: 'AES-GCM', iv, additionalData: aad } : { name: 'AES-GCM', iv };
+  return new Uint8Array(await subtle().decrypt(params, key, data));
+}
+
+/* ---------- Sync cifrata: record e vault ---------- */
+
+/** Testo noto cifrato nel vault: decifrarlo prova che la passphrase è giusta. */
+export const VAULT_CHECK = 'NexusLife vault v1';
+const VAULT_AAD = enc.encode('nexuslife:vault');
+const dec = new TextDecoder();
+
+export class WrongPassphrase extends Error {
+  constructor() { super('Passphrase non corretta'); this.code = 'passphrase'; }
+}
+
+export class DecryptError extends Error {
+  constructor(entity, id) {
+    super(`Impossibile decifrare ${entity}/${id}`);
+    this.code = 'decrypt';
+  }
+}
+
+/** Il cifrato è legato a entità e id: il server non può scambiare il contenuto tra due righe. */
+const recordAad = (entity, id) => enc.encode(`nexuslife:${entity}:${id}`);
+
+/**
+ * Cifra un record per la tabella `records`.
+ * @returns {Promise<{ iv: string, payload: string }>} base64
+ */
+export async function encryptRecord(key, record) {
+  const { iv, data } = await encryptBytes(key, enc.encode(JSON.stringify(record)), recordAad(record.entity, record.id));
+  return { iv: toBase64(iv), payload: toBase64(data) };
+}
+
+/**
+ * Decifra una riga `{ entity, id, iv, payload }` e controlla che il contenuto corrisponda.
+ * @throws {DecryptError}
+ */
+export async function decryptRecord(key, row) {
+  let record;
+  try {
+    const bytes = await decryptBytes(key, fromBase64(row.iv), fromBase64(row.payload), recordAad(row.entity, row.id));
+    record = JSON.parse(dec.decode(bytes));
+  } catch {
+    throw new DecryptError(row.entity, row.id);
+  }
+  if (record?.entity !== row.entity || record?.id !== row.id) throw new DecryptError(row.entity, row.id);
+  return record;
+}
+
+/**
+ * Primo dispositivo: crea il vault (salt casuale + verifier) e la chiave.
+ * @returns {Promise<{ key: CryptoKey, vault: { salt: string, verifier: string, iterations: number } }>}
+ */
+export async function createVault(passphrase, { iterations = PBKDF2_ITERATIONS } = {}) {
+  const salt = randomBytes(16);
+  const key = await deriveKey(passphrase, salt, iterations);
+  const { iv, data } = await encryptBytes(key, enc.encode(VAULT_CHECK), VAULT_AAD);
+  return { key, vault: { salt: toBase64(salt), verifier: `v1.${toBase64(iv)}.${toBase64(data)}`, iterations } };
+}
+
+/**
+ * Dispositivi successivi: deriva la chiave e la verifica con il verifier del vault.
+ * @returns {Promise<CryptoKey>}
+ * @throws {WrongPassphrase}
+ */
+export async function openVault(passphrase, vault) {
+  const [version, iv, data] = String(vault?.verifier ?? '').split('.');
+  if (version !== 'v1' || !iv || !data) throw new Error('Vault non valido');
+  const key = await deriveKey(passphrase, fromBase64(vault.salt), vault.iterations);
+  try {
+    const plain = dec.decode(await decryptBytes(key, fromBase64(iv), fromBase64(data), VAULT_AAD));
+    if (plain !== VAULT_CHECK) throw new Error('verifier diverso');
+  } catch {
+    throw new WrongPassphrase();
+  }
+  return key;
 }
 
 /**

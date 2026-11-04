@@ -7,6 +7,7 @@ import { getRepo } from './store/repo.js';
 import { seedDefaults, startupMaintenance, DEFAULT_SETTINGS } from './store/seed.js';
 import { checkTimeout, touchActivity } from './store/lock.js';
 import { loadSettings } from './store/settings.js';
+import { initCloud } from './store/cloud.js';
 import { Background } from './ui/Background.js';
 import { Sidebar } from './ui/Sidebar.js';
 import { Topbar } from './ui/Topbar.js';
@@ -131,6 +132,9 @@ async function initData() {
   } catch (err) {
     // Es. navigazione privata senza IndexedDB: l'interfaccia resta usabile, senza dati salvati.
     console.warn('Archivio locale non disponibile:', err);
+    return;
   }
+  // Sync cifrata: riprende la sessione salvata e sincronizza (avvio, online, ogni 60 s, manuale).
+  initCloud().catch((err) => console.warn('Sync non avviata:', err));
 }
 initData();
