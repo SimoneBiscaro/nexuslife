@@ -39,14 +39,45 @@ export function authErrorFrom(status, body = {}) {
   return new AuthError('Accesso non riuscito', code || 'auth', status);
 }
 
-/** Sessione salvata a partire dalla risposta di /token. */
+/** Sotto questo scarto l'orologio del dispositivo si considera giusto (iat ha la precisione del secondo). */
+export const SKEW_TOLERANCE_MS = 3000;
+
+/** Istante di emissione del token (claim `iat` del JWT) in millisecondi, o null. */
+export function tokenIssuedAt(jwt) {
+  try {
+    const part = String(jwt).split('.')[1];
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '=');
+    const iat = JSON.parse(atob(b64)).iat;
+    return Number.isFinite(iat) ? iat * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Correzione da applicare all'orologio del dispositivo (ms): 0 se lo scarto è entro la tolleranza.
+ * @param {number|null|undefined} skewMs ora del server − ora del dispositivo
+ */
+export function clockCorrection(skewMs) {
+  if (!Number.isFinite(skewMs) || Math.abs(skewMs) < SKEW_TOLERANCE_MS) return 0;
+  return Math.round(skewMs);
+}
+
+/**
+ * Sessione salvata a partire dalla risposta di /token.
+ * La scadenza si calcola da `expires_in` con l'orologio locale: così un telefono avanti o indietro
+ * di qualche minuto non scambia un token valido per scaduto (o viceversa).
+ * `skewMs` = ora del server (iat) − ora del dispositivo.
+ */
 export function sessionFrom(res, now) {
   if (!res?.access_token || !res?.refresh_token) throw new AuthError('Risposta di accesso non valida', 'invalid_response');
-  const expiresAt = res.expires_at ? res.expires_at * 1000 : now + (res.expires_in ?? 3600) * 1000;
+  const expiresAt = Number.isFinite(res.expires_in) ? now + res.expires_in * 1000 : (res.expires_at ?? 0) * 1000 || now + 3600_000;
+  const iat = tokenIssuedAt(res.access_token);
   return {
     accessToken: res.access_token,
     refreshToken: res.refresh_token,
     expiresAt,
+    skewMs: iat === null ? null : iat - now,
     user: { id: res.user?.id ?? null, email: res.user?.email ?? null },
   };
 }

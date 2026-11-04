@@ -1,11 +1,14 @@
 name: Keepalive Supabase
 
-# Il piano gratuito di Supabase mette in pausa i progetti inattivi per una settimana.
-# Due volte a settimana chiama la funzione ping() (docs/supabase.sql) con la chiave pubblica:
-# nessun dato letto o scritto, nessun segreto necessario.
+# Il piano gratuito di Supabase mette in pausa i progetti senza attività per 7 giorni.
+# Ogni 3 giorni (e a richiesta) questo workflow chiama la funzione ping() di docs/supabase.sql
+# con la chiave pubblica: nessun dato letto o scritto.
+# Secrets richiesti (Settings → Secrets and variables → Actions → New repository secret):
+#   SUPABASE_URL       es. https://xxxx.supabase.co
+#   SUPABASE_ANON_KEY  la chiave pubblica (anon / publishable), MAI la service_role
 on:
   schedule:
-    - cron: '17 6 * * 1,4'
+    - cron: '23 5 */3 * *'
   workflow_dispatch:
 
 permissions:
@@ -14,13 +17,21 @@ permissions:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
       - name: Chiama ping()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          URL=$(sed -n "s/^export const SUPABASE_URL = '\(.*\)';/\1/p" app/config.js)
-          KEY=$(sed -n "s/^export const SUPABASE_ANON_KEY = '\(.*\)';/\1/p" app/config.js)
-          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "Supabase non configurato in app/config.js"; exit 0; fi
-          curl -fsS --retry 3 --retry-delay 10 -X POST "$URL/rest/v1/rpc/ping" \
-            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}'
-          echo
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Mancano i secrets SUPABASE_URL e/o SUPABASE_ANON_KEY (Settings → Secrets and variables → Actions)"
+            exit 1
+          fi
+          response=$(curl -fsS --retry 3 --retry-delay 15 --max-time 30 \
+            -X POST "${SUPABASE_URL%/}/rest/v1/rpc/ping" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "Risposta: $response"
+          [ "$response" = '"pong"' ] || { echo "::error::Risposta inattesa da ping()"; exit 1; }

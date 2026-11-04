@@ -1,6 +1,6 @@
 import { useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
-import { PageHeader, EmptyState } from '../../ui/Page.js';
+import { PageHeader, EmptyState, Skeleton } from '../../ui/Page.js';
 import { GlassCard } from '../../ui/GlassCard.js';
 import { Icon } from '../../ui/icons.js';
 import { useEntities } from '../../store/queries.js';
@@ -32,7 +32,7 @@ export function SpesaView() {
     return html`${header}<${EmptyState} icon="alert" title="Archivio non disponibile"
       text="Questo browser non permette di salvare dati (per esempio in navigazione privata)." />`;
   }
-  if (!data) return header;
+  if (!data) return html`${header}<${Skeleton} cards=${2} rows=${4} label="Caricamento della spesa" />`;
 
   const items = data.groceryItems.filter((i) => !i.archived);
   const suggestions = suggestGroceries({ purchases: data.groceryPurchases, openItems: items, feedback: data.suggestionFeedback, today });

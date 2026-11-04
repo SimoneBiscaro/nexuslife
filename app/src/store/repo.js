@@ -128,10 +128,23 @@ export function createRepo(adapter, { clock = () => new Date(), uuid = () => cry
   };
 }
 
+/* ---------- Orologio corretto ---------- */
+/** Chiave in `meta` della correzione dell'orologio stimata dalla sync (ms). */
+export const CLOCK_OFFSET_KEY = 'sync.clockOffset';
+let clockOffset = 0;
+/** Imposta la correzione (ms) da sommare all'orologio del dispositivo per le date dei record. */
+export function setClockOffset(ms) { clockOffset = Number.isFinite(ms) ? ms : 0; }
+export function getClockOffset() { return clockOffset; }
+/** Ora del dispositivo corretta con lo scarto rispetto al server. */
+export const appNow = () => new Date(Date.now() + clockOffset);
+
 let shared = null;
 /** Repository condiviso dell'app, aperto su IndexedDB alla prima richiesta. */
 export function getRepo() {
-  shared ??= openIdbAdapter().then((adapter) => createRepo(adapter));
+  shared ??= openIdbAdapter().then(async (adapter) => {
+    setClockOffset(await adapter.metaGet(CLOCK_OFFSET_KEY).catch(() => 0));
+    return createRepo(adapter, { clock: appNow });
+  });
   return shared;
 }
 

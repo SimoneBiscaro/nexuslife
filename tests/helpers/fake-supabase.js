@@ -35,8 +35,11 @@ export function createFakeSupabase({ users = [{ id: 'u1', email: 'simo@example.c
     now: () => Date.now(),
   };
 
+  const b64url = (s) => Buffer.from(s).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const issue = (userId) => {
-    const access = `at-${++seq}`;
+    // JWT come quelli di GoTrue: il campo iat porta l'ora del server (al secondo)
+    const claims = { sub: userId, role: 'authenticated', iat: Math.floor(state.now() / 1000), seq: ++seq };
+    const access = `${b64url('{"alg":"HS256","typ":"JWT"}')}.${b64url(JSON.stringify(claims))}.firma`;
     const refresh = `rt-${seq}`;
     tokens.set(access, { userId, expiresAt: state.now() + state.tokenTtl * 1000 });
     refreshTokens.set(refresh, userId);

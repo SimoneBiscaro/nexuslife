@@ -6,6 +6,8 @@ import { BarChart } from '../../ui/BarChart.js';
 import { Icon } from '../../ui/icons.js';
 import { formatDueDate, formatEuro } from '../../ui/format.js';
 import { BILL_KINDS, BILL_KIND_LABEL, billTotals, paymentBadge, sortBills } from '../../domain/home.js';
+import { useIncremental } from '../../ui/incremental.js';
+import { EmptyNote } from '../../ui/Page.js';
 
 export const BILL_COLORS = {
   luce: 'var(--amber)', gas: 'var(--electric-blue-glow)', internet: 'var(--champagne)',
@@ -23,7 +25,8 @@ export function BillsCard({ bills, today, onEdit }) {
   const totals = billTotals(bills, year);
   const month = year === currentYear ? Number(today.slice(5, 7)) - 1 : null;
   const list = sortBills(bills).filter((b) => !b.paidAt || b.dueDate?.startsWith(year));
-  const visible = showAll ? list : list.slice(0, 6);
+  const shown = useIncremental(showAll ? list.length : Math.min(6, list.length));
+  const visible = (showAll ? list : list.slice(0, 6)).slice(0, shown);
   const series = BILL_KINDS.map((k) => ({ key: k, label: BILL_KIND_LABEL[k], color: BILL_COLORS[k], values: totals.matrix[k] }));
 
   return html`
@@ -50,7 +53,7 @@ export function BillsCard({ bills, today, onEdit }) {
               <span class="num">${formatEuro(totals.byKind[k])}</span></li>`)}
         </ul>`}
       ${list.length === 0
-        ? html`<p class="card-text list-empty">Nessuna bolletta registrata${year !== currentYear ? ` nel ${year}` : ''}.</p>`
+        ? html`<${EmptyNote} art="bollette" accent="var(--mint)">Nessuna bolletta${year !== currentYear ? ` nel ${year}` : ''}. Luce, gas, internet: aggiungile e vedrai il grafico dell'anno.<//>`
         : html`<ul class="item-list">
             ${visible.map((b) => {
               const badge = paymentBadge(b, today);

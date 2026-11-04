@@ -21,7 +21,8 @@ function walk(dir) {
 }
 
 // File presenti in app/ ma volutamente fuori dall'app shell.
-const EXCLUDED = [/^sw\.js$/, /\.gitkeep$/, /\.txt$/, /^assets\//];
+// Le icone PNG servono solo al sistema quando si installa l'app (Home, Dock): non al funzionamento offline.
+const EXCLUDED = [/^sw\.js$/, /\.gitkeep$/, /\.txt$/, /^assets\//, /^icons\/.*\.png$/];
 
 test('sw.js dichiara CACHE_VERSION', () => {
   assert.match(sw, /const CACHE_VERSION = '[^']+';/);

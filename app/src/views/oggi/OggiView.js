@@ -1,5 +1,6 @@
+import { useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
-import { PageHeader } from '../../ui/Page.js';
+import { PageHeader, EmptyNote, Skeleton } from '../../ui/Page.js';
 import { GlassCard } from '../../ui/GlassCard.js';
 import { HudGauge } from '../../ui/HudGauge.js';
 import { Banner } from '../../ui/Banner.js';
@@ -19,6 +20,7 @@ import { unlocked } from '../../store/lock.js';
 import { activeContract, currentInstallment, homePurchasesTotal, paymentBadge } from '../../domain/home.js';
 import { urgencyGlow } from '../../domain/groceries.js';
 import { suggestGroceries } from '../../domain/suggestions.js';
+import { useIncremental } from '../../ui/incremental.js';
 
 const SECTION_ICON = { auto: 'auto', casa: 'casa', spesa: 'spesa', salute: 'salute' };
 
@@ -37,6 +39,9 @@ function SummaryCard({ section, title, accent, index, children }) {
 
 const Placeholder = () => html`<span class="summary__placeholder">Si attiva quando aggiungi dati</span>`;
 
+/** Avvisi mostrati in Oggi prima di "Mostra altri". */
+const BANNER_LIMIT = 6;
+
 export function OggiView() {
   const now = new Date();
   const today = toDateKey(now);
@@ -49,6 +54,10 @@ export function OggiView() {
   const items = (data ? collectDeadlines(data, today) : []).map((i) => (maskHealth && i.section === 'salute'
     ? { ...i, title: i.kind === 'visita' ? 'Visita medica' : 'Richiamo vaccino' } : i));
   const banners = todayBanners(items, { today, now, dismissed: settings.dismissedBanners || {} });
+  // Oggi resta leggibile a colpo d'occhio: i primi avvisi (già ordinati per gravità), il resto a richiesta.
+  const [allBanners, setAllBanners] = useState(false);
+  const bannerCount = useIncremental(allBanners ? banners.length : Math.min(BANNER_LIMIT, banners.length));
+  const shownBanners = banners.slice(0, allBanners ? bannerCount : BANNER_LIMIT);
   const upcoming = upcomingDeadlines(items, 5);
   const vehicle = data?.vehicles.slice().sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))[0];
   const gauges = vehicle
@@ -79,20 +88,24 @@ export function OggiView() {
   return html`
     <${PageHeader} eyebrow="Oggi" docTitle="Oggi" title=${`${greeting(now.getHours())}${settings.profileName ? `, ${settings.profileName}` : ''}`} lede=${html`<span class="today-date">${formatWeekdayDate(today)}</span>`} />
 
-    ${(banners.length > 0 || showBackup) && html`
+    ${!data && html`<${Skeleton} cards=${2} label="Caricamento di Oggi" />`}
+    ${data && (banners.length > 0 || showBackup) && html`
       <section class="stack banners" aria-label="Avvisi">
         ${showBackup && html`<${Banner} key=${backup.key} status="warning" title=${backup.title} onDismiss=${() => hide(backup.key)}>
           ${backup.text} <a class="inline-link" href="#/impostazioni">Vai al backup</a>
         <//>`}
-        ${banners.map((b) => html`
+        ${shownBanners.map((b) => html`
           <${Banner} key=${b.key} status=${b.status} title=${b.title}
             badge=${html`<${NeonBadge} status=${b.status}>${daysLabel(b.days)}<//>`}
             onDismiss=${() => hide(b.key)}>
             ${b.status === 'overdue' ? `Scaduto ${formatDueDate(b.date, today)}` : `Scade ${formatDueDate(b.date, today)}`}
           <//>`)}
+        ${banners.length > BANNER_LIMIT && html`<button class="btn btn--ghost banners__more" type="button" aria-expanded=${allBanners}
+          onClick=${() => setAllBanners(!allBanners)}>
+          <${Icon} name=${allBanners ? 'up' : 'down'} /> ${allBanners ? 'Mostra meno avvisi' : `Mostra altri ${banners.length - BANNER_LIMIT} avvisi`}</button>`}
       </section>`}
 
-    <section class="summary-grid" aria-label="Riepilogo delle sezioni">
+    ${data && html`<section class="summary-grid" aria-label="Riepilogo delle sezioni">
       <${SummaryCard} section="auto" title="Auto" accent="var(--electric-blue-glow)" index=${0}>
         ${vehicle
           ? html`<span class="summary__gauges">
@@ -121,11 +134,11 @@ export function OggiView() {
       <${SummaryCard} section="salute" title="Salute" accent="var(--health)" index=${3}>
         ${salute ? html`<span class="summary__line">${salute.title} · ${daysLabel(salute.days)}</span>` : html`<${Placeholder} />`}
       <//>
-    </section>
+    </section>`}
 
-    <h2 class="section-title">Prossime scadenze</h2>
-    ${upcoming.length === 0
-      ? html`<p class="card-text">Nessuna scadenza registrata. Aggiungi l'auto o i dati di casa per vederle qui.</p>`
+    ${data && html`<h2 class="section-title">Prossime scadenze</h2>`}
+    ${!data ? null : upcoming.length === 0
+      ? html`<${GlassCard} class="spring-in" style="--i:4"><${EmptyNote} art="oggi">Nessuna scadenza in vista. Aggiungi l'auto, l'affitto o una visita e le prossime date compariranno qui.<//><//>`
       : html`<${GlassCard} class="spring-in" style="--i:4">
           <ul class="item-list">
             ${upcoming.map((u) => html`

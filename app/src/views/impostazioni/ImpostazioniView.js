@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
-import { PageHeader } from '../../ui/Page.js';
+import { PageHeader, Skeleton } from '../../ui/Page.js';
 import { GlassCard } from '../../ui/GlassCard.js';
 import { Icon } from '../../ui/icons.js';
 import { Segmented, SelectField, TextField } from '../../ui/forms.js';
@@ -266,6 +266,7 @@ export function ImpostazioniView() {
 
   return html`
     <${PageHeader} eyebrow="Preferenze" title="Impostazioni" />
+    ${!data && html`<${Skeleton} cards=${3} label="Caricamento delle impostazioni" />`}
     ${data && html`<div class="settings-grid">
       <${ProfileCard} settings=${settings} />
       <${AccountCard} index=${1} />

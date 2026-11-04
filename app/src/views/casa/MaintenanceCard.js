@@ -8,10 +8,13 @@ import { formatDueDate } from '../../ui/format.js';
 import { getRepo } from '../../store/repo.js';
 import { sortMaintenance } from '../../domain/home.js';
 import { daysLabel } from '../../domain/overview.js';
+import { useIncremental } from '../../ui/incremental.js';
+import { EmptyNote } from '../../ui/Page.js';
 
 /** Manutenzioni periodiche con stato calcolato e "Fatto oggi". */
 export function MaintenanceCard({ items, today, onEdit }) {
   const list = sortMaintenance(items, today);
+  const shown = useIncremental(list.length);
 
   async function doneToday(item) {
     const repo = await getRepo();
@@ -28,9 +31,9 @@ export function MaintenanceCard({ items, today, onEdit }) {
         <button class="btn btn--secondary" type="button" onClick=${() => onEdit(null)}><${Icon} name="plus" /> Aggiungi</button>
       </div>
       ${list.length === 0
-        ? html`<p class="card-text list-empty">Caldaia, filtri del condizionatore, cappa: aggiungi ciò che va controllato a intervalli regolari.</p>`
+        ? html`<${EmptyNote} art="manutenzioni" accent="var(--mint)">Caldaia, filtri del condizionatore, cappa: aggiungi ciò che va controllato a intervalli regolari.<//>`
         : html`<ul class="item-list">
-            ${list.map(({ item, nextDate, status, days }) => html`<li key=${item.id} class="maint__row">
+            ${list.slice(0, shown).map(({ item, nextDate, status, days }) => html`<li key=${item.id} class="maint__row">
               <button class="item-row" type="button" onClick=${() => onEdit(item)}>
                 <span class="item-row__icon" data-status=${status} aria-hidden="true"><${Icon} name="wrench" /></span>
                 <span class="item-row__main">

@@ -11,7 +11,7 @@ export const DB_NAME = 'nexuslife';
 export const DB_VERSION = 1;
 
 /** Migrazioni: la funzione di indice N porta lo schema dalla versione N−1 alla N. */
-const MIGRATIONS = {
+export const MIGRATIONS = {
   1(db) {
     const records = db.createObjectStore('records', { keyPath: ['entity', 'id'] });
     records.createIndex('entity', 'entity', { unique: false });

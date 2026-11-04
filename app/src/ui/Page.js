@@ -1,6 +1,7 @@
-import { useEffect, useRef } from '../../vendor/preact-hooks.mjs';
+import { useEffect, useRef, useState } from '../../vendor/preact-hooks.mjs';
 import { html } from './html.js';
 import { Icon } from './icons.js';
+import { Illustration } from './Illustration.js';
 
 /**
  * Intestazione di pagina con titolo serif. Riceve il focus dopo la navigazione
@@ -23,8 +24,19 @@ export function PageHeader({ eyebrow, title, lede, actions, docTitle }) {
     </header>`;
 }
 
-/** Stato vuoto curato: sfera in vetro con l'icona della sezione. */
-export function EmptyState({ icon, title, text, accent = 'var(--champagne)', children }) {
+/**
+ * Stato vuoto curato: illustrazione SVG (`art`) oppure sfera in vetro con l'icona della sezione.
+ */
+export function EmptyState({ icon, art, title, text, accent = 'var(--champagne)', children }) {
+  if (art) {
+    return html`
+      <div class="empty-state" style=${`--accent:${accent}`}>
+        <div class="empty-state__art"><${Illustration} name=${art} /></div>
+        <h2 class="empty-state__title">${title}</h2>
+        <p class="empty-state__text">${text}</p>
+        ${children}
+      </div>`;
+  }
   return html`
     <div class="empty-state" style=${`--accent:${accent}`}>
       <div class="empty-state__orb" aria-hidden="true">
@@ -38,4 +50,29 @@ export function EmptyState({ icon, title, text, accent = 'var(--champagne)', chi
       <p class="empty-state__text">${text}</p>
       ${children}
     </div>`;
+}
+
+/** Stato vuoto compatto dentro una card: piccola illustrazione e una frase. */
+export function EmptyNote({ art, accent = 'var(--champagne)', children }) {
+  return html`<div class="empty-note" style=${`--accent:${accent}`}>
+    <${Illustration} name=${art} size="sm" />
+    <p class="empty-note__text">${children}</p>
+  </div>`;
+}
+
+/**
+ * Scheletro di caricamento: forme in vetro che anticipano la pagina, così l'arrivo dei dati
+ * non sposta nulla. Compare solo se il caricamento supera 120 ms (niente lampi).
+ */
+export function Skeleton({ cards = 2, rows = 3, label = 'Caricamento' }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setShow(true), 120); return () => clearTimeout(t); }, []);
+  return html`<div class=${`skeleton${show ? ' is-visible' : ''}`} role="status" aria-label=${label}>
+    ${Array.from({ length: cards }, (_, c) => html`<div class="skeleton__card" key=${c}>
+      <span class="skeleton__bar skeleton__bar--title"></span>
+      ${Array.from({ length: rows }, (_, r) => html`<span class="skeleton__row" key=${r}>
+        <span class="skeleton__dot"></span><span class="skeleton__bar" style=${`width:${[72, 54, 64, 46][(r + c) % 4]}%`}></span>
+      </span>`)}
+    </div>`)}
+  </div>`;
 }
