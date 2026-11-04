@@ -57,7 +57,29 @@ export function Sheet({ open, onClose, title, children, footer }) {
       if (e.key === 'Escape') { e.preventDefault(); closeRef.current?.(); }
     };
     document.addEventListener('keydown', onKey);
+
+    // Tastiera su iPhone: il layout non si restringe, quindi il pannello sale di quanto la
+    // tastiera copre (visualViewport) e il campo attivo viene portato al centro.
+    const panel = panelRef.current;
+    const vv = window.visualViewport;
+    const onViewport = () => {
+      if (!vv || !panel) return;
+      const covered = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      panel.style.setProperty('--kb', `${covered}px`);
+      panel.classList.toggle('has-keyboard', covered > 80);
+    };
+    const onFocusIn = (e) => {
+      if (!e.target.matches?.('input, textarea, select')) return;
+      setTimeout(() => e.target.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 320);
+    };
+    vv?.addEventListener('resize', onViewport);
+    vv?.addEventListener('scroll', onViewport);
+    panel?.addEventListener('focusin', onFocusIn);
+    onViewport();
     return () => {
+      vv?.removeEventListener('resize', onViewport);
+      vv?.removeEventListener('scroll', onViewport);
+      panel?.removeEventListener('focusin', onFocusIn);
       document.removeEventListener('keydown', onKey);
       lockApp(false);
       const el = returnFocus.current;

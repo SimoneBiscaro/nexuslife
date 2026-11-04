@@ -4,6 +4,8 @@ import { GlassCard } from '../../ui/GlassCard.js';
 import { ChipGroup } from '../../ui/forms.js';
 import { Icon } from '../../ui/icons.js';
 import { formatEuro, formatKm, formatShortDate } from '../../ui/format.js';
+import { useIncremental } from '../../ui/incremental.js';
+import { EmptyNote } from '../../ui/Page.js';
 
 export const EXPENSE_CATEGORIES = [
   { value: 'tagliando', label: 'Tagliando' },
@@ -24,6 +26,7 @@ export function ExpensesCard({ expenses, onEdit, today }) {
   const list = expenses
     .filter((e) => e.date.startsWith(year) && (category === 'tutte' || e.category === category))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const shown = useIncremental(list.length);
   const total = list.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
   return html`
@@ -49,9 +52,9 @@ export function ExpensesCard({ expenses, onEdit, today }) {
         </label>
       </div>
       ${list.length === 0
-        ? html`<p class="card-text list-empty">Nessuna spesa ${category !== 'tutte' ? `di tipo ${CATEGORY_LABEL[category].toLowerCase()} ` : ''}nel ${year}.</p>`
+        ? html`<${EmptyNote} art="auto" accent="var(--electric-blue-glow)">Nessuna spesa ${category !== 'tutte' ? `di tipo ${CATEGORY_LABEL[category].toLowerCase()} ` : ''}nel ${year}.<//>`
         : html`<ul class="item-list">
-            ${list.map((e) => html`
+            ${list.slice(0, shown).map((e) => html`
               <li key=${e.id}>
                 <button class="item-row" type="button" onClick=${() => onEdit(e)}>
                   <span class="item-row__icon" data-cat=${e.category} aria-hidden="true"><${Icon} name=${e.category === 'carburante' ? 'road' : 'wrench'} /></span>

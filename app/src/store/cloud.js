@@ -4,9 +4,9 @@
  * Lo stato è un segnale letto dall'indicatore in TabBar, Sidebar, Topbar e da Impostazioni.
  */
 import { signal } from './state.js';
-import { getRepo } from './repo.js';
+import { CLOCK_OFFSET_KEY, getClockOffset, getRepo, setClockOffset } from './repo.js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../../config.js';
-import { AuthError, createAuth, NetworkError } from '../sync/auth.js';
+import { AuthError, clockCorrection, createAuth, NetworkError } from '../sync/auth.js';
 import { ApiError, createApi, isRetryable } from '../sync/api.js';
 import { createVault, DecryptError, openVault, WrongPassphrase } from '../sync/crypto.js';
 import { META, runSync } from '../sync/sync.js';
@@ -31,7 +31,7 @@ const USER_KEY = 'sync.userId';
  *  error     ultimo tentativo fallito (con retry pianificato se ha senso)
  */
 export const syncState = signal({
-  phase: 'off', email: null, lastSyncAt: null, error: null, vault: null, remembered: false, retryAt: null,
+  phase: 'off', email: null, lastSyncAt: null, error: null, vault: null, remembered: false, retryAt: null, clockOffset: 0,
 });
 
 const set = (patch) => { syncState.value = { ...syncState.value, ...patch }; };
@@ -76,7 +76,16 @@ function clients(repo) {
     url: SUPABASE_URL,
     anonKey: SUPABASE_ANON_KEY,
     load: () => repo.getMeta(META.session),
-    save: (s) => repo.setMeta(META.session, s),
+    save: async (s) => {
+      await repo.setMeta(META.session, s);
+      // Ogni nuovo token porta l'ora del server: se l'orologio del telefono è sfasato, si corregge.
+      if (s && s.skewMs != null) {
+        const offset = clockCorrection(s.skewMs);
+        setClockOffset(offset);
+        await repo.setMeta(CLOCK_OFFSET_KEY, offset);
+        set({ clockOffset: offset });
+      }
+    },
   });
   api ??= createApi({ url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY, getAccessToken: (o) => auth.getAccessToken(o) });
 }
@@ -175,6 +184,7 @@ export async function initCloud() {
     return;
   }
   key = savedKey ?? null;
+  set({ clockOffset: getClockOffset() });
   set({ email: session.user?.email ?? null, lastSyncAt: lastSyncAt ?? null, remembered: Boolean(key), phase: key ? 'idle' : 'locked' });
   if (key) syncNow();
 }

@@ -14,6 +14,13 @@ import {
 const dateTime = new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
 const count = new Intl.NumberFormat('it-IT');
 
+/** "indietro di 4 min · corretto": offset = ora del server − ora del dispositivo. */
+export function clockLabel(offsetMs) {
+  const s = Math.round(Math.abs(offsetMs) / 1000);
+  const amount = s >= 90 ? `${Math.round(s / 60)} min` : `${s} s`;
+  return `${offsetMs > 0 ? 'indietro' : 'avanti'} di ${amount} · corretto`;
+}
+
 function Notice({ status = 'warning', icon = 'alert', children }) {
   return html`<div class="notice" data-status=${status}><${Icon} name=${icon} /><div>${children}</div></div>`;
 }
@@ -152,6 +159,8 @@ function ConnectedState({ state }) {
       <div class="row"><span class="row__label">Record su questo dispositivo</span><span class="row__value">${stats ? count.format(stats.local) : '…'}</span></div>
       <div class="row"><span class="row__label">Record nel cloud</span><span class="row__value">${stats?.cloud == null ? '—' : count.format(stats.cloud)}</span></div>
       <div class="row"><span class="row__label">In attesa di invio</span><span class="row__value">${stats ? count.format(stats.pending) : '…'}</span></div>
+      ${state.clockOffset !== 0 && html`<div class="row"><span class="row__label">Orologio del dispositivo</span>
+        <span class="row__value">${clockLabel(state.clockOffset)}</span></div>`}
       <div class="row"><span class="row__label">Chiave di cifratura</span>
         <span class="row__value">${state.remembered ? 'Ricordata su questo dispositivo' : 'Solo fino alla chiusura'}</span></div>
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
-import { PageHeader, EmptyState } from '../../ui/Page.js';
+import { PageHeader, EmptyState, EmptyNote, Skeleton } from '../../ui/Page.js';
 import { GlassCard } from '../../ui/GlassCard.js';
 import { NeonBadge } from '../../ui/NeonBadge.js';
 import { Icon } from '../../ui/icons.js';
@@ -15,13 +15,15 @@ import { daysLabel } from '../../domain/overview.js';
 import { LockScreen, PinSetup } from './LockScreen.js';
 import { VisitSheet } from './VisitSheet.js';
 import { VaccineSheet } from './VaccineSheet.js';
+import { ProgressiveList } from '../../ui/incremental.js';
+import { memo } from '../../ui/memo.js';
 
 const ENTITIES = ['medicalVisit', 'vaccine', 'settings'];
 const when = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 const shortWhen = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 
-function VisitRow({ v, onOpen }) {
+const VisitRow = memo(function VisitRow({ v, onOpen }) {
   return html`<li>
     <button class="item-row" type="button" onClick=${() => onOpen(v)}>
       <span class="item-row__icon" style="--status-color:var(--health);--status-text:var(--health)" aria-hidden="true"><${Icon} name="stethoscope" /></span>
@@ -30,14 +32,27 @@ function VisitRow({ v, onOpen }) {
         <span class="item-row__meta">${shortWhen.format(new Date(v.dateTime))}${v.place ? ` · ${v.place}` : ''}</span>
       </span>
     </button></li>`;
-}
+});
+
+const VaccineRow = memo(function VaccineRow({ v, today, onOpen }) {
+  const st = boosterStatus(v, today);
+  return html`<li>
+    <button class="item-row" type="button" onClick=${() => onOpen(v)}>
+      <span class="item-row__icon" style="--status-color:var(--health);--status-text:var(--health)" aria-hidden="true"><${Icon} name="syringe" /></span>
+      <span class="item-row__main">
+        <span class="item-row__title">${v.name}</span>
+        <span class="item-row__meta">fatto ${formatDueDate(v.date, today)}${v.lot ? ` · lotto ${v.lot}` : ''}${v.boosterDate ? ` · richiamo ${formatDueDate(v.boosterDate, today)}` : ''}</span>
+      </span>
+      ${st && st !== 'ok' && html`<${NeonBadge} status=${st}>${st === 'overdue' ? 'richiamo scaduto' : `richiamo ${daysLabel(daysBetween(today, v.boosterDate))}`}<//>`}
+    </button></li>`;
+});
 
 function HealthContent({ data, now, today, onVisit, onVaccine }) {
   const { upcoming, past } = splitVisits(data.medicalVisits, now);
   const vaccines = sortVaccines(data.vaccines);
   const next = upcoming[0];
   if (!upcoming.length && !past.length && !vaccines.length) {
-    return html`<${EmptyState} icon="salute" accent="var(--health)" title="Nessuna visita in programma"
+    return html`<${EmptyState} art="visite" accent="var(--health)" title="Nessuna visita in programma"
       text="Aggiungi visite mediche e vaccini: ti ricorderemo appuntamenti e richiami.">
       <div class="empty-actions">
         <button class="btn btn--primary" type="button" onClick=${() => onVisit(null)}><${Icon} name="plus" /> Aggiungi una visita</button>
@@ -61,10 +76,10 @@ function HealthContent({ data, now, today, onVisit, onVaccine }) {
           <button class="btn btn--secondary" type="button" onClick=${() => onVisit(null)} aria-keyshortcuts="N"><${Icon} name="plus" /> Aggiungi</button>
         </div>
         <h3 class="subhead">Prossime</h3>
-        ${upcoming.length ? html`<ul class="item-list">${upcoming.map((v) => html`<${VisitRow} key=${v.id} v=${v} onOpen=${onVisit} />`)}</ul>`
-          : html`<p class="card-text">Nessuna visita in programma.</p>`}
+        ${upcoming.length ? html`<${ProgressiveList} class="item-list" items=${upcoming} renderItem=${(v) => html`<${VisitRow} key=${v.id} v=${v} onOpen=${onVisit} />`} />`
+          : html`<${EmptyNote} art="visite" accent="var(--health)">Nessuna visita in programma: aggiungila e ti ricorderemo 24 e 2 ore prima.<//>`}
         <h3 class="subhead">Passate</h3>
-        ${past.length ? html`<ul class="item-list">${past.slice(0, 20).map((v) => html`<${VisitRow} key=${v.id} v=${v} onOpen=${onVisit} />`)}</ul>`
+        ${past.length ? html`<ul class="item-list">${past.slice(0, 12).map((v) => html`<${VisitRow} key=${v.id} v=${v} onOpen=${onVisit} />`)}</ul>`
           : html`<p class="card-text">Ancora nessuna visita passata.</p>`}
       <//>
       <${GlassCard} class="spring-in" style="--i:2">
@@ -72,21 +87,8 @@ function HealthContent({ data, now, today, onVisit, onVaccine }) {
           <h2 class="card-title">Libretto vaccini</h2>
           <button class="btn btn--secondary" type="button" onClick=${() => onVaccine(null)}><${Icon} name="plus" /> Aggiungi</button>
         </div>
-        ${vaccines.length === 0 ? html`<p class="card-text list-empty">Nessun vaccino registrato.</p>` : html`
-          <ul class="item-list">
-            ${vaccines.map((v) => {
-              const st = boosterStatus(v, today);
-              return html`<li key=${v.id}>
-                <button class="item-row" type="button" onClick=${() => onVaccine(v)}>
-                  <span class="item-row__icon" style="--status-color:var(--health);--status-text:var(--health)" aria-hidden="true"><${Icon} name="syringe" /></span>
-                  <span class="item-row__main">
-                    <span class="item-row__title">${v.name}</span>
-                    <span class="item-row__meta">fatto ${formatDueDate(v.date, today)}${v.lot ? ` · lotto ${v.lot}` : ''}${v.boosterDate ? ` · richiamo ${formatDueDate(v.boosterDate, today)}` : ''}</span>
-                  </span>
-                  ${st && st !== 'ok' && html`<${NeonBadge} status=${st}>${st === 'overdue' ? 'richiamo scaduto' : `richiamo ${daysLabel(daysBetween(today, v.boosterDate))}`}<//>`}
-                </button></li>`;
-            })}
-          </ul>`}
+        ${vaccines.length === 0 ? html`<${EmptyNote} art="vaccini" accent="var(--health)">Nessun vaccino registrato. Con la data del richiamo ti avvisiamo 30 e 7 giorni prima.<//>` : html`
+          <${ProgressiveList} class="item-list" items=${vaccines} renderItem=${(v) => html`<${VaccineRow} key=${v.id} v=${v} today=${today} onOpen=${onVaccine} />`} />`}
       <//>
     </div>`;
 }
@@ -125,7 +127,7 @@ export function SaluteView() {
     return html`${header}<${EmptyState} icon="alert" title="Archivio non disponibile"
       text="Questo browser non permette di salvare dati (per esempio in navigazione privata)." />`;
   }
-  if (!data || (lockEnabled && pinSet === null)) return header;
+  if (!data || (lockEnabled && pinSet === null)) return html`${header}<${Skeleton} cards=${2} label="Caricamento di Salute" />`;
 
   return html`
     ${header}

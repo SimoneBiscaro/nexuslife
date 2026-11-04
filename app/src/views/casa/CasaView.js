@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
-import { PageHeader, EmptyState } from '../../ui/Page.js';
+import { PageHeader, EmptyState, Skeleton } from '../../ui/Page.js';
 import { useEntities } from '../../store/queries.js';
 import { getRepo } from '../../store/repo.js';
 import { ensureRentInstallments } from '../../store/home.js';
@@ -57,7 +57,7 @@ export function CasaView() {
     return html`${header}<${EmptyState} icon="alert" title="Archivio non disponibile"
       text="Questo browser non permette di salvare dati (per esempio in navigazione privata)." />`;
   }
-  if (!data) return header;
+  if (!data) return html`${header}<${Skeleton} cards=${3} label="Caricamento di Casa" />`;
 
   return html`
     ${header}

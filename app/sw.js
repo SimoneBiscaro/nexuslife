@@ -1,5 +1,5 @@
 /* NexusLife — service worker. Incrementare CACHE_VERSION a ogni modifica dell'app shell. */
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const SHELL_CACHE = `nexuslife-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = 'nexuslife-runtime';
 
@@ -10,10 +10,6 @@ const SHELL = [
   './config.js',
   './icons/icon.svg',
   './icons/icon-maskable.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png',
   './fonts/nunito-latin-400-normal.woff2',
   './fonts/nunito-latin-600-normal.woff2',
   './fonts/nunito-latin-700-normal.woff2',
@@ -80,6 +76,7 @@ const SHELL = [
   './src/ui/Topbar.js',
   './src/ui/Background.js',
   './src/ui/Page.js',
+  './src/ui/Illustration.js',
   './src/ui/ConnectionStatus.js',
   './src/ui/format.js',
   './src/ui/forms.js',
@@ -90,6 +87,8 @@ const SHELL = [
   './src/ui/download.js',
   './src/ui/CalendarButton.js',
   './src/ui/PinPad.js',
+  './src/ui/incremental.js',
+  './src/ui/memo.js',
   './src/views/oggi/OggiView.js',
   './src/views/auto/AutoView.js',
   './src/views/auto/gauges.js',

@@ -7,6 +7,7 @@ import { getRepo } from './store/repo.js';
 import { seedDefaults, startupMaintenance, DEFAULT_SETTINGS } from './store/seed.js';
 import { checkTimeout, touchActivity } from './store/lock.js';
 import { loadSettings } from './store/settings.js';
+import { showToast } from './ui/Toast.js';
 import { initCloud } from './store/cloud.js';
 import { Background } from './ui/Background.js';
 import { Sidebar } from './ui/Sidebar.js';
@@ -130,6 +131,11 @@ async function initData() {
     await startupMaintenance(repo);
     lockEnabled = (await loadSettings()).healthLockEnabled !== false;
   } catch (err) {
+    if (err?.name === 'VersionError') {
+      // L'archivio è stato aggiornato da una versione più nuova dell'app (es. un'altra scheda).
+      showToast({ message: 'Dati salvati da una versione più recente: ricarica l’app', actionLabel: 'Ricarica', onAction: () => location.reload(), duration: Infinity, status: 'warning' });
+      return;
+    }
     // Es. navigazione privata senza IndexedDB: l'interfaccia resta usabile, senza dati salvati.
     console.warn('Archivio locale non disponibile:', err);
     return;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
-import { PageHeader, EmptyState } from '../../ui/Page.js';
+import { PageHeader, EmptyState, Skeleton } from '../../ui/Page.js';
 import { HudGauge } from '../../ui/HudGauge.js';
 import { DigitalTwin } from '../../ui/DigitalTwin.js';
 import { Icon } from '../../ui/icons.js';
@@ -49,12 +49,12 @@ export function AutoView() {
       <${EmptyState} icon="alert" title="Archivio non disponibile"
         text="Questo browser non permette di salvare dati (per esempio in navigazione privata)." />`;
   }
-  if (loading || !data) return html`<${PageHeader} eyebrow="Garage" title="Auto" />`;
+  if (loading || !data) return html`<${PageHeader} eyebrow="Garage" title="Auto" /><${Skeleton} cards=${2} label="Caricamento di Auto" />`;
 
   if (!vehicle) {
     return html`
       <${PageHeader} eyebrow="Garage" title="Auto" />
-      <${EmptyState} icon="auto" accent="var(--electric-blue-glow)" title="Nessun veicolo"
+      <${EmptyState} art="auto" accent="var(--electric-blue-glow)" title="Nessun veicolo"
         text="Il gemello digitale della tua auto terrà d'occhio bollo, assicurazione, revisione e tagliando.">
         <button class="btn btn--primary empty-state__cta" type="button" onClick=${() => setWizard('create')}>
           <${Icon} name="plus" /> Aggiungi la tua auto
