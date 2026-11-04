@@ -3,6 +3,9 @@ import { deadlineStatus, maintenanceNextDate, STATUS_SEVERITY } from './deadline
 import { DEADLINE_LABEL, DEADLINE_TYPES, vehicleOverview } from './overview.js';
 import { estimateKmPerDay } from './mileage.js';
 import { urgencyGlow } from './groceries.js';
+import { tyreChange, TYRE_LABEL } from './tyres.js';
+import { isPeriodic, maintenancePlan } from './maintenance.js';
+import { openVisitPlans } from './health.js';
 
 /*
  * Giardino zen: una pianta per categoria, la cui salute riassume le cose in sospeso.
@@ -135,6 +138,14 @@ export function dueText(label, days, fem = false) {
 }
 
 const FEM = new Set(['assicurazione', 'revisione']);
+
+/** "Visita dentista da prenotare entro 12 giorni", "… da prenotare: in ritardo di 3 giorni". */
+export function bookText(label, days) {
+  if (days < 0) return `${label} da prenotare: in ritardo di ${-days} ${plural(-days, 'giorno', 'giorni')}`;
+  if (days === 0) return `${label} da prenotare entro oggi`;
+  if (days === 1) return `${label} da prenotare entro domani`;
+  return `${label} da prenotare entro ${days} giorni`;
+}
 const live = (list) => (list || []).filter((r) => !r.deleted);
 
 function dateIssue({ key, plant, label, fem, date, today, href, status, masked }) {
@@ -165,6 +176,26 @@ export function autoIssues(data, today) {
       out.push(dateIssue({ key: `auto:${v.id}:${type}`, plant: 'auto', label, fem: FEM.has(type), date: d.record.dueDate, today, href: '#/auto' }));
     }
     out.push(serviceIssue(v, ov, data, today, suffix));
+    const tc = tyreChange(v, today);
+    if (tc) {
+      const label = `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()}${suffix}`;
+      out.push(dateIssue({ key: `auto:${v.id}:gomme`, plant: 'auto', label, date: tc.due, today, href: '#/auto' }));
+    }
+    for (const m of live(data.vehicleMaintenance).filter((x) => x.vehicleId === v.id)) {
+      const p = maintenancePlan(m, today, { currentKm: ov.currentKm, kmPerDay: ov.kmPerDay.kmPerDay });
+      if (p.done) continue;
+      const label = `${m.title}${suffix}`;
+      const base = { key: `auto:${v.id}:m:${m.id}`, plant: 'auto', href: '#/auto' };
+      if (p.status === 'unknown') {
+        out.push({ ...base, status: 'unknown', date: null, days: null, overdueDays: 0, title: p.periodic ? `${label}: ultima volta da inserire` : `${label}: da fare, senza data` });
+        continue;
+      }
+      if (!p.periodic) {
+        out.push(dateIssue({ ...base, label, fem: false, date: p.date, today }));
+        continue;
+      }
+      out.push(kmDateIssue(base, label, { ...p, daysRemaining: p.nextDate ? daysBetween(today, p.nextDate) : null }, ov.kmPerDay.kmPerDay));
+    }
   }
   return out;
 }
@@ -174,12 +205,20 @@ function serviceIssue(vehicle, ov, data, today, suffix) {
   const label = `Tagliando${suffix}`;
   const base = { key: `auto:${vehicle.id}:tagliando`, plant: 'auto', href: '#/auto' };
   if (s.status === 'unknown') return { ...base, status: 'unknown', date: null, days: null, overdueDays: 0, title: `${label}: dati da inserire` };
-  // Giorni di ritardo: dalla data o, per i km, dai km in eccesso diviso il ritmo stimato.
+  const readings = live(data.mileageReadings).filter((r) => r.vehicleId === vehicle.id);
+  const { kmPerDay } = estimateKmPerDay(readings, today);
+  return kmDateIssue(base, label, s, kmPerDay);
+}
+
+/**
+ * Causa per una scadenza a data e/o km (tagliando, manutenzioni dell'auto).
+ * Giorni di ritardo: dalla data o, per i km, dai km in eccesso diviso il ritmo stimato.
+ * @param {{ status, dateStatus, kmStatus, kmRemaining, nextDate, daysRemaining }} s
+ */
+function kmDateIssue(base, label, s, kmPerDay) {
   let overdueDays = 0;
   if (s.dateStatus === 'overdue') overdueDays = -s.daysRemaining;
   if (s.kmStatus === 'overdue' && s.kmRemaining < 0) {
-    const readings = live(data.mileageReadings).filter((r) => r.vehicleId === vehicle.id);
-    const { kmPerDay } = estimateKmPerDay(readings, today);
     overdueDays = Math.max(overdueDays, kmPerDay > 0 ? Math.round(-s.kmRemaining / kmPerDay) : OVERDUE_RAMP_DAYS);
   }
   let title;
@@ -224,10 +263,11 @@ export function rentIssues(data, today) {
 export function maintenanceIssues(data, today) {
   const out = [];
   for (const m of live(data.homeMaintenance)) {
+    if (m.doneAt && !isPeriodic(m)) continue; // una tantum già fatta
     const next = maintenanceNextDate(m);
     if (!next) {
       out.push({ key: `maintenance:${m.id}`, plant: 'manutenzioni', status: 'unknown', date: null, days: null, overdueDays: 0,
-        title: `${m.title}: ultima esecuzione da inserire`, href: '#/casa' });
+        title: isPeriodic(m) ? `${m.title}: ultima esecuzione da inserire` : `${m.title}: da fare, senza data`, href: '#/casa' });
       continue;
     }
     const days = daysBetween(today, next);
@@ -274,6 +314,19 @@ export function healthIssues(data, today) {
     out.push({ key: `visit:${v.id}`, plant: 'salute', status: days <= 2 ? 'critical' : 'warning', date, days, overdueDays: 0,
       title: `Visita ${v.type || 'medica'} ${when}, senza preparazione`, maskedTitle: `Visita ${when}, senza preparazione`, href: '#/salute' });
   }
+  for (const x of openVisitPlans(data.visitPlans, data.medicalVisits, today)) {
+    if (x.state !== 'daPrenotare') continue;
+    const type = x.plan.type || 'medica';
+    const base = { key: `visitPlan:${x.plan.id}`, plant: 'salute', href: '#/salute' };
+    if (!x.dueBy) {
+      out.push({ ...base, status: 'unknown', date: null, days: null, overdueDays: 0, title: `Visita ${type} da prenotare, senza data`, maskedTitle: 'Visita da prenotare, senza data' });
+      continue;
+    }
+    const issue = dateIssue({ ...base, label: `Prenotare visita ${type}`, date: x.dueBy, today });
+    issue.title = bookText(`Visita ${type}`, issue.days);
+    issue.maskedTitle = bookText('Visita', issue.days);
+    out.push(issue);
+  }
   for (const v of live(data.vaccines)) {
     if (!v.boosterDate) continue;
     const issue = dateIssue({ key: `vaccine:${v.id}`, plant: 'salute', label: `Richiamo ${v.name}`, date: v.boosterDate, today, href: '#/salute' });
@@ -316,8 +369,8 @@ export function gardenState(data, { today, now, settings = {} }) {
   const hasRent = any('rentContracts', 'rentInstallments', 'bills');
   const hasMaint = any('homeMaintenance');
   const hasSpesa = any('groceryItems', 'groceryPurchases');
-  const hasSalute = any('medicalVisits', 'vaccines');
-  const hasAnything = hasAuto || hasRent || hasMaint || hasSpesa || hasSalute || any('homePurchases');
+  const hasSalute = any('medicalVisits', 'vaccines', 'visitPlans');
+  const hasAnything = hasAuto || hasRent || hasMaint || hasSpesa || hasSalute || any('homePurchases', 'vehiclePurchases');
 
   const plants = [
     buildPlant('auto', hasAuto ? autoIssues(d, today) : [], hasAuto),

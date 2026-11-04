@@ -2,6 +2,9 @@ import { addDays, formatPeriod, toDateKey, zonedTimeToUtc, TIME_ZONE } from './d
 import { maintenanceNextDate } from './deadlines.js';
 import { serviceStatus } from './service.js';
 import { estimateKmPerDay, latestKm } from './mileage.js';
+import { tyreChange, TYRE_LABEL } from './tyres.js';
+import { maintenancePlan } from './maintenance.js';
+import { openVisitPlans } from './health.js';
 
 /** Preavvisi per tipo: giorni prima (alle `reminderHour`) oppure ore prima (visite). */
 export const REMINDER_RULES = {
@@ -11,6 +14,7 @@ export const REMINDER_RULES = {
   homeMaintenance: { days: [7] },
   medicalVisit: { hours: [24, 2] },
   vaccine: { days: [30, 7] },
+  visitPlan: { days: [30, 7] },
 };
 
 const DEADLINE_LABEL = { bollo: 'Bollo', assicurazione: 'Assicurazione', revisione: 'Revisione' };
@@ -54,8 +58,8 @@ const live = (list) => (list || []).filter((r) => !r.deleted);
 
 /**
  * Eventi da esportare nel calendario con i loro preavvisi, da oggi in poi.
- * @param {{ vehicles?, vehicleDeadlines?, mileageReadings?, rentInstallments?, bills?, homeMaintenance?,
- *   medicalVisits?, vaccines? }} data liste di record
+ * @param {{ vehicles?, vehicleDeadlines?, mileageReadings?, vehicleMaintenance?, rentInstallments?, bills?, homeMaintenance?,
+ *   medicalVisits?, visitPlans?, vaccines? }} data liste di record
  * @param {{ today: string, reminderHour?: number }} opts
  * @returns {Array<{ uid: string, kind: string, title: string, date?: string, dateTime?: string, reminders: Array }>}
  */
@@ -74,6 +78,12 @@ export function buildReminderEvents(data, { today, reminderHour = 9 }) {
     const km = estimateKmPerDay(readings, todayKey).kmPerDay;
     const s = serviceStatus({ ...v, currentKm: latestKm(v, readings) }, todayKey, { kmPerDay: km });
     if (s.effectiveDate) events.push({ uid: `service-${v.id}`, updatedAt: v.updatedAt, kind: 'auto', title: `Tagliando – ${vName(v.id)}`, date: s.effectiveDate });
+    const tc = tyreChange(v, todayKey);
+    if (tc) events.push({ uid: `tyres-${v.id}`, updatedAt: v.updatedAt, kind: 'auto', title: `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()} – ${vName(v.id)}`, date: tc.due });
+    for (const m of live(data.vehicleMaintenance).filter((x) => x.vehicleId === v.id)) {
+      const p = maintenancePlan(m, todayKey, { currentKm: latestKm(v, readings), kmPerDay: km });
+      if (!p.done && p.date) events.push({ uid: `vehicleMaintenance-${m.id}`, updatedAt: m.updatedAt, kind: 'auto', title: `${m.title} – ${vName(v.id)}`, date: p.date });
+    }
   }
   for (const r of live(data.rentInstallments)) {
     if (r.paidAt || !r.dueDate) continue;
@@ -92,6 +102,10 @@ export function buildReminderEvents(data, { today, reminderHour = 9 }) {
     if (!v.dateTime) continue;
     events.push({ uid: `medicalVisit-${v.id}`, updatedAt: v.updatedAt, kind: 'medicalVisit', title: `Visita: ${v.type}`, dateTime: v.dateTime,
       location: [v.place, v.doctor].filter(Boolean).join(' · '), description: v.notes || '' });
+  }
+  for (const x of openVisitPlans(data.visitPlans, data.medicalVisits, todayKey)) {
+    if (x.state !== 'daPrenotare' || !x.dueBy) continue;
+    events.push({ uid: `visitPlan-${x.plan.id}`, updatedAt: x.plan.updatedAt, kind: 'visitPlan', title: `Prenotare visita: ${x.plan.type || 'visita'}`, date: x.dueBy });
   }
   for (const v of live(data.vaccines)) {
     if (!v.boosterDate) continue;

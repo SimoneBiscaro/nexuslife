@@ -47,6 +47,8 @@ function GardenCard({ garden, index }) {
 }
 
 const SECTION_ICON = { auto: 'auto', casa: 'casa', spesa: 'spesa', salute: 'salute' };
+/** Titoli generici delle scadenze sanitarie quando il blocco Salute è attivo. */
+const MASKED_HEALTH = { visita: 'Visita medica', richiamo: 'Richiamo vaccino', prenotazione: 'Visita da prenotare' };
 
 function SummaryCard({ section, title, accent, index, children }) {
   return html`
@@ -76,7 +78,7 @@ export function OggiView() {
   // Con il blocco attivo, fuori da Salute non compaiono dettagli sanitari.
   const maskHealth = settings.healthLockEnabled !== false && !healthOpen;
   const items = (data ? collectDeadlines(data, today) : []).map((i) => (maskHealth && i.section === 'salute'
-    ? { ...i, title: i.kind === 'visita' ? 'Visita medica' : 'Richiamo vaccino' } : i));
+    ? { ...i, title: MASKED_HEALTH[i.kind] ?? 'Salute' } : i));
   const banners = todayBanners(items, { today, now, dismissed: settings.dismissedBanners || {} });
   // Oggi resta leggibile a colpo d'occhio: i primi avvisi (già ordinati per gravità), il resto a richiesta.
   const [allBanners, setAllBanners] = useState(false);

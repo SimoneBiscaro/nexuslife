@@ -24,7 +24,8 @@ test('budget: app shell senza font sotto i 300 KB compressi (come la serve GitHu
   }
   assert.ok(gz < 300 * 1024, `shell compressa ${Math.round(gz / 1024)} KB`);
   // senza build step il codice non è minificato: un tetto anche sul peso grezzo evita derive
-  assert.ok(raw < 600 * 1024, `shell non compressa ${Math.round(raw / 1024)} KB`);
+  // (alzato da 600 a 750 KB con la Fase 9; il tetto compresso resta 300 KB)
+  assert.ok(raw < 750 * 1024, `shell non compressa ${Math.round(raw / 1024)} KB`);
 });
 
 /* ---------- Contrasto AA (CLAUDE.md §4) ---------- */

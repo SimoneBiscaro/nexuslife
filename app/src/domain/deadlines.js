@@ -87,10 +87,14 @@ export function proposeRenewal(deadline, vehicle = {}) {
   return addMonths(deadline.dueDate, renewalMonths(deadline));
 }
 
-/** Prossima manutenzione di casa: ultima esecuzione + intervallo in mesi. */
+/**
+ * Prossima data di una manutenzione a calendario.
+ * Periodica a mesi: ultima esecuzione + intervallo. Una tantum: la data prevista, finché non è fatta.
+ */
 export function maintenanceNextDate(item) {
-  if (!item.lastDoneDate || !(item.intervalMonths > 0)) return null;
-  return addMonths(item.lastDoneDate, item.intervalMonths);
+  if (Number(item.intervalMonths) > 0) return item.lastDoneDate ? addMonths(item.lastDoneDate, Number(item.intervalMonths)) : null;
+  if (Number(item.intervalKm) > 0) return null;
+  return item.doneAt ? null : item.dueDate || null;
 }
 
 const BANNER_STATUSES = new Set(['warning', 'critical', 'overdue']);

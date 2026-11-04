@@ -10,15 +10,16 @@ import { useSignal } from '../../store/state.js';
 import { checkTimeout, hasPin, unlocked } from '../../store/lock.js';
 import { DEFAULT_SETTINGS } from '../../store/seed.js';
 import { daysBetween, toDateKey } from '../../domain/dates.js';
-import { boosterStatus, countdown, sortVaccines, splitVisits } from '../../domain/health.js';
+import { boosterStatus, countdown, openVisitPlans, sortVaccines, splitVisits, visitPlanLabel } from '../../domain/health.js';
 import { daysLabel } from '../../domain/overview.js';
 import { LockScreen, PinSetup } from './LockScreen.js';
 import { VisitSheet } from './VisitSheet.js';
 import { VaccineSheet } from './VaccineSheet.js';
+import { VisitPlanSheet } from './VisitPlanSheet.js';
 import { ProgressiveList } from '../../ui/incremental.js';
 import { memo } from '../../ui/memo.js';
 
-const ENTITIES = ['medicalVisit', 'vaccine', 'settings'];
+const ENTITIES = ['medicalVisit', 'vaccine', 'visitPlan', 'settings'];
 const when = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 const shortWhen = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
@@ -47,16 +48,45 @@ const VaccineRow = memo(function VaccineRow({ v, today, onOpen }) {
     </button></li>`;
 });
 
-function HealthContent({ data, now, today, onVisit, onVaccine }) {
+const PlanRow = memo(function PlanRow({ x, today, onOpen }) {
+  const booked = x.state === 'prenotata';
+  return html`<li>
+    <button class="item-row" type="button" onClick=${() => onOpen(x.plan)}>
+      <span class="item-row__icon" data-status=${booked ? 'ok' : x.status} aria-hidden="true"><${Icon} name=${booked ? 'check' : 'calendar'} /></span>
+      <span class="item-row__main">
+        <span class="item-row__title">${visitPlanLabel(x.plan)}</span>
+        <span class="item-row__meta">${booked ? `prenotata per ${shortWhen.format(new Date(x.booked.dateTime))}`
+          : x.dueBy ? `da prenotare entro ${formatDueDate(x.dueBy, today)}` : 'da prenotare, senza data'}</span>
+      </span>
+      <${NeonBadge} status=${booked ? 'ok' : x.status}>${booked ? 'prenotata' : x.dueBy ? daysLabel(x.days) : 'da fare'}<//>
+    </button></li>`;
+});
+
+function PlansCard({ plans, today, onPlan }) {
+  return html`
+    <${GlassCard} class="spring-in" style="--i:1">
+      <div class="card-head">
+        <h2 class="card-title">Da prenotare</h2>
+        <button class="btn btn--secondary" type="button" onClick=${() => onPlan(null)}><${Icon} name="plus" /> Aggiungi</button>
+      </div>
+      ${plans.length
+        ? html`<ul class="item-list">${plans.map((x) => html`<${PlanRow} key=${x.plan.id} x=${x} today=${today} onOpen=${onPlan} />`)}</ul>`
+        : html`<${EmptyNote} art="visite" accent="var(--health)">Visite da prenotare, una volta o periodiche (es. dentista ogni 6 mesi): ti ricordiamo quando chiamare.<//>`}
+    <//>`;
+}
+
+function HealthContent({ data, now, today, onVisit, onVaccine, onPlan }) {
   const { upcoming, past } = splitVisits(data.medicalVisits, now);
   const vaccines = sortVaccines(data.vaccines);
+  const plans = openVisitPlans(data.visitPlans, data.medicalVisits, now);
   const next = upcoming[0];
-  if (!upcoming.length && !past.length && !vaccines.length) {
+  if (!upcoming.length && !past.length && !vaccines.length && !plans.length && !data.visitPlans.length) {
     return html`<${EmptyState} art="visite" accent="var(--health)" title="Nessuna visita in programma"
       text="Aggiungi visite mediche e vaccini: ti ricorderemo appuntamenti e richiami.">
       <div class="empty-actions">
         <button class="btn btn--primary" type="button" onClick=${() => onVisit(null)}><${Icon} name="plus" /> Aggiungi una visita</button>
         <button class="btn btn--secondary" type="button" onClick=${() => onVaccine(null)}><${Icon} name="syringe" /> Aggiungi un vaccino</button>
+        <button class="btn btn--secondary" type="button" onClick=${() => onPlan(null)}><${Icon} name="calendar" /> Da prenotare</button>
       </div>
     <//>`;
   }
@@ -70,7 +100,8 @@ function HealthContent({ data, now, today, onVisit, onVaccine }) {
         <span class="countdown__when">${when.format(new Date(next.dateTime))}${next.place ? ` · ${next.place}` : ''}</span>
       <//>`}
     <div class="salute-grid">
-      <${GlassCard} class="spring-in" style="--i:1">
+      <${PlansCard} plans=${plans} today=${today} onPlan=${onPlan} />
+      <${GlassCard} class="spring-in" style="--i:2">
         <div class="card-head">
           <h2 class="card-title">Visite</h2>
           <button class="btn btn--secondary" type="button" onClick=${() => onVisit(null)} aria-keyshortcuts="N"><${Icon} name="plus" /> Aggiungi</button>
@@ -82,7 +113,7 @@ function HealthContent({ data, now, today, onVisit, onVaccine }) {
         ${past.length ? html`<ul class="item-list">${past.slice(0, 12).map((v) => html`<${VisitRow} key=${v.id} v=${v} onOpen=${onVisit} />`)}</ul>`
           : html`<p class="card-text">Ancora nessuna visita passata.</p>`}
       <//>
-      <${GlassCard} class="spring-in" style="--i:2">
+      <${GlassCard} class="spring-in" style="--i:3">
         <div class="card-head">
           <h2 class="card-title">Libretto vaccini</h2>
           <button class="btn btn--secondary" type="button" onClick=${() => onVaccine(null)}><${Icon} name="plus" /> Aggiungi</button>
@@ -101,6 +132,8 @@ export function SaluteView() {
   const [pinSet, setPinSet] = useState(null);
   const [visit, setVisit] = useState(undefined);
   const [vaccine, setVaccine] = useState(undefined);
+  const [plan, setPlan] = useState(undefined); // visita da prenotare aperta
+  const [booking, setBooking] = useState(null); // visita da prenotare da cui nasce la nuova visita
   const [, tick] = useState(0);
 
   const settings = { ...DEFAULT_SETTINGS, ...(data?.settings?.[0] || {}) };
@@ -133,11 +166,15 @@ export function SaluteView() {
     ${header}
     <div class="health" data-locked=${locked ? 'true' : 'false'}>
       <div class="health__content" inert=${locked} aria-hidden=${locked ? 'true' : undefined}>
-        <${HealthContent} data=${data} now=${now} today=${today} onVisit=${setVisit} onVaccine=${setVaccine} />
+        <${HealthContent} data=${data} now=${now} today=${today} onVisit=${(v) => { setBooking(null); setVisit(v); }} onVaccine=${setVaccine} onPlan=${setPlan} />
       </div>
       ${locked && html`<div class="health__lock">${pinSet ? html`<${LockScreen} />` : html`<${PinSetup} onDone=${() => setPinSet(true)} />`}</div>`}
     </div>
     ${!locked && html`
-      <${VisitSheet} open=${visit !== undefined} visit=${visit || null} onClose=${() => setVisit(undefined)} />
+      <${VisitSheet} open=${visit !== undefined} visit=${visit || null} plan=${booking} plans=${data.visitPlans}
+        onClose=${() => { setVisit(undefined); setBooking(null); }} />
+      <${VisitPlanSheet} open=${plan !== undefined} plan=${plan || null} today=${today}
+        state=${plan ? openVisitPlans([plan], data.medicalVisits, now)[0] : null}
+        onClose=${() => setPlan(undefined)} onBook=${(p) => { setPlan(undefined); setBooking(p); setVisit(null); }} />
       <${VaccineSheet} open=${vaccine !== undefined} vaccine=${vaccine || null} today=${today} onClose=${() => setVaccine(undefined)} />`}`;
 }

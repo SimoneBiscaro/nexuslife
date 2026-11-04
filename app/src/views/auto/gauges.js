@@ -2,6 +2,7 @@ import { remainingRatio, renewalMonths, STATUS_SEVERITY } from '../../domain/dea
 import { serviceKmRemainingRatio } from '../../domain/service.js';
 import { DEADLINE_LABEL, DEADLINE_TYPES } from '../../domain/overview.js';
 import { formatDueDate, formatInt } from '../../ui/format.js';
+import { tyreChange, TYRE_LABEL, TYRE_SEASON_MONTHS } from '../../domain/tyres.js';
 
 function daysValue(days) {
   if (days === null || days === undefined) return { value: null, unit: 'giorni' };
@@ -10,8 +11,8 @@ function daysValue(days) {
 }
 
 /**
- * Modelli dei 4 HudGauge: Bollo, Assicurazione, Revisione (giorni) e Tagliando
- * (km o giorni, quello più grave).
+ * Modelli dei 5 HudGauge: Bollo, Assicurazione, Revisione (giorni), Tagliando
+ * (km o giorni, quello più grave) e Gomme (giorni al prossimo cambio stagionale).
  */
 export function vehicleGauges(overview, vehicle, today) {
   const gauges = DEADLINE_TYPES.map((type) => {
@@ -50,5 +51,18 @@ export function vehicleGauges(overview, vehicle, today) {
     ratio: ratios.length ? Math.min(...ratios) : 0,
     sublabel: s.status === 'unknown' ? 'tocca per impostare' : kmWorse ? 'misurato in km' : `entro ${formatDueDate(s.nextDate, today)}`,
   });
+
+  const tc = tyreChange(vehicle, today);
+  if (tc) {
+    gauges.push({
+      key: 'gomme', label: 'Gomme', ...daysValue(tc.days), status: tc.status,
+      ratio: remainingRatio(tc.due, TYRE_SEASON_MONTHS, today),
+      sublabel: `${TYRE_LABEL[tc.target].toLowerCase()} ${tc.days < 0 ? 'scaduto' : 'entro'} ${formatDueDate(tc.due, today)}`,
+    });
+  } else {
+    const four = vehicle.tyreType === 'quattroStagioni';
+    gauges.push({ key: 'gomme', label: 'Gomme', value: four ? '4S' : null, unit: four ? '' : 'giorni', status: four ? 'ok' : 'unknown',
+      ratio: four ? 1 : 0, sublabel: four ? 'quattro stagioni' : 'tocca per impostare' });
+  }
   return gauges;
 }

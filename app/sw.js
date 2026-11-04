@@ -1,5 +1,5 @@
 /* NexusLife — service worker. Incrementare CACHE_VERSION a ogni modifica dell'app shell. */
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v10';
 const SHELL_CACHE = `nexuslife-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = 'nexuslife-runtime';
 
@@ -62,6 +62,8 @@ const SHELL = [
   './src/domain/health.js',
   './src/domain/ics.js',
   './src/domain/garden.js',
+  './src/domain/tyres.js',
+  './src/domain/maintenance.js',
   './src/ui/html.js',
   './src/ui/icons.js',
   './src/ui/haptics.js',
@@ -103,6 +105,7 @@ const SHELL = [
   './src/views/auto/MileageCard.js',
   './src/views/auto/ExpensesCard.js',
   './src/views/auto/ExpenseSheet.js',
+  './src/views/auto/TyreSheet.js',
   './src/views/casa/CasaView.js',
   './src/views/casa/RentCard.js',
   './src/views/casa/ContractSheet.js',
@@ -125,6 +128,7 @@ const SHELL = [
   './src/views/salute/LockScreen.js',
   './src/views/salute/VisitSheet.js',
   './src/views/salute/VaccineSheet.js',
+  './src/views/salute/VisitPlanSheet.js',
   './src/views/impostazioni/ImpostazioniView.js',
   './src/views/impostazioni/DesignView.js',
   './src/views/impostazioni/RestoreSheet.js',

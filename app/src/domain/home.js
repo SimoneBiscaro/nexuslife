@@ -1,11 +1,13 @@
 import { daysBetween, periodKeyOf } from './dates.js';
-import { deadlineStatus, maintenanceNextDate } from './deadlines.js';
+import { maintenancePlan, sortMaintenancePlans } from './maintenance.js';
 import { installmentDueDate, paymentStatus } from './rent.js';
 
 export const BILL_KINDS = ['luce', 'gas', 'internet', 'acqua', 'rifiuti', 'altro'];
 export const BILL_KIND_LABEL = { luce: 'Luce', gas: 'Gas', internet: 'Internet', acqua: 'Acqua', rifiuti: 'Rifiuti', altro: 'Altro' };
 export const PRIORITY_RANK = { alta: 3, media: 2, bassa: 1 };
 export const HOME_PURCHASE_CATEGORIES = ['arredamento', 'ferramenta', 'detersivi', 'bricolage', 'altro'];
+/** Categorie di "Da comprare per l'auto" (vehiclePurchase): stessi campi di homePurchase più vehicleId. */
+export const VEHICLE_PURCHASE_CATEGORIES = ['accessori', 'ricambi', 'pulizia', 'sicurezza', 'altro'];
 
 const live = (list) => (list || []).filter((r) => !r.deleted);
 const round2 = (n) => Math.round(n * 100) / 100;
@@ -97,24 +99,19 @@ export function sortBills(bills) {
 
 /* ---------- Manutenzioni ---------- */
 
-/** Prossima esecuzione, stato e giorni mancanti. */
+/**
+ * Prossima esecuzione, stato e giorni mancanti (periodica o una tantum).
+ * @returns {{ nextDate: string|null, status: string, days: number|null, periodic: boolean, done: boolean }}
+ */
 export function maintenanceState(item, today) {
-  const nextDate = maintenanceNextDate(item);
-  return {
-    nextDate,
-    status: deadlineStatus(nextDate, today),
-    days: nextDate ? daysBetween(today, nextDate) : null,
-  };
+  const p = maintenancePlan(item, today);
+  return { nextDate: p.nextDate, status: p.status, days: p.days, periodic: p.periodic, done: p.done };
 }
 
-/** Manutenzioni dalla più urgente. */
+/** Manutenzioni di casa: aperte dalla più urgente, una tantum fatte in fondo. */
 export function sortMaintenance(items, today) {
-  return live(items)
-    .map((item) => ({ item, ...maintenanceState(item, today) }))
-    .sort((a, b) => {
-      if (!a.nextDate !== !b.nextDate) return a.nextDate ? -1 : 1;
-      return (a.nextDate || '') < (b.nextDate || '') ? -1 : (a.nextDate || '') > (b.nextDate || '') ? 1 : 0;
-    });
+  return sortMaintenancePlans(items, today)
+    .map(({ item, nextDate, status, days, periodic, done }) => ({ item, nextDate, status, days, periodic, done }));
 }
 
 /* ---------- Da comprare per la casa ---------- */

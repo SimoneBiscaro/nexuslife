@@ -8,14 +8,15 @@ import { columnsFor, toCsv } from './csv.js';
 import { buildReport } from './report.js';
 import { decryptBytes, deriveKey, encryptBytes, PBKDF2_ITERATIONS, randomBytes, sha256Hex } from '../sync/crypto.js';
 
-export const SCHEMA_VERSION = 1;
+/** 2: entità vehicleMaintenance, vehiclePurchase, visitPlan e campi delle manutenzioni una tantum (Fase 9). */
+export const SCHEMA_VERSION = 2;
 export const FORMAT = 'nexuslife-backup';
-export const HEALTH_ENTITIES = ['medicalVisit', 'vaccine'];
+export const HEALTH_ENTITIES = ['medicalVisit', 'visitPlan', 'vaccine'];
 export const ENTITY_ORDER = [
-  'vehicle', 'vehicleDeadline', 'mileageReading', 'vehicleExpense',
+  'vehicle', 'vehicleDeadline', 'mileageReading', 'vehicleExpense', 'vehicleMaintenance', 'vehiclePurchase',
   'rentContract', 'rentInstallment', 'bill', 'homeMaintenance', 'homePurchase',
   'groceryCategory', 'groceryItem', 'groceryPurchase', 'suggestionFeedback',
-  'medicalVisit', 'vaccine', 'settings',
+  'medicalVisit', 'visitPlan', 'vaccine', 'settings',
 ];
 
 const enc = new TextEncoder();

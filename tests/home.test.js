@@ -77,14 +77,27 @@ test('bollette: non pagate per scadenza, poi pagate dalla più recente', () => {
 });
 
 test('manutenzioni: stato calcolato e ordine per urgenza', () => {
-  assert.deepEqual(maintenanceState({ intervalMonths: 12, lastDoneDate: '2025-11-10' }, today), { nextDate: '2026-11-10', status: 'critical', days: 7 });
-  assert.deepEqual(maintenanceState({ intervalMonths: 6 }, today), { nextDate: null, status: 'unknown', days: null });
+  assert.deepEqual(maintenanceState({ intervalMonths: 12, lastDoneDate: '2025-11-10' }, today), { nextDate: '2026-11-10', status: 'critical', days: 7, periodic: true, done: false });
+  assert.deepEqual(maintenanceState({ intervalMonths: 6 }, today), { nextDate: null, status: 'unknown', days: null, periodic: true, done: false });
   const list = sortMaintenance([
     { id: 'a', intervalMonths: 12, lastDoneDate: '2026-06-01' },
     { id: 'b', intervalMonths: 6 },
     { id: 'c', intervalMonths: 3, lastDoneDate: '2026-07-01' },
   ], today);
   assert.deepEqual(list.map((x) => `${x.item.id}:${x.status}`), ['c:overdue', 'a:ok', 'b:unknown']);
+});
+
+test('manutenzioni di casa una tantum: data facoltativa, fatte in fondo', () => {
+  assert.deepEqual(maintenanceState({ title: 'Imbiancare', dueDate: '2026-11-20' }, today), { nextDate: '2026-11-20', status: 'warning', days: 17, periodic: false, done: false });
+  assert.deepEqual(maintenanceState({ title: 'Tenda', intervalMonths: null }, today), { nextDate: null, status: 'unknown', days: null, periodic: false, done: false });
+  assert.deepEqual(maintenanceState({ title: 'Lavandino', dueDate: '2026-10-01', doneAt: '2026-10-02' }, today), { nextDate: null, status: 'ok', days: null, periodic: false, done: true });
+  const list = sortMaintenance([
+    { id: 'fatta', title: 'Lavandino', dueDate: '2026-10-01', doneAt: '2026-10-02' },
+    { id: 'senza', title: 'Tenda' },
+    { id: 'tardi', title: 'Imbiancare', dueDate: '2026-11-01' },
+    { id: 'per', title: 'Caldaia', intervalMonths: 12, lastDoneDate: '2026-06-01' },
+  ], today);
+  assert.deepEqual(list.map((x) => x.item.id), ['tardi', 'per', 'senza', 'fatta']);
 });
 
 test('da comprare per la casa: ordine e totale stimato', () => {

@@ -288,3 +288,42 @@ test('giardino: le categorie senza dati restano germogli, le eliminate non conta
   assert.equal(g.healthy, 2);
   assert.equal(by.spesa.summary, 'Spesa: sana, 1 cosa in sospeso');
 });
+
+/* ---------- Fase 9: gomme, manutenzioni auto e una tantum ---------- */
+
+test('Auto: cambio gomme e manutenzioni dell\'auto fanno soffrire la pianta', () => {
+  const data = {
+    vehicles: [{ ...vehicle, tyreType: 'estive' }],
+    vehicleDeadlines: [
+      { id: 'b', vehicleId: 'v1', type: 'bollo', dueDate: addDays(today, 200) },
+      { id: 'a', vehicleId: 'v1', type: 'assicurazione', dueDate: addDays(today, 200) },
+      { id: 'r', vehicleId: 'v1', type: 'revisione', dueDate: addDays(today, 400) },
+    ],
+    mileageReadings: [],
+    vehicleMaintenance: [
+      { id: 'olio', vehicleId: 'v1', title: 'Cambio olio', intervalMonths: 12, intervalKm: 15000, lastDoneDate: addMonths(today, -2), lastDoneKm: 25500 },
+      { id: 'terg', vehicleId: 'v1', title: 'Tergicristalli' },
+      { id: 'batt', vehicleId: 'v1', title: 'Batteria', dueDate: addDays(today, -1), doneAt: addDays(today, -2) },
+      { id: 'altra', vehicleId: 'altra', title: 'Altro veicolo', dueDate: addDays(today, -40) },
+    ],
+  };
+  const issues = autoIssues(data, today);
+  const by = Object.fromEntries(issues.map((i) => [i.key, i]));
+  assert.equal(by['auto:v1:gomme'].title, 'Cambio gomme invernali scade tra 11 giorni');
+  assert.equal(by['auto:v1:gomme'].status, 'warning');
+  assert.equal(by['auto:v1:m:olio'].status, 'critical'); // 14.500 km su 15.000 = 0,967
+  assert.equal(by['auto:v1:m:olio'].title, 'Cambio olio tra 500 km');
+  assert.equal(by['auto:v1:m:terg'].status, 'unknown');
+  assert.equal(by['auto:v1:m:terg'].title, 'Tergicristalli: da fare, senza data');
+  assert.equal(by['auto:v1:m:batt'], undefined);
+  assert.equal(Object.keys(by).some((k) => k.includes('altra')), false);
+});
+
+test('Manutenzioni di casa una tantum: fatte escluse, senza data da completare', () => {
+  const issues = maintenanceIssues({ homeMaintenance: [
+    { id: 'm1', title: 'Imbiancare', dueDate: addDays(today, -3) },
+    { id: 'm2', title: 'Tenda' },
+    { id: 'm3', title: 'Lavandino', dueDate: addDays(today, -3), doneAt: addDays(today, -4) },
+  ] }, today);
+  assert.deepEqual(issues.map((i) => [i.title, i.status]), [['Imbiancare in ritardo di 3 giorni', 'overdue'], ['Tenda: da fare, senza data', 'unknown']]);
+});

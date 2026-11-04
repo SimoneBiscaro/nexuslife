@@ -16,8 +16,13 @@ import { KmSheet } from './KmSheet.js';
 import { MileageCard } from './MileageCard.js';
 import { ExpensesCard } from './ExpensesCard.js';
 import { ExpenseSheet } from './ExpenseSheet.js';
+import { TyreSheet } from './TyreSheet.js';
+import { MaintenanceCard } from '../casa/MaintenanceCard.js';
+import { MaintenanceSheet } from '../casa/MaintenanceSheet.js';
+import { HomePurchasesCard } from '../casa/HomePurchasesCard.js';
+import { HomePurchaseSheet } from '../casa/HomePurchaseSheet.js';
 
-const ENTITIES = ['vehicle', 'vehicleDeadline', 'mileageReading', 'vehicleExpense'];
+const ENTITIES = ['vehicle', 'vehicleDeadline', 'mileageReading', 'vehicleExpense', 'vehicleMaintenance', 'vehiclePurchase'];
 
 export function AutoView() {
   const today = toDateKey(new Date());
@@ -26,6 +31,8 @@ export function AutoView() {
   const [sheet, setSheet] = useState(null); // tipo di gauge aperto
   const [kmOpen, setKmOpen] = useState(false);
   const [expense, setExpense] = useState(undefined); // undefined = chiuso, null = nuova
+  const [maint, setMaint] = useState(undefined);
+  const [purchase, setPurchase] = useState(undefined);
   const autoOpened = useRef(false);
 
   const vehicle = data?.vehicles.slice().sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))[0];
@@ -55,7 +62,7 @@ export function AutoView() {
     return html`
       <${PageHeader} eyebrow="Garage" title="Auto" />
       <${EmptyState} art="auto" accent="var(--electric-blue-glow)" title="Nessun veicolo"
-        text="Il gemello digitale della tua auto terrà d'occhio bollo, assicurazione, revisione e tagliando.">
+        text="Il gemello digitale della tua auto terrà d'occhio bollo, assicurazione, revisione, tagliando e cambio gomme.">
         <button class="btn btn--primary empty-state__cta" type="button" onClick=${() => setWizard('create')}>
           <${Icon} name="plus" /> Aggiungi la tua auto
         </button>
@@ -65,6 +72,8 @@ export function AutoView() {
 
   const readings = data.mileageReadings.filter((r) => r.vehicleId === vehicle.id);
   const expenses = data.vehicleExpenses.filter((e) => e.vehicleId === vehicle.id);
+  const maintenance = data.vehicleMaintenance.filter((m) => m.vehicleId === vehicle.id);
+  const purchases = data.vehiclePurchases.filter((p) => p.vehicleId === vehicle.id);
   const overview = vehicleOverview(vehicle, { deadlines: data.vehicleDeadlines, readings }, today);
   const gauges = vehicleGauges(overview, vehicle, today);
   const subtitle = [vehicle.make, vehicle.model, vehicle.plate].filter(Boolean).join(' · ');
@@ -89,6 +98,9 @@ export function AutoView() {
     <div class="auto-grid">
       <${MileageCard} overview=${overview} readings=${readings} today=${today} onUpdate=${() => setKmOpen(true)} />
       <${ExpensesCard} expenses=${expenses} today=${today} onEdit=${(e) => setExpense(e)} />
+      <${MaintenanceCard} entity="vehicleMaintenance" items=${maintenance} today=${today} onEdit=${setMaint}
+        currentKm=${overview.currentKm} kmPerDay=${overview.kmPerDay.kmPerDay} index=${2} />
+      <${HomePurchasesCard} entity="vehiclePurchase" items=${purchases} onEdit=${setPurchase} index=${3} />
     </div>
 
     <${VehicleWizard} open=${wizard === 'edit'} vehicle=${vehicle} onClose=${() => setWizard(null)} />
@@ -96,6 +108,11 @@ export function AutoView() {
       <${DeadlineSheet} key=${type} open=${sheet === type} type=${type} record=${overview.deadlines[type]?.record}
         vehicle=${vehicle} today=${today} onClose=${() => setSheet(null)} />`)}
     <${ServiceSheet} open=${sheet === 'tagliando'} vehicle=${vehicle} overview=${overview} today=${today} onClose=${() => setSheet(null)} />
+    <${TyreSheet} open=${sheet === 'gomme'} vehicle=${vehicle} today=${today} currentKm=${overview.currentKm} onClose=${() => setSheet(null)} />
+    <${MaintenanceSheet} entity="vehicleMaintenance" open=${maint !== undefined} item=${maint || null} today=${today}
+      vehicle=${vehicle} currentKm=${overview.currentKm} onClose=${() => setMaint(undefined)} />
+    <${HomePurchaseSheet} entity="vehiclePurchase" open=${purchase !== undefined} item=${purchase || null} vehicle=${vehicle}
+      onClose=${() => setPurchase(undefined)} />
     <${KmSheet} open=${kmOpen} vehicle=${vehicle} readings=${readings} currentKm=${overview.currentKm} today=${today} onClose=${() => setKmOpen(false)} />
     <${ExpenseSheet} open=${expense !== undefined} expense=${expense || null} vehicle=${vehicle} today=${today}
       onClose=${() => setExpense(undefined)} />`;
