@@ -5,7 +5,7 @@ import { useQuery } from './state.js';
 export const ALL_SECTION_ENTITIES = [
   'vehicle', 'vehicleDeadline', 'mileageReading', 'vehicleExpense', 'rentInstallment', 'bill',
   'homeMaintenance', 'medicalVisit', 'vaccine', 'groceryItem', 'groceryPurchase', 'suggestionFeedback',
-  'rentContract', 'homePurchase', 'vehicleMaintenance', 'vehiclePurchase', 'visitPlan', 'settings',
+  'rentContract', 'homePurchase', 'vehicleMaintenance', 'vehiclePurchase', 'visitPlan', 'todo', 'settings',
 ];
 
 /** Chiave nell'oggetto risultato per ogni entità. */
@@ -15,7 +15,7 @@ const KEY = {
   homeMaintenance: 'homeMaintenance', medicalVisit: 'medicalVisits', vaccine: 'vaccines',
   groceryItem: 'groceryItems', groceryCategory: 'groceryCategories', groceryPurchase: 'groceryPurchases',
   suggestionFeedback: 'suggestionFeedback', rentContract: 'rentContracts', homePurchase: 'homePurchases',
-  vehicleMaintenance: 'vehicleMaintenance', vehiclePurchase: 'vehiclePurchases', visitPlan: 'visitPlans',
+  vehicleMaintenance: 'vehicleMaintenance', vehiclePurchase: 'vehiclePurchases', visitPlan: 'visitPlans', todo: 'todos',
   settings: 'settings',
 };
 

@@ -58,6 +58,11 @@ export function buildDemoRecords(today, categories) {
   add('medicalVisit', { type: 'dentista', dateTime: at(-170, 10), doctor: 'Dott. Demo', place: 'Studio demo', notes: '', postNotes: 'Nessuna carie', planId: dentist });
   add('medicalVisit', { type: 'controllo annuale', dateTime: at(-40, 9), doctor: 'Medico demo', place: 'Ambulatorio demo', notes: '', postNotes: 'Tutto nella norma' });
   add('visitPlan', { type: 'oculista', doctor: '', intervalMonths: null, dueBy: addDays(today, 20), notes: 'Serve l\'impegnativa del medico', doneAt: null });
+  add('todo', { title: 'Chiamare il barbiere', dueDate: addDays(today, -1), notes: '', repeatEvery: 5, repeatUnit: 'settimane', doneAt: null });
+  add('todo', { title: 'Regalo di compleanno per Luca', dueDate: addDays(today, 6), notes: 'Libro o biglietti del concerto', repeatEvery: null, repeatUnit: null, doneAt: null });
+  add('todo', { title: 'Rinnovare la carta d\'identità', dueDate: addDays(today, 40), notes: '', repeatEvery: null, repeatUnit: null, doneAt: null });
+  add('todo', { title: 'Riordinare la cantina', dueDate: null, notes: '', repeatEvery: null, repeatUnit: null, doneAt: null });
+  add('todo', { title: 'Restituire il trapano a Marco', dueDate: addDays(today, -4), notes: '', repeatEvery: null, repeatUnit: null, doneAt: addDays(today, -2) });
   add('vaccine', { name: 'Tetano', date: addMonths(today, -118), lot: 'DEMO-01', boosterDate: addDays(today, 25), notes: '' });
   add('vaccine', { name: 'Antinfluenzale', date: addMonths(today, -12), lot: '', boosterDate: addDays(today, -3), notes: '' });
   return out;

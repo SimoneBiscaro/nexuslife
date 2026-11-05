@@ -22,6 +22,7 @@ import { SaluteView } from './views/salute/SaluteView.js';
 import { ImpostazioniView } from './views/impostazioni/ImpostazioniView.js';
 import { DesignView } from './views/impostazioni/DesignView.js';
 import { GiardinoView } from './views/giardino/GiardinoView.js';
+import { TodoView } from './views/todo/TodoView.js';
 
 const VIEWS = {
   '/oggi': OggiView,
@@ -30,6 +31,7 @@ const VIEWS = {
   '/spesa': SpesaView,
   '/salute': SaluteView,
   '/giardino': GiardinoView,
+  '/todo': TodoView,
   '/impostazioni': ImpostazioniView,
   '/impostazioni/design': DesignView,
 };

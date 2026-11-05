@@ -3,7 +3,7 @@ import { html } from '../../ui/html.js';
 import { PageHeader, EmptyState, Skeleton } from '../../ui/Page.js';
 import { GlassCard } from '../../ui/GlassCard.js';
 import { NeonBadge } from '../../ui/NeonBadge.js';
-import { Plant, flowerColor } from '../../ui/Plant.js';
+import { Bouquet, PLANT_COLORS } from '../../ui/Bouquet.js';
 import { STATUS_LABEL } from '../../ui/status.js';
 import { haptic } from '../../ui/haptics.js';
 import { ALL_SECTION_ENTITIES, useEntities } from '../../store/queries.js';
@@ -11,7 +11,7 @@ import { DEFAULT_SETTINGS } from '../../store/seed.js';
 import { useSignal } from '../../store/state.js';
 import { unlocked } from '../../store/lock.js';
 import { toDateKey } from '../../domain/dates.js';
-import { GARDEN_STAGES, gardenState, isPending, sortIssues } from '../../domain/garden.js';
+import { gardenState, isPending, sortIssues } from '../../domain/garden.js';
 import { PlantSheet } from './PlantSheet.js';
 
 /** Righe di ghiaia rastrellata: onde morbide su tutta la larghezza del giardino. */
@@ -26,12 +26,12 @@ function RakedGravel() {
   </svg>`;
 }
 
-/** Frecce: spostano il focus tra le piante (in griglia, su e giù saltano di una riga). */
-function onGardenKey(e) {
+/** Frecce: spostano il focus tra le voci della legenda (in griglia, su e giù saltano di una riga). */
+function onLegendKey(e) {
   const keys = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 'down', ArrowUp: 'up', Home: 'home', End: 'end' };
   const move = keys[e.key];
   if (move === undefined) return;
-  const buttons = [...e.currentTarget.querySelectorAll('.garden__plant')];
+  const buttons = [...e.currentTarget.querySelectorAll('.garden-legend__item')];
   const i = buttons.indexOf(document.activeElement);
   if (i < 0) return;
   const cols = Math.max(1, getComputedStyle(e.currentTarget).gridTemplateColumns.split(' ').length);
@@ -57,14 +57,15 @@ export function GiardinoView() {
 
   const [selectedId, setSelectedId] = useState(null);
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(null); // categoria evidenziata nel mazzo
   const selected = garden?.plants.find((p) => p.id === selectedId) || null;
   const show = (id) => { haptic(); setSelectedId(id); setOpen(true); };
 
   const attention = garden ? sortIssues(garden.plants.flatMap((p) => p.issues.filter(isPending).map((i) => ({ ...i, plantLabel: p.label })))).slice(0, 5) : [];
   const lede = !garden ? 'Le tue cose, a colpo d\'occhio'
-    : !garden.hasData ? 'Ogni sezione avrà la sua pianta'
-      : garden.healthy === garden.withData ? 'Tutte le piante stanno bene'
-        : `${garden.healthy} ${garden.healthy === 1 ? 'pianta' : 'piante'} su ${garden.withData} in salute`;
+    : !garden.hasData ? 'Ogni sezione avrà il suo fiore'
+      : garden.healthy === garden.withData ? 'Tutti i fiori stanno bene'
+        : `${garden.healthy} ${garden.healthy === 1 ? 'fiore' : 'fiori'} su ${garden.withData} in salute`;
 
   return html`
     <${PageHeader} eyebrow="Giardino zen" docTitle="Giardino" title="Il tuo giardino" lede=${lede} />
@@ -73,35 +74,35 @@ export function GiardinoView() {
 
     ${garden && !garden.hasData && html`<${GlassCard} class="spring-in">
       <${EmptyState} art="giardino" accent="var(--mint)" title="Il giardino aspetta i primi semi"
-        text="Aggiungi l'auto, l'affitto, la spesa o una visita: ogni sezione farà crescere la sua pianta. Più le cose sono in ordine, più fiorisce.">
+        text="Aggiungi l'auto, l'affitto, la spesa o una visita: ogni sezione aggiungerà un fiore al mazzo. Più le cose sono in ordine, più fiorisce.">
         <a class="btn btn--primary" href="#/oggi">Vai a Oggi</a>
       <//>
     <//>`}
 
     ${garden?.hasData && html`
-      <section class="garden spring-in" aria-label="Giardino zen: una pianta per categoria">
-        <div class="garden__light" aria-hidden="true"></div>
+      <section class="garden spring-in" aria-label="Giardino zen: un mazzo con un fiore per categoria">
         <${RakedGravel} />
-        <ul class="garden__grid" onKeyDown=${onGardenKey}>
-          ${garden.plants.map((p, i) => html`
-            <li key=${p.id} class="garden__cell" style=${`--i:${i}`}>
-              <button class="garden__plant" type="button" data-stage=${p.stage.id} aria-label=${`${p.summary}. Apri i dettagli`}
-                aria-haspopup="dialog" onClick=${() => show(p.id)}>
-                <${Plant} stage=${p.stage} seed=${p.id} flower=${flowerColor(i)} />
-                <span class="garden__name">${p.label}</span>
-                <span class="garden__stage"><span class="garden__dot" aria-hidden="true"></span>${p.stage.label}${p.pending > 0 ? ` · ${p.pending}` : ''}</span>
+        <div class="garden__bouquet">
+          <${Bouquet} plants=${garden.plants} active=${active} onSelect=${show} />
+        </div>
+        <ul class="garden-legend" onKeyDown=${onLegendKey} aria-label="Legenda: categorie e stato">
+          ${garden.plants.map((p) => html`
+            <li key=${p.id}>
+              <button class="garden-legend__item" type="button" data-stage=${p.stage.id} aria-haspopup="dialog"
+                aria-label=${`${p.summary}. Apri i dettagli`} onClick=${() => show(p.id)}
+                onMouseEnter=${() => setActive(p.id)} onMouseLeave=${() => setActive(null)}
+                onFocus=${() => setActive(p.id)} onBlur=${() => setActive(null)}>
+                <span class="garden-legend__swatch" style=${`--flower:${PLANT_COLORS[p.id]}`} aria-hidden="true"></span>
+                <span class="garden-legend__name">${p.label}</span>
+                <span class="garden-legend__stage"><span class="garden__dot" aria-hidden="true"></span>${p.stage.label}${p.pending > 0 ? ` · ${p.pending}` : ''}</span>
               </button>
             </li>`)}
         </ul>
-      </section>
-
-      <section class="garden-legend" aria-label="Legenda degli stadi">
-        ${GARDEN_STAGES.map((s) => html`<span key=${s.id} class="garden-legend__item" data-stage=${s.id}><span class="garden__dot" aria-hidden="true"></span>${s.label}</span>`)}
-        <span class="garden-legend__item" data-stage="germoglio"><span class="garden__dot" aria-hidden="true"></span>Germoglio · senza dati</span>
+        <p class="garden__hint">Il colore del fiore indica la categoria. Stelo alto e fiore aperto: tutto in ordine. Stelo piegato, foglie gialle e petali a terra: ci sono cose in sospeso. Bocciolo grigio: ancora nessun dato.</p>
       </section>
 
       <h2 class="section-title">Da curare</h2>
-        <${GlassCard} class="spring-in" style="--i:6">
+        <${GlassCard} class="spring-in" style="--i:2">
           ${attention.length === 0
             ? html`<p class="garden-calm">Niente da curare: il giardino è in pace.</p>`
             : html`<ul class="item-list">

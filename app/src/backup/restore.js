@@ -17,7 +17,7 @@ export const SECTION_OF = {
   vehicle: 'Auto', vehicleDeadline: 'Auto', mileageReading: 'Auto', vehicleExpense: 'Auto', vehicleMaintenance: 'Auto', vehiclePurchase: 'Auto',
   rentContract: 'Casa', rentInstallment: 'Casa', bill: 'Casa', homeMaintenance: 'Casa', homePurchase: 'Casa',
   groceryCategory: 'Spesa', groceryItem: 'Spesa', groceryPurchase: 'Spesa', suggestionFeedback: 'Spesa',
-  medicalVisit: 'Salute', visitPlan: 'Salute', vaccine: 'Salute', settings: 'Impostazioni',
+  medicalVisit: 'Salute', visitPlan: 'Salute', vaccine: 'Salute', todo: 'To Do', settings: 'Impostazioni',
 };
 
 function parseJson(bytes) {

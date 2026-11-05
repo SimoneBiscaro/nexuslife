@@ -124,7 +124,7 @@ test('manutenzione all\'avvio: archivia gli spuntati da più di 6 ore come acqui
   const a = await repo.create('groceryItem', { name: 'Latte', normName: 'latte', categoryId: 'c', checkedAt: '2026-11-03T08:00:00.000Z', archived: false });
   const b = await repo.create('groceryItem', { name: 'Pane', normName: 'pane', categoryId: 'c', archived: false });
   clock.set('2026-11-03T14:00:01.000Z');
-  assert.deepEqual(await startupMaintenance(repo, new Date('2026-11-03T14:00:01.000Z')), { purged: 0, archived: 1, installments: 0 });
+  assert.deepEqual(await startupMaintenance(repo, new Date('2026-11-03T14:00:01.000Z')), { purged: 0, archived: 1, installments: 0, todos: 0 });
   assert.equal((await repo.get('groceryItem', a.id)).archived, true);
   assert.equal((await repo.get('groceryItem', b.id)).archived, false);
   const [p] = await repo.list('groceryPurchase');

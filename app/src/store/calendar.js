@@ -5,7 +5,7 @@ import { buildReminderEvents } from '../domain/reminders.js';
 import { buildCalendar } from '../domain/ics.js';
 import { saveFile } from '../ui/download.js';
 
-const ENTITIES = ['vehicle', 'vehicleDeadline', 'mileageReading', 'vehicleMaintenance', 'rentInstallment', 'bill', 'homeMaintenance', 'medicalVisit', 'visitPlan', 'vaccine'];
+const ENTITIES = ['vehicle', 'vehicleDeadline', 'mileageReading', 'vehicleMaintenance', 'rentInstallment', 'bill', 'homeMaintenance', 'medicalVisit', 'visitPlan', 'vaccine', 'todo'];
 
 async function events() {
   const [data, settings] = await Promise.all([loadEntities(ENTITIES), loadSettings()]);

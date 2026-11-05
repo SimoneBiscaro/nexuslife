@@ -5,6 +5,7 @@ import { estimateKmPerDay, latestKm } from './mileage.js';
 import { tyreChange, TYRE_LABEL } from './tyres.js';
 import { maintenancePlan } from './maintenance.js';
 import { openVisitPlans } from './health.js';
+import { sortTodos } from './todos.js';
 
 /** Preavvisi per tipo: giorni prima (alle `reminderHour`) oppure ore prima (visite). */
 export const REMINDER_RULES = {
@@ -15,6 +16,7 @@ export const REMINDER_RULES = {
   medicalVisit: { hours: [24, 2] },
   vaccine: { days: [30, 7] },
   visitPlan: { days: [30, 7] },
+  todo: { days: [1, 0] },
 };
 
 const DEADLINE_LABEL = { bollo: 'Bollo', assicurazione: 'Assicurazione', revisione: 'Revisione' };
@@ -106,6 +108,9 @@ export function buildReminderEvents(data, { today, reminderHour = 9 }) {
   for (const x of openVisitPlans(data.visitPlans, data.medicalVisits, todayKey)) {
     if (x.state !== 'daPrenotare' || !x.dueBy) continue;
     events.push({ uid: `visitPlan-${x.plan.id}`, updatedAt: x.plan.updatedAt, kind: 'visitPlan', title: `Prenotare visita: ${x.plan.type || 'visita'}`, date: x.dueBy });
+  }
+  for (const { todo } of sortTodos(data.todos, todayKey).open) {
+    if (todo.dueDate) events.push({ uid: `todo-${todo.id}`, updatedAt: todo.updatedAt, kind: 'todo', title: `To Do: ${todo.title}`, date: todo.dueDate, description: todo.notes || '' });
   }
   for (const v of live(data.vaccines)) {
     if (!v.boosterDate) continue;

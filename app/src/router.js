@@ -10,9 +10,9 @@ export const SECTIONS = [
 ];
 
 /** Pagine fuori dalla TabBar raggiungibili con una scorciatoia (Sidebar e tastiera). */
-export const EXTRA_PAGES = [{ id: 'giardino', label: 'Giardino', key: 'g' }];
+export const EXTRA_PAGES = [{ id: 'todo', label: 'To Do', key: 't' }, { id: 'giardino', label: 'Giardino', key: 'g' }];
 
-const VALID = new Set(['oggi', 'auto', 'casa', 'spesa', 'salute', 'giardino', 'impostazioni', 'impostazioni/design']);
+const VALID = new Set(['oggi', 'auto', 'casa', 'spesa', 'salute', 'todo', 'giardino', 'impostazioni', 'impostazioni/design']);
 export const DEFAULT_PATH = '/oggi';
 
 /**

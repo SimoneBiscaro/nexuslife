@@ -20,8 +20,9 @@ test('parseHash rifiuta rotte sconosciute o vuote', () => {
   assert.equal(parseHash('#/auto/xyz'), null);
 });
 
-test('il Giardino è fuori dalla TabBar, con la scorciatoia G', () => {
+test('Giardino e To Do sono fuori dalla TabBar, con le scorciatoie G e T', () => {
   assert.equal(SECTIONS.some((s) => s.id === 'giardino'), false);
-  assert.deepEqual(EXTRA_PAGES.map((p) => `${p.key}:${p.id}`), ['g:giardino']);
+  assert.deepEqual(EXTRA_PAGES.map((p) => `${p.key}:${p.id}`), ['t:todo', 'g:giardino']);
+  assert.deepEqual(parseHash('#/todo'), { path: '/todo', section: 'todo', sub: '' });
   assert.equal(SECTIONS.some((s) => s.key === 'g'), false);
 });

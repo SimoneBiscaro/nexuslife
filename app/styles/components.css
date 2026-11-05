@@ -1032,54 +1032,57 @@ html.privacy-shield #app::after {
 @keyframes garden-light { from { opacity: .6; transform: translate(0, 0); } to { opacity: 1; transform: translate(6%, 4%); } }
 .garden__gravel { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 .garden__gravel path { fill: none; stroke: rgba(199, 202, 209, .07); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.garden__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
-@media (min-width: 640px) { .garden__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1100px) { .garden { padding: var(--space-6) var(--space-4) var(--space-4); } .garden__grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-.garden__cell { display: flex; animation: spring-in var(--dur-spring) var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 60ms); }
-.garden__plant {
-  flex: 1; display: grid; justify-items: center; align-content: end; gap: 2px;
-  padding: var(--space-2) var(--space-1) var(--space-3); border-radius: var(--radius-lg);
-  color: var(--text-primary); text-align: center;
-  transition: background-color var(--dur-fast) ease, transform var(--dur-spring) var(--ease-spring);
-}
-.garden__plant:active { transform: scale(var(--press-scale)); }
-@media (hover: hover) { .garden__plant:hover { background: rgba(255, 255, 255, .04); } }
-.garden__plant:focus-visible { outline: 2px solid var(--champagne); outline-offset: -2px; background: rgba(217, 191, 140, .06); }
-.garden__name { font-weight: 800; font-size: var(--fs-sm); line-height: 1.2; }
-.garden__stage { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.garden__bouquet { position: relative; max-width: 560px; margin: 0 auto; }
+.garden__hint { margin: var(--space-3) var(--space-2) 0; font-size: var(--fs-xs); color: var(--text-secondary); text-align: center; }
 .garden__dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--stage-color); box-shadow: 0 0 8px var(--stage-color); }
 
-.plant { display: block; overflow: visible; }
-.plant--lg { width: 100%; max-width: min(168px, 34vw); aspect-ratio: 120 / 150; height: auto; }
-.plant--sm { width: 100%; aspect-ratio: 120 / 150; height: auto; }
-.plant__raked ellipse { fill: none; stroke: rgba(199, 202, 209, .14); stroke-width: .8; }
-.plant__mound { fill: rgba(0, 0, 0, .5); }
-.plant__stone-light { fill: none; stroke: rgba(255, 255, 255, .32); stroke-width: 1; stroke-linecap: round; }
-.plant__stem { fill: none; stroke-width: 3; stroke-linecap: round; }
-.plant__stem--thin { stroke-width: 1.8; }
-.plant__vein { fill: none; stroke-width: .9; stroke-linecap: round; opacity: .55; }
-.plant__body {
-  transform-box: view-box; transform-origin: 60px 128px;
-  animation: plant-sway var(--sway-dur, 8s) ease-in-out var(--sway-delay, 0s) infinite alternate;
+/* Mazzo */
+.bouquet { display: block; width: 100%; height: auto; overflow: visible; }
+.bq__raked ellipse { fill: none; stroke: rgba(199, 202, 209, .12); stroke-width: .9; }
+.bq__stone-light { fill: none; stroke: rgba(255, 255, 255, .32); stroke-width: 1.2; stroke-linecap: round; }
+.bq__stalk { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.bq__vein { fill: none; stroke-width: .9; stroke-linecap: round; opacity: .55; }
+.bq__hit { fill: transparent; stroke: transparent; stroke-width: 18; }
+.bq__stem { cursor: pointer; transform-box: view-box; transition: opacity var(--dur-fast) ease;
+  animation: bq-sway var(--sway-dur, 8s) ease-in-out var(--sway-delay, 0s) infinite alternate; }
+.bq__stem.is-dim { opacity: .28; }
+.bq__stem.is-active .bq__head { filter: drop-shadow(0 0 8px rgba(242, 227, 194, .55)); }
+.bouquet--sm .bq__stem { cursor: inherit; }
+@keyframes bq-sway { from { transform: rotate(calc(var(--sway, 1.5deg) * -1)); } to { transform: rotate(var(--sway, 1.5deg)); } }
+.bq__falling { opacity: 0; transform-box: fill-box; transform-origin: center; animation: leaf-fall 11s linear var(--fall-delay, 0s) infinite; }
+.bq__glass-edge { fill: none; stroke: rgba(255, 255, 255, .22); stroke-width: 1.2; }
+.bq__rim { fill: rgba(255, 255, 255, .04); stroke: rgba(255, 255, 255, .28); stroke-width: 1.2; }
+.bq__waterline { fill: none; stroke: rgba(111, 168, 255, .35); stroke-width: 1; }
+.bq__shine { fill: none; stroke: rgba(255, 255, 255, .35); stroke-width: 2.4; stroke-linecap: round; }
+.bq__ribbon { stroke: var(--champagne); stroke-width: 3; stroke-linecap: round; opacity: .85; }
+.bq__light { animation: plant-aura 9s ease-in-out infinite alternate; }
+
+/* Legenda sotto il mazzo */
+.garden-legend { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-1); grid-template-columns: 1fr; }
+@media (min-width: 560px) { .garden-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .garden-legend { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.garden-legend__item {
+  width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2px var(--space-2);
+  min-height: 48px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); text-align: left;
+  color: var(--text-primary); background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .06);
+  transition: background-color var(--dur-fast) ease, transform var(--dur-spring) var(--ease-spring);
 }
-@keyframes plant-sway { from { transform: rotate(calc(var(--sway, 1.5deg) * -1)); } to { transform: rotate(var(--sway, 1.5deg)); } }
-.plant__aura { animation: plant-aura 6s ease-in-out infinite alternate; }
-@keyframes plant-aura { from { opacity: .55; } to { opacity: 1; } }
-.plant__falling { opacity: 0; transform-box: fill-box; transform-origin: center; animation: leaf-fall 11s linear var(--fall-delay, 0s) infinite; }
-@keyframes leaf-fall {
-  0% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
-  8% { opacity: 1; }
-  45% { transform: translate(8px, calc(var(--fall) * .5)) rotate(120deg); }
-  80% { opacity: 1; transform: translate(-2px, var(--fall)) rotate(220deg); }
-  100% { opacity: 0; transform: translate(-2px, var(--fall)) rotate(220deg); }
+.garden-legend__item:active { transform: scale(var(--press-scale)); }
+@media (hover: hover) { .garden-legend__item:hover { background: rgba(255, 255, 255, .07); } }
+.garden-legend__item:focus-visible { outline: 2px solid var(--champagne); outline-offset: 2px; }
+.garden-legend__swatch { width: 14px; height: 14px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--flower); box-shadow: 0 0 10px color-mix(in srgb, var(--flower) 60%, transparent); flex: none; }
+.garden-legend__name { font-weight: 800; font-size: var(--fs-sm); line-height: 1.25; }
+@media (min-width: 560px) {
+  .garden-legend__item { grid-template-columns: auto minmax(0, 1fr); }
+  .garden-legend__swatch { grid-row: span 2; }
 }
+.garden-legend__stage { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
 @media (prefers-reduced-motion: reduce) {
-  .garden__light, .plant__body, .plant__aura, .garden__cell { animation: none; }
-  .plant__falling { display: none; }
+  .bq__stem, .bq__light, .garden__light { animation: none; }
+  .bq__falling { display: none; }
 }
 
-.garden-legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: var(--space-4) var(--space-1) 0; font-size: var(--fs-xs); color: var(--text-secondary); }
-.garden-legend__item { display: inline-flex; align-items: center; gap: 6px; }
 .garden-calm { margin: 0; color: var(--text-secondary); }
 
 .plant-detail { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--space-4); align-items: center; margin-bottom: var(--space-4); }
@@ -1097,8 +1100,28 @@ html.privacy-shield #app::after {
 .sheet-subtitle { margin: var(--space-4) 0 var(--space-1); font-size: var(--fs-xs); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
 
 .garden-card { width: 100%; margin-top: var(--space-4); }
-.garden-card__row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-1); align-items: end; }
-.garden-card__plant { display: block; max-width: 84px; justify-self: center; width: 100%; }
+.garden-card__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); align-items: center; }
+@media (min-width: 560px) { .garden-card__body { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); } }
+.garden-card__art { display: block; max-width: 260px; width: 100%; justify-self: center; }
+.garden-card__legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); font-size: var(--fs-xs); color: var(--text-secondary); }
+@media (min-width: 560px) { .garden-card__legend { display: grid; grid-template-columns: repeat(2, max-content); gap: var(--space-2) var(--space-5); } }
+.garden-card__key { display: inline-flex; align-items: center; gap: 6px; }
+.garden-card__key .garden-legend__swatch { width: 10px; height: 10px; }
+
+/* To Do */
+.todo-row { display: flex; align-items: center; gap: var(--space-1); }
+.todo-row .item-row { flex: 1; min-width: 0; margin-right: 0; width: auto; }
+.todo-row .g-item__check { margin: 0 4px 0 0; }
+.todo-row.is-done .item-row__title { text-decoration: line-through; color: var(--text-secondary); }
+.todo-done-toggle { margin-top: var(--space-3); }
+.todo-done-note { margin: var(--space-2) 0 0; }
+.todo-card { width: 100%; margin-top: var(--space-4); display: grid; gap: var(--space-3); }
+.todo-card .card-head { margin-bottom: 0; align-items: center; }
+.todo-card__title { display: flex; align-items: center; gap: var(--space-3); color: var(--text-primary); }
+.todo-card__title > span:last-child { display: grid; }
+.todo-card__count { margin: 0; }
+.todo-card .quick-add { background: rgba(255, 255, 255, .04); }
+
 
 /* ======================================================================
    Fase 9 — Gomme, manutenzioni auto, una tantum, visite da prenotare
@@ -1111,3 +1134,12 @@ html.privacy-shield #app::after {
 .tyre-next .card-text { margin: 0; }
 .maint__undo { color: var(--text-secondary); }
 .maint__row.is-done .item-row__title { color: var(--text-secondary); }
+
+@keyframes leaf-fall {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+  8% { opacity: 1; }
+  45% { transform: translate(8px, calc(var(--fall) * .5)) rotate(120deg); }
+  80% { opacity: 1; transform: translate(-2px, var(--fall)) rotate(220deg); }
+  100% { opacity: 0; transform: translate(-2px, var(--fall)) rotate(220deg); }
+}
+@keyframes plant-aura { from { opacity: .55; } to { opacity: 1; } }

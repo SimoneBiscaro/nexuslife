@@ -21,14 +21,37 @@ import { activeContract, currentInstallment, homePurchasesTotal, paymentBadge } 
 import { urgencyGlow } from '../../domain/groceries.js';
 import { suggestGroceries } from '../../domain/suggestions.js';
 import { useIncremental } from '../../ui/incremental.js';
-import { Plant, flowerColor } from '../../ui/Plant.js';
+import { Bouquet, PLANT_COLORS } from '../../ui/Bouquet.js';
 import { gardenState } from '../../domain/garden.js';
+import { sortTodos } from '../../domain/todos.js';
+import { TodoQuickAdd, TodoRow } from '../todo/TodoView.js';
+
+/** To Do in Oggi: le prossime 3 voci e l'aggiunta rapida. */
+function TodoCard({ todos, today, index }) {
+  const { open } = sortTodos(todos, today);
+  const late = open.filter((x) => x.status === 'overdue').length;
+  return html`
+    <${GlassCard} class="todo-card spring-in" style=${`--i:${index}`}>
+      <div class="card-head">
+        <a class="todo-card__title" href="#/todo">
+          <span class="summary__icon" aria-hidden="true" style="--accent:var(--champagne)"><${Icon} name="todo" /></span>
+          <span>
+            <span class="card-title">To Do</span>
+            <span class="card-text todo-card__count">${open.length === 0 ? 'Niente da fare' : `${open.length} da fare${late ? ` · ${late} in ritardo` : ''}`}</span>
+          </span>
+        </a>
+        <a class="btn btn--ghost" href="#/todo">Vedi tutti</a>
+      </div>
+      <${TodoQuickAdd} today=${today} />
+      ${open.length > 0 && html`<ul class="item-list">${open.slice(0, 3).map((x) => html`<${TodoRow} key=${x.todo.id} x=${x} today=${today} onOpen=${() => navigate('/todo')} />`)}</ul>`}
+    <//>`;
+}
 
 /** Anteprima del giardino zen: le sei piante in fila, si apre la pagina completa. */
 function GardenCard({ garden, index }) {
-  const text = !garden.hasData ? 'Ogni sezione farà crescere la sua pianta'
-    : garden.healthy === garden.withData ? 'Tutte le piante stanno bene'
-      : `${garden.healthy} ${garden.healthy === 1 ? 'pianta' : 'piante'} su ${garden.withData} in salute`;
+  const text = !garden.hasData ? 'Ogni sezione aggiungerà un fiore al mazzo'
+    : garden.healthy === garden.withData ? 'Tutti i fiori stanno bene'
+      : `${garden.healthy} ${garden.healthy === 1 ? 'fiore' : 'fiori'} su ${garden.withData} in salute`;
   return html`
     <${GlassCard} interactive onClick=${() => navigate('/giardino')} class="summary garden-card spring-in"
       style=${`--i:${index};--accent:var(--mint)`} aria-label=${`Giardino zen: ${text}. Apri il giardino`}>
@@ -38,15 +61,18 @@ function GardenCard({ garden, index }) {
         <span class="summary__go" aria-hidden="true"><${Icon} name="back" /></span>
       </span>
       <span class="summary__sub">${text}</span>
-      <span class="garden-card__row" aria-hidden="true">
-        ${garden.plants.map((p, i) => html`<span key=${p.id} class="garden-card__plant" data-stage=${p.stage.id}>
-          <${Plant} stage=${p.stage} seed=${p.id} flower=${flowerColor(i)} size="sm" still />
-        </span>`)}
+      <span class="garden-card__body">
+        <span class="garden-card__art"><${Bouquet} plants=${garden.plants} size="sm" still /></span>
+        <span class="garden-card__legend" aria-hidden="true">
+          ${garden.plants.map((p) => html`<span key=${p.id} class="garden-card__key" data-stage=${p.stage.id}>
+            <span class="garden-legend__swatch" style=${`--flower:${PLANT_COLORS[p.id]}`}></span>${p.label}
+          </span>`)}
+        </span>
       </span>
     <//>`;
 }
 
-const SECTION_ICON = { auto: 'auto', casa: 'casa', spesa: 'spesa', salute: 'salute' };
+const SECTION_ICON = { auto: 'auto', casa: 'casa', spesa: 'spesa', salute: 'salute', todo: 'todo' };
 /** Titoli generici delle scadenze sanitarie quando il blocco Salute è attivo. */
 const MASKED_HEALTH = { visita: 'Visita medica', richiamo: 'Richiamo vaccino', prenotazione: 'Visita da prenotare' };
 
@@ -164,12 +190,13 @@ export function OggiView() {
       <//>
     </section>`}
 
-    ${garden && html`<${GardenCard} garden=${garden} index=${4} />`}
+    ${data && html`<${TodoCard} todos=${data.todos} today=${today} index=${4} />`}
+    ${garden && html`<${GardenCard} garden=${garden} index=${5} />`}
 
     ${data && html`<h2 class="section-title">Prossime scadenze</h2>`}
     ${!data ? null : upcoming.length === 0
-      ? html`<${GlassCard} class="spring-in" style="--i:5"><${EmptyNote} art="oggi">Nessuna scadenza in vista. Aggiungi l'auto, l'affitto o una visita e le prossime date compariranno qui.<//><//>`
-      : html`<${GlassCard} class="spring-in" style="--i:5">
+      ? html`<${GlassCard} class="spring-in" style="--i:6"><${EmptyNote} art="oggi">Nessuna scadenza in vista. Aggiungi l'auto, l'affitto o una visita e le prossime date compariranno qui.<//><//>`
+      : html`<${GlassCard} class="spring-in" style="--i:6">
           <ul class="item-list">
             ${upcoming.map((u) => html`
               <li key=${u.key}>
