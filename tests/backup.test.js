@@ -141,7 +141,7 @@ test('Fase 9: nuove entità nel pacchetto, visite da prenotare escluse con "Escl
   assert.match(html, /una tantum/);
   assert.match(html, /Oculista/);
   const back = await readBackup(pkg.bytes);
-  assert.equal(back.meta.schemaVersion, 2);
+  assert.equal(back.meta.schemaVersion, 3);
   assert.deepEqual(summarize(back.records), { Auto: 4, Casa: 2, Spesa: 1, Salute: 3 });
   const noHealth = await createBackupPackage(more, { ...opts, excludeHealth: true });
   assert.ok(!readZip(noHealth.bytes).some((f) => f.name.includes('visitPlan')));

@@ -5,6 +5,7 @@ import { estimateKmPerDay, latestKm } from './mileage.js';
 import { tyreChange, TYRE_LABEL } from './tyres.js';
 import { maintenancePlan } from './maintenance.js';
 import { openVisitPlans } from './health.js';
+import { sortTodos } from './todos.js';
 
 export const DEADLINE_TYPES = ['bollo', 'assicurazione', 'revisione'];
 export const DEADLINE_LABEL = { bollo: 'Bollo', assicurazione: 'Assicurazione', revisione: 'Revisione', tagliando: 'Tagliando' };
@@ -118,6 +119,10 @@ export function collectDeadlines(data, today) {
     if (x.state !== 'daPrenotare' || !x.dueBy) continue;
     push({ key: `visitPlan:${x.plan.id}:${x.dueBy}`, section: 'salute', kind: 'prenotazione', title: `Prenotare visita ${x.plan.type || ''}`.trim(),
       date: x.dueBy, status: x.status, href: '#/salute' });
+  }
+  for (const { todo, status } of sortTodos(data.todos, todayKey).open) {
+    if (!todo.dueDate) continue;
+    push({ key: `todo:${todo.id}:${todo.dueDate}`, section: 'todo', kind: 'todo', title: todo.title, date: todo.dueDate, status, href: '#/todo' });
   }
   for (const v of live(data.vaccines)) {
     if (!v.boosterDate) continue;

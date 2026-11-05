@@ -1,5 +1,6 @@
 import { DEFAULT_CATEGORIES, itemsToAutoArchive } from '../domain/groceries.js';
 import { toDateKey } from '../domain/dates.js';
+import { expiredTodos } from '../domain/todos.js';
 import { ensureRentInstallments } from './home.js';
 
 export const SETTINGS_ID = 'settings';
@@ -57,5 +58,8 @@ export async function startupMaintenance(repo, now = new Date()) {
     ]);
   }
   const installments = await ensureRentInstallments(repo, toDateKey(now));
-  return { purged, archived: stale.length, installments };
+  // To Do fatti da più di 30 giorni: eliminati (tombstone, così anche il cloud si allinea)
+  const expired = expiredTodos(await repo.list('todo'), toDateKey(now));
+  if (expired.length) await repo.batch(expired.map((t) => ({ entity: 'todo', id: t.id, patch: { deleted: true } })));
+  return { purged, archived: stale.length, installments, todos: expired.length };
 }

@@ -11,6 +11,9 @@ export function Topbar({ path }) {
         <span aria-hidden="true">NexusLife</span>
       </a>
       <${SyncDot} />
+      <a class="icon-btn" href="#/todo" aria-label="To Do" aria-current=${path === '/todo' ? 'page' : undefined}>
+        <${Icon} name="todo" />
+      </a>
       <a class="icon-btn" href="#/giardino" aria-label="Giardino zen" aria-current=${path === '/giardino' ? 'page' : undefined}>
         <${Icon} name="giardino" />
       </a>

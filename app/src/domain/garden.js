@@ -6,6 +6,7 @@ import { urgencyGlow } from './groceries.js';
 import { tyreChange, TYRE_LABEL } from './tyres.js';
 import { isPeriodic, maintenancePlan } from './maintenance.js';
 import { openVisitPlans } from './health.js';
+import { sortTodos } from './todos.js';
 
 /*
  * Giardino zen: una pianta per categoria, la cui salute riassume le cose in sospeso.
@@ -19,6 +20,7 @@ export const GARDEN_PLANTS = [
   { id: 'manutenzioni', label: 'Manutenzioni', href: '#/casa', section: 'casa' },
   { id: 'spesa', label: 'Spesa', href: '#/spesa', section: 'spesa' },
   { id: 'salute', label: 'Salute', href: '#/salute', section: 'salute' },
+  { id: 'todo', label: 'To Do', href: '#/todo', section: 'todo' },
   { id: 'backup', label: 'Backup', href: '#/impostazioni', section: 'impostazioni' },
 ];
 
@@ -340,6 +342,17 @@ export function healthIssues(data, today) {
  * Backup: ok entro la soglia, poi warning fino a 2× la soglia, critical fino a 3×, poi overdue.
  * Nessun pacchetto mai scaricato (con dati presenti) = critical.
  */
+/** To Do: voci aperte con data (stati standard); senza data da completare, senza penalità. */
+export function todoIssues(data, today) {
+  return sortTodos(data.todos, today).open.map(({ todo, status, days }) => {
+    const base = { key: `todo:${todo.id}`, plant: 'todo', href: '#/todo' };
+    if (!todo.dueDate) return { ...base, status: 'unknown', date: null, days: null, overdueDays: 0, title: `${todo.title}: senza data` };
+    return { ...base, status, date: todo.dueDate, days, overdueDays: status === 'overdue' ? -days : 0,
+      title: days < 0 ? `${todo.title}: in ritardo di ${-days} ${plural(-days, 'giorno', 'giorni')}`
+        : days === 0 ? `${todo.title}: da fare oggi` : days === 1 ? `${todo.title}: da fare domani` : `${todo.title}: entro ${days} giorni` };
+  });
+}
+
 export function backupIssues({ lastBackupAt, thresholdDays = 30 }, today) {
   const t = Number(thresholdDays) > 0 ? Number(thresholdDays) : 30;
   if (!lastBackupAt) {
@@ -370,7 +383,8 @@ export function gardenState(data, { today, now, settings = {} }) {
   const hasMaint = any('homeMaintenance');
   const hasSpesa = any('groceryItems', 'groceryPurchases');
   const hasSalute = any('medicalVisits', 'vaccines', 'visitPlans');
-  const hasAnything = hasAuto || hasRent || hasMaint || hasSpesa || hasSalute || any('homePurchases', 'vehiclePurchases');
+  const hasTodo = any('todos');
+  const hasAnything = hasAuto || hasRent || hasMaint || hasSpesa || hasSalute || hasTodo || any('homePurchases', 'vehiclePurchases');
 
   const plants = [
     buildPlant('auto', hasAuto ? autoIssues(d, today) : [], hasAuto),
@@ -378,6 +392,7 @@ export function gardenState(data, { today, now, settings = {} }) {
     buildPlant('manutenzioni', hasMaint ? maintenanceIssues(d, today) : [], hasMaint),
     buildPlant('spesa', hasSpesa ? groceryIssues(d, now) : [], hasSpesa),
     buildPlant('salute', hasSalute ? healthIssues(d, today) : [], hasSalute),
+    buildPlant('todo', hasTodo ? todoIssues(d, today) : [], hasTodo),
     buildPlant('backup', hasAnything ? backupIssues({ lastBackupAt: settings.lastBackupAt, thresholdDays: settings.backupReminderDays }, today) : [], hasAnything),
   ];
   const withData = plants.filter((p) => p.hasData).length;

@@ -9,6 +9,7 @@ import { deadlineStatus } from '../domain/deadlines.js';
 import { openVisitPlans, STATUS_IT, splitVisits, visitPlanLabel } from '../domain/health.js';
 import { tyreChange, TYRE_LABEL } from '../domain/tyres.js';
 import { recurrenceLabel, sortMaintenancePlans } from '../domain/maintenance.js';
+import { repeatLabel, sortTodos } from '../domain/todos.js';
 
 const eur = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
 const int = new Intl.NumberFormat('it-IT');
@@ -95,6 +96,12 @@ export function buildReport(records, { today, now, appVersion, excludeHealth = f
   const open = of('groceryItem').filter((i) => !i.archived);
   sections.push(`<section><h2>Lista della spesa aperta</h2>
     ${table(['Articolo', 'Quantità', 'Urgenza', 'Categoria'], open.map((i) => [e(i.name), String(i.quantity ?? 1), e(i.urgency), e(cats.get(i.categoryId) ?? '—')]), 'La lista è vuota.')}
+  </section>`);
+
+  // To Do
+  const todos = sortTodos(of('todo'), today).open;
+  sections.push(`<section><h2>To Do</h2>
+    ${table(['Cosa', 'Entro', 'Ripetizione', 'Stato'], todos.map((x) => [e(x.todo.title), d(x.todo.dueDate), e(repeatLabel(x.todo) || '—'), x.todo.dueDate ? badge(x.status) : '—']), 'Niente da fare.')}
   </section>`);
 
   // Salute

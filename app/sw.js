@@ -1,5 +1,5 @@
 /* NexusLife — service worker. Incrementare CACHE_VERSION a ogni modifica dell'app shell. */
-const CACHE_VERSION = 'v10';
+const CACHE_VERSION = 'v11';
 const SHELL_CACHE = `nexuslife-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = 'nexuslife-runtime';
 
@@ -64,6 +64,7 @@ const SHELL = [
   './src/domain/garden.js',
   './src/domain/tyres.js',
   './src/domain/maintenance.js',
+  './src/domain/todos.js',
   './src/ui/html.js',
   './src/ui/icons.js',
   './src/ui/haptics.js',
@@ -92,10 +93,12 @@ const SHELL = [
   './src/ui/PinPad.js',
   './src/ui/incremental.js',
   './src/ui/memo.js',
-  './src/ui/Plant.js',
+  './src/ui/Bouquet.js',
   './src/views/oggi/OggiView.js',
   './src/views/giardino/GiardinoView.js',
   './src/views/giardino/PlantSheet.js',
+  './src/views/todo/TodoView.js',
+  './src/views/todo/TodoSheet.js',
   './src/views/auto/AutoView.js',
   './src/views/auto/gauges.js',
   './src/views/auto/VehicleWizard.js',
