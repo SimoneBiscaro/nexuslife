@@ -1,7 +1,7 @@
 import { addMonths, daysBetween, endOfMonth, toDateKey } from './dates.js';
 
 /** Gravità crescente: usata per scegliere lo stato peggiore e ordinare i banner. */
-export const STATUS_SEVERITY = { unknown: 0, ok: 1, warning: 2, critical: 3, overdue: 4 };
+export const STATUS_SEVERITY = { unknown: 0, ok: 1, booked: 1, warning: 2, bookingPast: 2, critical: 3, overdue: 4 };
 
 /**
  * Stato di una scadenza con d = giorni di calendario da oggi.
@@ -88,6 +88,15 @@ export function proposeRenewal(deadline, vehicle = {}) {
 }
 
 /**
+ * Revisione appena fatta (per esempio da una prenotazione): la successiva è a fine mese
+ * della data in cui è stata fatta + 24 mesi, anche se fatta in ritardo.
+ */
+export function proposeRevisionAfter(doneDate) {
+  if (!doneDate) return null;
+  return endOfMonth(addMonths(toDateKey(doneDate), 24));
+}
+
+/**
  * Prossima data di una manutenzione a calendario.
  * Periodica a mesi: ultima esecuzione + intervallo. Una tantum: la data prevista, finché non è fatta.
  */
@@ -97,12 +106,15 @@ export function maintenanceNextDate(item) {
   return item.doneAt ? null : item.dueDate || null;
 }
 
-const BANNER_STATUSES = new Set(['warning', 'critical', 'overdue']);
+const BANNER_STATUSES = new Set(['warning', 'critical', 'overdue', 'bookingPast']);
+/** Un appuntamento prenotato compare in Oggi solo nell'ultima settimana. */
+export const BOOKED_BANNER_DAYS = 7;
 const BANNER_HIDE_MS = 24 * 3600 * 1000;
 
 /**
- * Elementi per i banner di Oggi: warning/critical/overdue entro 30 giorni,
- * esclusi quelli nascosti, ordinati per gravità e poi per data.
+ * Elementi per i banner di Oggi: warning/critical/overdue entro 30 giorni e prenotazioni
+ * passate da confermare (bookingPast); gli appuntamenti prenotati (booked) solo negli ultimi 7 giorni.
+ * Esclusi quelli nascosti, ordinati per gravità e poi per data.
  * @param {Array<{ key: string, status: string, date: string }>} items
  * @param {{ today: string, now: string|Date, dismissed?: Record<string, string> }} opts
  *   `dismissed`: chiave → istante ISO fino a cui il banner resta nascosto
@@ -110,7 +122,9 @@ const BANNER_HIDE_MS = 24 * 3600 * 1000;
 export function todayBanners(items, { today, now, dismissed = {} }) {
   const nowMs = new Date(now).getTime();
   return items
-    .filter((it) => BANNER_STATUSES.has(it.status) && it.date && daysBetween(today, it.date) <= 30)
+    .filter((it) => it.date && (it.status === 'booked'
+      ? daysBetween(today, it.date) >= 0 && daysBetween(today, it.date) <= BOOKED_BANNER_DAYS
+      : BANNER_STATUSES.has(it.status) && daysBetween(today, it.date) <= 30))
     .filter((it) => !(dismissed[it.key] && Date.parse(dismissed[it.key]) > nowMs))
     .sort((a, b) => STATUS_SEVERITY[b.status] - STATUS_SEVERITY[a.status] || (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }

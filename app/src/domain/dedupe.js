@@ -1,4 +1,5 @@
 import { normalizeName, URGENCY_RANK } from './groceries.js';
+import { bookingSnapshot, hasBooking } from './booking.js';
 
 /*
  * Deduplicazione dopo la sincronizzazione (CLAUDE.md §7).
@@ -57,17 +58,30 @@ export function dedupe(records, now) {
     }
   };
 
+  /** Il vincitore senza prenotazione eredita quella del perdente più recente che ne ha una. */
+  const inheritBookings = (winner, losers, kinds) => {
+    let patch = null;
+    for (const kind of kinds) {
+      if (hasBooking(winner, kind)) continue;
+      const donor = losers.find((l) => hasBooking(l, kind));
+      if (donor) patch = { ...patch, ...bookingSnapshot(donor, kind) };
+    }
+    if (patch) save({ ...winner, ...patch });
+  };
+
   // Veicoli per targa normalizzata; scadenze, letture e spese seguono il vincitore.
   const vehicleRemap = new Map();
   for (const group of duplicates('vehicle', (v) => normalizePlate(v.plate))) {
     const [winner, ...losers] = [...group].sort(byLatest);
+    inheritBookings(winner, losers, ['tagliando', 'gomme']);
     for (const l of losers) { vehicleRemap.set(l.id, winner.id); bury(l); }
   }
   remapChildren(VEHICLE_CHILDREN, 'vehicleId', vehicleRemap);
 
   // Scadenze auto per (veicolo, tipo): vince la più recente.
   for (const group of duplicates('vehicleDeadline', (d) => d.vehicleId && d.type && `${d.vehicleId}|${d.type}`)) {
-    const [, ...losers] = [...group].sort(byLatest);
+    const [winner, ...losers] = [...group].sort(byLatest);
+    if (winner.type === 'revisione') inheritBookings(winner, losers, ['revisione']);
     losers.forEach(bury);
   }
 

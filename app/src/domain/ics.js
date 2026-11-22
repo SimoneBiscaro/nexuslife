@@ -45,7 +45,11 @@ const VTIMEZONE = [
 function alarmLines(event) {
   const rule = REMINDER_RULES[event.kind];
   if (!rule) return [];
-  const triggers = rule.hours
+  // Appuntamenti con l'ora: i preavvisi a giorni sono già calcolati in minuti dall'inizio.
+  const timedDays = rule.days && event.dateTime && Array.isArray(event.reminders) && event.reminders.length;
+  const triggers = timedDays
+    ? event.reminders.map((r) => ({ trigger: r.minutesBefore > 0 ? `-PT${r.minutesBefore}M` : 'PT0S', label: r.label }))
+    : rule.hours
     ? rule.hours.map((h) => ({ trigger: `-PT${h}H`, label: `${h} ore prima` }))
     : rule.days.map((dd) => ({ trigger: dd === 0 ? 'PT0S' : `-P${dd}D`, label: dd === 0 ? 'oggi' : dd === 1 ? 'domani' : `tra ${dd} giorni` }));
   return triggers.flatMap(({ trigger, label }) => [

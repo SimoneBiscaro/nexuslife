@@ -1,5 +1,5 @@
 /** Stati di scadenza condivisi dai componenti (CLAUDE.md §5 e §7). */
-export const STATUSES = ['ok', 'warning', 'critical', 'overdue', 'unknown'];
+export const STATUSES = ['ok', 'warning', 'critical', 'overdue', 'unknown', 'booked', 'bookingPast'];
 
 export const STATUS_LABEL = {
   ok: 'In regola',
@@ -7,6 +7,8 @@ export const STATUS_LABEL = {
   critical: 'Urgente',
   overdue: 'Scaduto',
   unknown: 'Dato mancante',
+  booked: 'Prenotato',
+  bookingPast: 'Da confermare',
 };
 
 export function normalizeStatus(status) {

@@ -5,7 +5,7 @@ import { haptic } from './haptics.js';
 import { normalizeStatus } from './status.js';
 
 const DISMISS_PX = 96;
-const ICON_FOR = { ok: 'check', warning: 'clock', critical: 'alert', overdue: 'alert', unknown: 'info' };
+const ICON_FOR = { ok: 'check', warning: 'clock', critical: 'alert', overdue: 'alert', unknown: 'info', booked: 'calendar', bookingPast: 'calendar' };
 
 /**
  * Avviso in evidenza. Swipe orizzontale o ✕ per nasconderlo (onDismiss).

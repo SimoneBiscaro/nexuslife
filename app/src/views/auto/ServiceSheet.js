@@ -11,13 +11,17 @@ import { getRepo } from '../../store/repo.js';
 import { daysBetween, isDateKey } from '../../domain/dates.js';
 import { daysLabel } from '../../domain/overview.js';
 import { STATUS_LABEL } from '../../ui/status.js';
+import { clearBookingPatch, proposedDoneDate, bookingSnapshot } from '../../domain/booking.js';
+import { BookingForm } from './BookingForm.js';
+import { useFocusDone } from './useFocusDone.js';
 
 /**
- * Dettaglio tagliando: prossima data e km, stima, "Tagliando fatto".
- * @param {{ open, onClose, vehicle, overview, today }} props
+ * Dettaglio tagliando: prossima data e km, stima, prenotazione, "Tagliando fatto".
+ * @param {{ open, onClose, vehicle, overview, today, focus?: 'done' }} props
  */
-export function ServiceSheet({ open, onClose, vehicle, overview, today }) {
+export function ServiceSheet({ open, onClose, vehicle, overview, today, focus }) {
   const s = overview.service;
+  const doneRef = useFocusDone(open && focus === 'done');
   const [date, setDate] = useState(today);
   const [km, setKm] = useState('');
   const [cost, setCost] = useState('');
@@ -25,7 +29,7 @@ export function ServiceSheet({ open, onClose, vehicle, overview, today }) {
 
   useEffect(() => {
     if (!open) return;
-    setDate(today);
+    setDate(proposedDoneDate(s.booking, today));
     setKm(String(overview.currentKm || ''));
     setCost('');
     setErrors({});
@@ -42,9 +46,12 @@ export function ServiceSheet({ open, onClose, vehicle, overview, today }) {
     if (Object.keys(e).length) return;
 
     const repo = await getRepo();
-    const before = { lastServiceDate: vehicle.lastServiceDate ?? null, lastServiceKm: vehicle.lastServiceKm ?? null, currentKm: vehicle.currentKm };
+    const before = { lastServiceDate: vehicle.lastServiceDate ?? null, lastServiceKm: vehicle.lastServiceKm ?? null, currentKm: vehicle.currentKm,
+      ...bookingSnapshot(vehicle, 'tagliando') };
+    // "Fatto" chiude anche la prenotazione
     const ops = [{ entity: 'vehicle', id: vehicle.id, patch: {
       lastServiceDate: date, lastServiceKm: kmValue, currentKm: Math.max(Number(vehicle.currentKm) || 0, kmValue),
+      ...clearBookingPatch('tagliando'),
     } }];
     let expenseId = null;
     if (amount !== null) {
@@ -64,12 +71,14 @@ export function ServiceSheet({ open, onClose, vehicle, overview, today }) {
   }
 
   const showsKm = s.kmStatus !== 'unknown';
+  const orig = s.originalStatus ?? s.status;
   return html`
     <${Sheet} open=${open} onClose=${onClose} title="Tagliando">
-      <div class="detail-hero" data-status=${s.status}>
+      <div class="detail-hero" data-status=${orig}>
         <p class="detail-hero__date">${s.effectiveDate ? formatLongDate(s.effectiveDate) : 'Dati da completare'}</p>
-        <${NeonBadge} status=${s.status}>${s.status === 'unknown' || !s.effectiveDate ? STATUS_LABEL[s.status] : daysLabel(daysBetween(today, s.effectiveDate))}<//>
+        <${NeonBadge} status=${orig}>${orig === 'unknown' || !s.effectiveDate ? STATUS_LABEL[orig] : daysLabel(daysBetween(today, s.effectiveDate))}<//>
       </div>
+      ${s.booking && html`<p class="detail-original">Scadenza originale del tagliando, calcolata come sempre: la prenotazione non la sposta.</p>`}
       <dl class="detail-list">
         <div><dt>Per data</dt><dd>${s.nextDate ? formatLongDate(s.nextDate) : '—'}</dd></div>
         <div><dt>Per km</dt><dd>${s.nextKm != null ? formatKm(s.nextKm) : '—'}</dd></div>
@@ -79,8 +88,10 @@ export function ServiceSheet({ open, onClose, vehicle, overview, today }) {
           <dd>${s.estimatedKmDate ? formatLongDate(s.estimatedKmDate) : '—'}
             ${s.estimatedKmDate && overview.kmPerDay.generic && html` <span class="tag">stima generica</span>`}</dd></div>
       </dl>
-      ${s.effectiveDate && s.effectiveDate >= today && html`<div class="sheet-actions"><${CalendarButton} uid=${`service-${vehicle.id}`} /></div>`}
-      <div class="renew">
+      ${!s.booking && s.effectiveDate && s.effectiveDate >= today && html`<div class="sheet-actions"><${CalendarButton} uid=${`service-${vehicle.id}`} /></div>`}
+      <${BookingForm} kind="tagliando" entity="vehicle" record=${vehicle} booking=${s.booking} today=${today} open=${open}
+        uid=${`service-${vehicle.id}`} label="Tagliando" />
+      <div class="renew" ref=${doneRef}>
         <h3 class="renew__title">Tagliando fatto</h3>
         <form class="form-grid" onSubmit=${(e) => { e.preventDefault(); done(); }} noValidate>
           <${TextField} label="Data" type="date" value=${date} max=${today} onValue=${setDate} error=${errors.date} />

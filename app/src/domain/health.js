@@ -2,7 +2,8 @@ import { addMonths, daysBetween, toDateKey } from './dates.js';
 import { deadlineStatus } from './deadlines.js';
 
 export const VISIT_TYPES = ['dentista', 'oculista', 'controllo annuale', 'altro'];
-export const STATUS_IT = { ok: 'In regola', warning: 'In avvicinamento', critical: 'Urgente', overdue: 'Scaduto', unknown: '—' };
+export const STATUS_IT = { ok: 'In regola', warning: 'In avvicinamento', critical: 'Urgente', overdue: 'Scaduto', unknown: '—',
+  booked: 'Prenotato', bookingPast: 'Da confermare' };
 
 const live = (list) => (list || []).filter((r) => !r.deleted && r.dateTime);
 

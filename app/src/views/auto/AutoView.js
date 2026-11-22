@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from '../../../vendor/preact-hooks.mjs';
 import { html } from '../../ui/html.js';
 import { PageHeader, EmptyState, Skeleton } from '../../ui/Page.js';
-import { HudGauge } from '../../ui/HudGauge.js';
+import { HudGauge, hudAriaLabel } from '../../ui/HudGauge.js';
 import { DigitalTwin } from '../../ui/DigitalTwin.js';
 import { Icon } from '../../ui/icons.js';
 import { haptic } from '../../ui/haptics.js';
@@ -29,6 +29,7 @@ export function AutoView() {
   const { data, loading, error } = useEntities(ENTITIES);
   const [wizard, setWizard] = useState(null); // 'create' | 'edit' | null
   const [sheet, setSheet] = useState(null); // tipo di gauge aperto
+  const [focus, setFocus] = useState(null); // 'done' quando un gauge chiede "Fatto?"
   const [kmOpen, setKmOpen] = useState(false);
   const [expense, setExpense] = useState(undefined); // undefined = chiuso, null = nuova
   const [maint, setMaint] = useState(undefined);
@@ -77,7 +78,8 @@ export function AutoView() {
   const overview = vehicleOverview(vehicle, { deadlines: data.vehicleDeadlines, readings }, today);
   const gauges = vehicleGauges(overview, vehicle, today);
   const subtitle = [vehicle.make, vehicle.model, vehicle.plate].filter(Boolean).join(' · ');
-  const openGauge = (key) => { haptic(); setSheet(key); };
+  const openGauge = (g) => { haptic(); setFocus(g.askDone ? 'done' : null); setSheet(g.key); };
+  const closeSheet = () => { setSheet(null); setFocus(null); };
 
   return html`
     <${PageHeader} eyebrow=${subtitle || 'Garage'} title=${vehicle.name || 'Auto'}
@@ -90,8 +92,9 @@ export function AutoView() {
       </div>
       ${gauges.map((g, i) => html`
         <button class=${`garage__gauge garage__gauge--${i + 1} spring-in`} style=${`--i:${i + 1}`} type="button" key=${g.key}
-          onClick=${() => openGauge(g.key)} aria-label=${`${g.label}: apri il dettaglio`}>
-          <${HudGauge} value=${g.value} unit=${g.unit} label=${g.label} ratio=${g.ratio} status=${g.status} sublabel=${g.sublabel} size=${128} />
+          onClick=${() => openGauge(g)} aria-label=${`${hudAriaLabel(g)}. ${g.askDone ? 'Conferma se fatto' : 'Apri il dettaglio'}`}>
+          <${HudGauge} value=${g.value} unit=${g.unit} label=${g.label} ratio=${g.ratio} status=${g.status} sublabel=${g.sublabel}
+            note=${g.note} icon=${g.icon} aria=${g.aria} size=${128} />
         </button>`)}
     </section>
 
@@ -106,9 +109,9 @@ export function AutoView() {
     <${VehicleWizard} open=${wizard === 'edit'} vehicle=${vehicle} onClose=${() => setWizard(null)} />
     ${['bollo', 'assicurazione', 'revisione'].map((type) => html`
       <${DeadlineSheet} key=${type} open=${sheet === type} type=${type} record=${overview.deadlines[type]?.record}
-        vehicle=${vehicle} today=${today} onClose=${() => setSheet(null)} />`)}
-    <${ServiceSheet} open=${sheet === 'tagliando'} vehicle=${vehicle} overview=${overview} today=${today} onClose=${() => setSheet(null)} />
-    <${TyreSheet} open=${sheet === 'gomme'} vehicle=${vehicle} today=${today} currentKm=${overview.currentKm} onClose=${() => setSheet(null)} />
+        vehicle=${vehicle} today=${today} focus=${focus} onClose=${closeSheet} />`)}
+    <${ServiceSheet} open=${sheet === 'tagliando'} vehicle=${vehicle} overview=${overview} today=${today} focus=${focus} onClose=${closeSheet} />
+    <${TyreSheet} open=${sheet === 'gomme'} vehicle=${vehicle} today=${today} currentKm=${overview.currentKm} focus=${focus} onClose=${closeSheet} />
     <${MaintenanceSheet} entity="vehicleMaintenance" open=${maint !== undefined} item=${maint || null} today=${today}
       vehicle=${vehicle} currentKm=${overview.currentKm} onClose=${() => setMaint(undefined)} />
     <${HomePurchaseSheet} entity="vehiclePurchase" open=${purchase !== undefined} item=${purchase || null} vehicle=${vehicle}

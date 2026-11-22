@@ -6,6 +6,8 @@
 [data-status="warning"]  { --status-color: var(--status-warning);  --status-text: var(--status-warning); }
 [data-status="critical"] { --status-color: var(--status-critical); --status-text: var(--status-critical); }
 [data-status="overdue"]  { --status-color: var(--status-overdue);  --status-text: var(--status-overdue); }
+[data-status="booked"]   { --status-color: var(--status-booked);   --status-text: var(--status-booked); }
+[data-status="bookingPast"] { --status-color: var(--status-booking-past); --status-text: var(--status-booking-past); }
 [data-status="sync"]     { --status-color: var(--electric-blue);   --status-text: var(--electric-blue-glow); }
 
 @keyframes status-pulse {
@@ -175,6 +177,13 @@ kbd, .kbd {
 .hud-gauge__unit { margin-top: 4px; font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--status-text); }
 .hud-gauge__label { margin-top: calc(var(--size) * -.1); font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
 .hud-gauge__sub { font-size: var(--fs-xs); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* Prenotato (CLAUDE.md §5): arco a trattini + icona calendario, riconoscibile anche senza colore */
+.hud-gauge__icon { width: calc(var(--size) * .15); height: calc(var(--size) * .15); margin-bottom: 2px; color: var(--status-text); }
+.hud-gauge__icon svg { width: 100%; height: 100%; }
+.hud-gauge__value--word { font-size: calc(var(--size) * .17); letter-spacing: -.01em; }
+.hud-gauge[data-status="booked"] .hud-gauge__arc { stroke-linecap: butt; }
+.hud-gauge__note { font-size: 11px; color: var(--text-secondary); opacity: .85; font-variant-numeric: tabular-nums; }
+.hud-gauge[data-status="bookingPast"] .hud-gauge__value { color: var(--status-text); }
 
 /* ---------- NeonBadge ---------- */
 .neon-badge {
@@ -601,6 +610,21 @@ input[type="date"].input::-webkit-calendar-picker-indicator { filter: invert(.8)
 .renew__title { font-size: var(--fs-md); font-weight: 800; margin-bottom: var(--space-3); }
 .renew__row { display: flex; gap: var(--space-3); align-items: flex-end; flex-wrap: wrap; }
 .renew__row .form-field { flex: 1 1 180px; }
+/* Prenotazioni (tagliando, revisione, gomme) */
+.booking .form-actions { gap: var(--space-2); justify-content: flex-end; flex-wrap: wrap; }
+.booking__card {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  padding: var(--space-3); border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--status-color) 10%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--status-color) 55%, transparent);
+}
+.booking__icon { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; color: var(--status-text); background: color-mix(in srgb, var(--status-color) 16%, transparent); }
+.booking__icon svg { width: 20px; height: 20px; }
+.booking__main { flex: 1 1 160px; min-width: 0; }
+.booking__when { margin: 0; font-weight: 800; }
+.booking__meta { margin: 2px 0 0; font-size: var(--fs-sm); color: var(--text-secondary); overflow-wrap: anywhere; }
+.booking .card-text { margin: var(--space-3) 0 0; }
+.detail-original { margin: calc(var(--space-2) * -1) 0 var(--space-3); font-size: var(--fs-sm); color: var(--text-secondary); }
 .tag { display: inline-block; padding: 1px 8px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 800; color: var(--amber); background: rgba(255, 176, 32, .12); border: 1px solid rgba(255, 176, 32, .35); vertical-align: 1px; }
 
 /* ---------- Garage: gemello digitale + 4 indicatori ---------- */

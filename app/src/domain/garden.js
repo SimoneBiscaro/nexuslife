@@ -3,7 +3,7 @@ import { deadlineStatus, maintenanceNextDate, STATUS_SEVERITY } from './deadline
 import { DEADLINE_LABEL, DEADLINE_TYPES, vehicleOverview } from './overview.js';
 import { estimateKmPerDay } from './mileage.js';
 import { urgencyGlow } from './groceries.js';
-import { tyreChange, TYRE_LABEL } from './tyres.js';
+import { TYRE_LABEL } from './tyres.js';
 import { isPeriodic, maintenancePlan } from './maintenance.js';
 import { openVisitPlans } from './health.js';
 import { sortTodos } from './todos.js';
@@ -25,13 +25,13 @@ export const GARDEN_PLANTS = [
 ];
 
 /** Penalità per stato: quanto un elemento toglie alla salute della pianta. */
-export const STATUS_PENALTY = { unknown: 0, ok: 0, warning: 0.15, critical: 0.40, overdue: 0.70 };
+export const STATUS_PENALTY = { unknown: 0, ok: 0, booked: 0, warning: 0.15, bookingPast: 0.15, critical: 0.40, overdue: 0.70 };
 /** Uno scaduto pesa sempre di più col passare dei giorni, fino a questo tetto dopo 30 giorni. */
 export const OVERDUE_MAX_PENALTY = 0.95;
 export const OVERDUE_RAMP_DAYS = 30;
 
 /** Stato immediatamente più grave (per il pavimento dei problemi lievi). */
-const NEXT_STATUS = { unknown: null, ok: null, warning: 'critical', critical: 'overdue', overdue: null };
+const NEXT_STATUS = { unknown: null, ok: null, booked: null, warning: 'critical', bookingPast: 'critical', critical: 'overdue', overdue: null };
 
 /** Giorni passati dalla scadenza, ≥ 0. */
 const overdueDaysOf = (issue) => Math.max(0, Number(issue.overdueDays) || 0);
@@ -170,6 +170,10 @@ export function autoIssues(data, today) {
     for (const type of DEADLINE_TYPES) {
       const d = ov.deadlines[type];
       const label = `${DEADLINE_LABEL[type]}${suffix}`;
+      if (d?.booking) {
+        out.push(bookingIssue(`auto:${v.id}:${type}`, label, d, today));
+        continue;
+      }
       if (!d?.record.dueDate) {
         out.push({ key: `auto:${v.id}:${type}`, plant: 'auto', status: 'unknown', date: null, days: null, overdueDays: 0,
           title: `${label}: data da inserire`, href: '#/auto' });
@@ -177,9 +181,11 @@ export function autoIssues(data, today) {
       }
       out.push(dateIssue({ key: `auto:${v.id}:${type}`, plant: 'auto', label, fem: FEM.has(type), date: d.record.dueDate, today, href: '#/auto' }));
     }
-    out.push(serviceIssue(v, ov, data, today, suffix));
-    const tc = tyreChange(v, today);
-    if (tc) {
+    out.push(ov.service.booking ? bookingIssue(`auto:${v.id}:tagliando`, `Tagliando${suffix}`, ov.service, today) : serviceIssue(v, ov, data, today, suffix));
+    const tc = ov.tyres;
+    if (tc?.booking) {
+      out.push(bookingIssue(`auto:${v.id}:gomme`, `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()}${suffix}`, tc, today));
+    } else if (tc) {
       const label = `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()}${suffix}`;
       out.push(dateIssue({ key: `auto:${v.id}:gomme`, plant: 'auto', label, date: tc.due, today, href: '#/auto' }));
     }
@@ -200,6 +206,20 @@ export function autoIssues(data, today) {
     }
   }
   return out;
+}
+
+/**
+ * Voce prenotata: booked non pesa ("Tagliando prenotato il 28/11"), bookingPast pesa come
+ * un warning ("Tagliando: conferma se l'hai fatto").
+ */
+function bookingIssue(key, label, x, today) {
+  const b = x.booking;
+  const [, m, d] = b.date.split('-');
+  const when = `${Number(d)}/${Number(m)}`;
+  const title = x.status === 'booked'
+    ? `${label} prenotato il ${when}${b.time ? ` alle ${b.time.replace(/^0/, '')}` : ''}`
+    : `${label}: conferma se l'hai fatto (appuntamento del ${when})`;
+  return { key, plant: 'auto', href: '#/auto', status: x.status, date: b.date, days: daysBetween(today, b.date), overdueDays: 0, title };
 }
 
 function serviceIssue(vehicle, ov, data, today, suffix) {
