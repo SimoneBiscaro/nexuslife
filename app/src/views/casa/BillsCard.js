@@ -10,8 +10,8 @@ import { useIncremental } from '../../ui/incremental.js';
 import { EmptyNote } from '../../ui/Page.js';
 
 export const BILL_COLORS = {
-  luce: 'var(--amber)', gas: 'var(--electric-blue-glow)', internet: 'var(--champagne)',
-  acqua: 'var(--mint)', rifiuti: 'var(--titanium-light)', altro: 'var(--health)',
+  luce: 'var(--amber)', gas: 'var(--blue-glow)', internet: 'var(--accent)',
+  acqua: 'var(--green)', rifiuti: 'var(--neutral-light)', altro: 'var(--pink)',
 };
 const BILL_ICON = { luce: 'bolt', gas: 'flame', internet: 'wifi', acqua: 'bottle', rifiuti: 'trash', altro: 'euro' };
 export const billIcon = (kind) => BILL_ICON[kind] || 'euro';
@@ -53,7 +53,7 @@ export function BillsCard({ bills, today, onEdit }) {
               <span class="num">${formatEuro(totals.byKind[k])}</span></li>`)}
         </ul>`}
       ${list.length === 0
-        ? html`<${EmptyNote} art="bollette" accent="var(--mint)">Nessuna bolletta${year !== currentYear ? ` nel ${year}` : ''}. Luce, gas, internet: aggiungile e vedrai il grafico dell'anno.<//>`
+        ? html`<${EmptyNote} art="bollette" accent="var(--green)">Nessuna bolletta${year !== currentYear ? ` nel ${year}` : ''}. Luce, gas, internet: aggiungile e vedrai il grafico dell'anno.<//>`
         : html`<ul class="item-list">
             ${visible.map((b) => {
               const badge = paymentBadge(b, today);

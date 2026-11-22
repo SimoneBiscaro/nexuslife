@@ -27,10 +27,10 @@ export function PageHeader({ eyebrow, title, lede, actions, docTitle }) {
 /**
  * Stato vuoto curato: illustrazione SVG (`art`) oppure sfera in vetro con l'icona della sezione.
  */
-export function EmptyState({ icon, art, title, text, accent = 'var(--champagne)', children }) {
+export function EmptyState({ icon, art, title, text, accent = 'var(--accent)', children }) {
   if (art) {
     return html`
-      <div class="empty-state" style=${`--accent:${accent}`}>
+      <div class="empty-state" style=${`--tint:${accent}`}>
         <div class="empty-state__art"><${Illustration} name=${art} /></div>
         <h2 class="empty-state__title">${title}</h2>
         <p class="empty-state__text">${text}</p>
@@ -38,7 +38,7 @@ export function EmptyState({ icon, art, title, text, accent = 'var(--champagne)'
       </div>`;
   }
   return html`
-    <div class="empty-state" style=${`--accent:${accent}`}>
+    <div class="empty-state" style=${`--tint:${accent}`}>
       <div class="empty-state__orb" aria-hidden="true">
         <svg class="orb-rings" viewBox="0 0 132 132">
           <circle class="orb-ring orb-ring--a" cx="66" cy="66" r="63" stroke-width="1.5" />
@@ -53,8 +53,8 @@ export function EmptyState({ icon, art, title, text, accent = 'var(--champagne)'
 }
 
 /** Stato vuoto compatto dentro una card: piccola illustrazione e una frase. */
-export function EmptyNote({ art, accent = 'var(--champagne)', children }) {
-  return html`<div class="empty-note" style=${`--accent:${accent}`}>
+export function EmptyNote({ art, accent = 'var(--accent)', children }) {
+  return html`<div class="empty-note" style=${`--tint:${accent}`}>
     <${Illustration} name=${art} size="sm" />
     <p class="empty-note__text">${children}</p>
   </div>`;

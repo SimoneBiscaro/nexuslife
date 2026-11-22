@@ -27,7 +27,7 @@ const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const VisitRow = memo(function VisitRow({ v, onOpen }) {
   return html`<li>
     <button class="item-row" type="button" onClick=${() => onOpen(v)}>
-      <span class="item-row__icon" style="--status-color:var(--health);--status-text:var(--health)" aria-hidden="true"><${Icon} name="stethoscope" /></span>
+      <span class="item-row__icon" style="--status-color:var(--pink);--status-text:var(--pink)" aria-hidden="true"><${Icon} name="stethoscope" /></span>
       <span class="item-row__main">
         <span class="item-row__title">${cap(v.type)}${v.doctor ? ` · ${v.doctor}` : ''}</span>
         <span class="item-row__meta">${shortWhen.format(new Date(v.dateTime))}${v.place ? ` · ${v.place}` : ''}</span>
@@ -39,7 +39,7 @@ const VaccineRow = memo(function VaccineRow({ v, today, onOpen }) {
   const st = boosterStatus(v, today);
   return html`<li>
     <button class="item-row" type="button" onClick=${() => onOpen(v)}>
-      <span class="item-row__icon" style="--status-color:var(--health);--status-text:var(--health)" aria-hidden="true"><${Icon} name="syringe" /></span>
+      <span class="item-row__icon" style="--status-color:var(--pink);--status-text:var(--pink)" aria-hidden="true"><${Icon} name="syringe" /></span>
       <span class="item-row__main">
         <span class="item-row__title">${v.name}</span>
         <span class="item-row__meta">fatto ${formatDueDate(v.date, today)}${v.lot ? ` · lotto ${v.lot}` : ''}${v.boosterDate ? ` · richiamo ${formatDueDate(v.boosterDate, today)}` : ''}</span>
@@ -71,7 +71,7 @@ function PlansCard({ plans, today, onPlan }) {
       </div>
       ${plans.length
         ? html`<ul class="item-list">${plans.map((x) => html`<${PlanRow} key=${x.plan.id} x=${x} today=${today} onOpen=${onPlan} />`)}</ul>`
-        : html`<${EmptyNote} art="visite" accent="var(--health)">Visite da prenotare, una volta o periodiche (es. dentista ogni 6 mesi): ti ricordiamo quando chiamare.<//>`}
+        : html`<${EmptyNote} art="visite" accent="var(--pink)">Visite da prenotare, una volta o periodiche (es. dentista ogni 6 mesi): ti ricordiamo quando chiamare.<//>`}
     <//>`;
 }
 
@@ -81,7 +81,7 @@ function HealthContent({ data, now, today, onVisit, onVaccine, onPlan }) {
   const plans = openVisitPlans(data.visitPlans, data.medicalVisits, now);
   const next = upcoming[0];
   if (!upcoming.length && !past.length && !vaccines.length && !plans.length && !data.visitPlans.length) {
-    return html`<${EmptyState} art="visite" accent="var(--health)" title="Nessuna visita in programma"
+    return html`<${EmptyState} art="visite" accent="var(--pink)" title="Nessuna visita in programma"
       text="Aggiungi visite mediche e vaccini: ti ricorderemo appuntamenti e richiami.">
       <div class="empty-actions">
         <button class="btn btn--primary" type="button" onClick=${() => onVisit(null)}><${Icon} name="plus" /> Aggiungi una visita</button>
@@ -108,7 +108,7 @@ function HealthContent({ data, now, today, onVisit, onVaccine, onPlan }) {
         </div>
         <h3 class="subhead">Prossime</h3>
         ${upcoming.length ? html`<${ProgressiveList} class="item-list" items=${upcoming} renderItem=${(v) => html`<${VisitRow} key=${v.id} v=${v} onOpen=${onVisit} />`} />`
-          : html`<${EmptyNote} art="visite" accent="var(--health)">Nessuna visita in programma: aggiungila e ti ricorderemo 24 e 2 ore prima.<//>`}
+          : html`<${EmptyNote} art="visite" accent="var(--pink)">Nessuna visita in programma: aggiungila e ti ricorderemo 24 e 2 ore prima.<//>`}
         <h3 class="subhead">Passate</h3>
         ${past.length ? html`<ul class="item-list">${past.slice(0, 12).map((v) => html`<${VisitRow} key=${v.id} v=${v} onOpen=${onVisit} />`)}</ul>`
           : html`<p class="card-text">Ancora nessuna visita passata.</p>`}
@@ -118,7 +118,7 @@ function HealthContent({ data, now, today, onVisit, onVaccine, onPlan }) {
           <h2 class="card-title">Libretto vaccini</h2>
           <button class="btn btn--secondary" type="button" onClick=${() => onVaccine(null)}><${Icon} name="plus" /> Aggiungi</button>
         </div>
-        ${vaccines.length === 0 ? html`<${EmptyNote} art="vaccini" accent="var(--health)">Nessun vaccino registrato. Con la data del richiamo ti avvisiamo 30 e 7 giorni prima.<//>` : html`
+        ${vaccines.length === 0 ? html`<${EmptyNote} art="vaccini" accent="var(--pink)">Nessun vaccino registrato. Con la data del richiamo ti avvisiamo 30 e 7 giorni prima.<//>` : html`
           <${ProgressiveList} class="item-list" items=${vaccines} renderItem=${(v) => html`<${VaccineRow} key=${v.id} v=${v} today=${today} onOpen=${onVaccine} />`} />`}
       <//>
     </div>`;

@@ -9,20 +9,24 @@ import { Sheet } from '../../ui/Sheet.js';
 import { showToast } from '../../ui/Toast.js';
 import { Icon } from '../../ui/icons.js';
 import { STATUSES, STATUS_LABEL } from '../../ui/status.js';
+import { ChipGroup } from '../../ui/forms.js';
+import { useSignal } from '../../store/state.js';
+import { STYLES, appearanceLabel } from '../../ui/appearance.js';
+import { savedAppearance, startTrial, trial } from '../../ui/AppearanceTrial.js';
+
+/** Valore calcolato di un token sul documento (cambia con stile e tema). */
+const tokenValue = (name) => (typeof getComputedStyle === 'function'
+  ? getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim().toUpperCase() : '');
 
 /*
  * Catalogo visivo interno (#/impostazioni/design): mostra i componenti nei 5 stati.
  * I valori qui sotto sono campioni del catalogo, non dati dell'utente.
  */
 
-const PALETTE = [
-  ['obsidian', '#0A0A0C'], ['obsidian-elevated', '#121216'], ['obsidian-raised', '#1A1B20'],
-  ['titanium-deep', '#2A2C31'], ['titanium', '#5C5F66'], ['titanium-light', '#8E9196'], ['titanium-specular', '#C7CAD1'],
-  ['champagne', '#D9BF8C'], ['champagne-light', '#F2E3C2'], ['champagne-deep', '#9C8355'],
-  ['electric-blue', '#3D8BFF'], ['electric-blue-glow', '#6FA8FF'],
-  ['mint', '#3DDC97'], ['amber', '#FFB020'], ['alarm-red', '#FF453A'], ['health', '#FF6B8B'],
-  ['text-primary', '#F5F5F7'], ['text-secondary', '#A1A1A6'], ['text-tertiary', '#6E6E73'],
-];
+/** Token di colore mostrati nel catalogo: i valori si leggono dal tema in uso. */
+const PALETTE = ['bg', 'bg-elevated', 'bg-raised', 'neutral-deep', 'neutral', 'neutral-light', 'neutral-specular',
+  'accent', 'accent-light', 'accent-deep', 'blue', 'blue-glow', 'green', 'amber', 'red', 'pink', 'booked',
+  'text-primary', 'text-secondary', 'text-tertiary'];
 
 const GAUGE_SAMPLES = [
   { status: 'ok', label: 'Bollo', value: 214, unit: 'giorni', ratio: 0.59, sublabel: 'scade il 4/6' },
@@ -30,9 +34,12 @@ const GAUGE_SAMPLES = [
   { status: 'critical', label: 'Revisione', value: 5, unit: 'giorni', ratio: 0.03, sublabel: 'scade l’8/11' },
   { status: 'overdue', label: 'Tagliando', value: -3, unit: 'giorni', ratio: 0, sublabel: 'scaduto il 31/10' },
   { status: 'unknown', label: 'Bollo', value: null, unit: 'giorni', ratio: 0, sublabel: 'data mancante' },
+  { status: 'booked', label: 'Tagliando', value: 6, unit: 'giorni', ratio: 0.6, sublabel: 'prenotato 28/11 · ore 9:00', note: 'scaduto 10/11', icon: 'calendar' },
+  { status: 'bookingPast', label: 'Gomme', value: 'Fatto?', unit: '', ratio: 1, sublabel: 'appuntamento del 20/11', icon: 'calendar' },
 ];
 
 const SECTIONS = [
+  { id: 'aspetto', title: 'Stile e tema', keys: 'aspetto stile tema palette' },
   { id: 'colori', title: 'Colori', keys: 'colori palette token' },
   { id: 'tipografia', title: 'Tipografia', keys: 'tipografia font serif numeri' },
   { id: 'glass', title: 'GlassCard', keys: 'glasscard vetro card riflesso' },
@@ -46,6 +53,10 @@ const SECTIONS = [
 ];
 
 export function DesignView() {
+  const t = useSignal(trial);
+  const saved = useSignal(savedAppearance);
+  const look = t ? { style: t.style, theme: t.theme } : saved;
+  const lookStyle = STYLES.find((x) => x.id === look.style) || STYLES[0];
   const [query, setQuery] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [hidden, setHidden] = useState(() => new Set());
@@ -81,7 +92,7 @@ export function DesignView() {
   return html`
     <a class="btn btn--ghost catalog-back" href="#/impostazioni"><${Icon} name="back" /> Impostazioni</a>
     <${PageHeader} eyebrow="Catalogo interno" title="Design system"
-      lede="Tutti i componenti di NexusLife nei cinque stati: ok, warning, critical, overdue, unknown." />
+      lede="Tutti i componenti di NexusLife negli stati ok, warning, critical, overdue, unknown, prenotato e da confermare, nello stile in uso." />
 
     <div class="catalog-toolbar">
       <label class="field">
@@ -99,13 +110,24 @@ export function DesignView() {
 
     ${!anyVisible && html`<p class="card-text">Nessun componente corrisponde a “${query}”.</p>`}
 
+    ${section('aspetto', html`
+      <${GlassCard}>
+        <p class="card-text" style="margin:0 0 var(--space-3)">In vista: <strong>${appearanceLabel(look.style, look.theme)}</strong>.
+          Cambiando qui parte la stessa prova di Impostazioni → Aspetto.</p>
+        <${ChipGroup} label="Stile" value=${look.style} onValue=${(id) => startTrial(id, STYLES.find((x) => x.id === id).themes[0].id)}
+          options=${STYLES.map((x) => ({ value: x.id, label: x.name }))} />
+        ${lookStyle.themes.length > 1 && html`<div style="margin-top:var(--space-3)">
+          <${ChipGroup} label="Tema" value=${look.theme} onValue=${(id) => startTrial(lookStyle.id, id)}
+            options=${lookStyle.themes.map((x) => ({ value: x.id, label: x.name }))} /></div>`}
+      <//>`)}
+
     ${section('colori', html`
       <div class="swatches">
-        ${PALETTE.map(([name, hex]) => html`
+        ${PALETTE.map((name) => html`
           <div class="swatch" key=${name}>
             <div class="swatch__chip" style=${`background:var(--${name})`}></div>
             <span class="swatch__name">--${name}</span>
-            <span class="swatch__hex">${hex}</span>
+            <span class="swatch__hex">${tokenValue(name)}</span>
           </div>`)}
       </div>`)}
 

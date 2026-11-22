@@ -20,11 +20,11 @@ export const HP_CATEGORY_LABEL = {
 export const PURCHASE_KINDS = {
   homePurchase: {
     title: 'Da comprare per la casa', sheetTitle: 'Nuovo acquisto per la casa', categories: HOME_PURCHASE_CATEGORIES,
-    art: 'acquisti', accent: 'var(--mint)', empty: 'Mensole, lampadine, una tenda nuova: tienili qui, separati dalla spesa.',
+    art: 'acquisti', accent: 'var(--green)', empty: 'Mensole, lampadine, una tenda nuova: tienili qui, separati dalla spesa.',
   },
   vehiclePurchase: {
     title: 'Da comprare per l\'auto', sheetTitle: 'Nuovo acquisto per l\'auto', categories: VEHICLE_PURCHASE_CATEGORIES,
-    art: 'auto', accent: 'var(--electric-blue-glow)', empty: 'Tappetini, catene da neve, kit di emergenza: la lista dell\'auto.',
+    art: 'auto', accent: 'var(--blue-glow)', empty: 'Tappetini, catene da neve, kit di emergenza: la lista dell\'auto.',
   },
 };
 

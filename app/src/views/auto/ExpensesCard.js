@@ -52,7 +52,7 @@ export function ExpensesCard({ expenses, onEdit, today }) {
         </label>
       </div>
       ${list.length === 0
-        ? html`<${EmptyNote} art="auto" accent="var(--electric-blue-glow)">Nessuna spesa ${category !== 'tutte' ? `di tipo ${CATEGORY_LABEL[category].toLowerCase()} ` : ''}nel ${year}.<//>`
+        ? html`<${EmptyNote} art="auto" accent="var(--blue-glow)">Nessuna spesa ${category !== 'tutte' ? `di tipo ${CATEGORY_LABEL[category].toLowerCase()} ` : ''}nel ${year}.<//>`
         : html`<ul class="item-list">
             ${list.slice(0, shown).map((e) => html`
               <li key=${e.id}>

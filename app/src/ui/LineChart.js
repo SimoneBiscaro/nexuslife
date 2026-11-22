@@ -32,8 +32,8 @@ export function LineChart({ points, label, unit = '' }) {
       <svg viewBox=${`0 0 ${W} ${H}`} role="img" aria-label=${summary}>
         <defs>
           <linearGradient id="lc-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="var(--electric-blue)" stop-opacity=".35" />
-            <stop offset="1" stop-color="var(--electric-blue)" stop-opacity="0" />
+            <stop offset="0" stop-color="var(--blue)" stop-opacity=".35" />
+            <stop offset="1" stop-color="var(--blue)" stop-opacity="0" />
           </linearGradient>
         </defs>
         ${[0, 0.5, 1].map((t) => html`<line class="line-chart__grid" key=${t} x1=${P.l} x2=${W - P.r}

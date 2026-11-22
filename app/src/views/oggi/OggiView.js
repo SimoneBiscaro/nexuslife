@@ -34,7 +34,7 @@ function TodoCard({ todos, today, index }) {
     <${GlassCard} class="todo-card spring-in" style=${`--i:${index}`}>
       <div class="card-head">
         <a class="todo-card__title" href="#/todo">
-          <span class="summary__icon" aria-hidden="true" style="--accent:var(--champagne)"><${Icon} name="todo" /></span>
+          <span class="summary__icon" aria-hidden="true" style="--tint:var(--accent)"><${Icon} name="todo" /></span>
           <span>
             <span class="card-title">To Do</span>
             <span class="card-text todo-card__count">${open.length === 0 ? 'Niente da fare' : `${open.length} da fare${late ? ` · ${late} in ritardo` : ''}`}</span>
@@ -54,7 +54,7 @@ function GardenCard({ garden, index }) {
       : `${garden.healthy} ${garden.healthy === 1 ? 'fiore' : 'fiori'} su ${garden.withData} in salute`;
   return html`
     <${GlassCard} interactive onClick=${() => navigate('/giardino')} class="summary garden-card spring-in"
-      style=${`--i:${index};--accent:var(--mint)`} aria-label=${`Giardino zen: ${text}. Apri il giardino`}>
+      style=${`--i:${index};--tint:var(--green)`} aria-label=${`Giardino zen: ${text}. Apri il giardino`}>
       <span class="summary__head">
         <span class="summary__icon" aria-hidden="true"><${Icon} name="giardino" /></span>
         <span class="summary__title">Giardino</span>
@@ -79,7 +79,7 @@ const MASKED_HEALTH = { visita: 'Visita medica', richiamo: 'Richiamo vaccino', p
 function SummaryCard({ section, title, accent, index, children }) {
   return html`
     <${GlassCard} interactive onClick=${() => navigate(`/${section}`)} class="summary spring-in"
-      style=${`--i:${index};--accent:${accent}`} aria-label=${`${title}: apri la sezione`}>
+      style=${`--i:${index};--tint:${accent}`} aria-label=${`${title}: apri la sezione`}>
       <span class="summary__head">
         <span class="summary__icon" aria-hidden="true"><${Icon} name=${SECTION_ICON[section]} /></span>
         <span class="summary__title">${title}</span>
@@ -170,7 +170,7 @@ export function OggiView() {
       </section>`}
 
     ${data && html`<section class="summary-grid" aria-label="Riepilogo delle sezioni">
-      <${SummaryCard} section="auto" title="Auto" accent="var(--electric-blue-glow)" index=${0}>
+      <${SummaryCard} section="auto" title="Auto" accent="var(--blue-glow)" index=${0}>
         ${vehicle
           ? html`<span class="summary__gauges">
               ${gauges.map((g) => html`<${HudGauge} key=${g.key} value=${g.value} unit="" label=${g.label} ratio=${g.ratio} status=${g.status}
@@ -178,7 +178,7 @@ export function OggiView() {
             </span>`
           : html`<span class="summary__placeholder">Aggiungi la tua auto per vedere le scadenze</span>`}
       <//>
-      <${SummaryCard} section="casa" title="Casa" accent="var(--mint)" index=${1}>
+      <${SummaryCard} section="casa" title="Casa" accent="var(--green)" index=${1}>
         ${hasCasa
           ? html`<span class="summary__lines">
               ${rentNow && html`<span class="summary__line">Affitto ${formatEuro(rentNow.amount)} <${NeonBadge} status=${rentBadge.status}>${rentBadge.label}<//></span>`}
@@ -196,7 +196,7 @@ export function OggiView() {
             </span>`
           : html`<${Placeholder} />`}
       <//>
-      <${SummaryCard} section="salute" title="Salute" accent="var(--health)" index=${3}>
+      <${SummaryCard} section="salute" title="Salute" accent="var(--pink)" index=${3}>
         ${salute ? html`<span class="summary__line">${salute.title} · ${daysLabel(salute.days)}</span>` : html`<${Placeholder} />`}
       <//>
     </section>`}

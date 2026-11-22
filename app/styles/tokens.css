@@ -1,43 +1,14 @@
-/* NexusLife — design tokens "Super WOW" (CLAUDE.md §5) */
+/*
+ * NexusLife — design tokens (CLAUDE.md §5).
+ * Due livelli: data-style (struttura: forme, raggi, ombre, materiali, tipografia, motion)
+ * e data-theme (palette). Lo stile 0 "Spatial Glass" con il tema "Obsidian" è il predefinito.
+ * I selettori sono su attributo (non solo :root) così un contenitore con data-style/data-theme
+ * applica uno stile solo al suo interno (anteprime della galleria "Aspetto").
+ * I componenti usano solo var(--…): nessun colore fisso fuori dai file di stile.
+ */
+
+/* ---------- Costanti comuni ---------- */
 :root {
-  color-scheme: dark;
-
-  /* Palette */
-  --obsidian: #0A0A0C;
-  --obsidian-elevated: #121216;
-  --obsidian-raised: #1A1B20;
-  --titanium-deep: #2A2C31;
-  --titanium: #5C5F66;
-  --titanium-light: #8E9196;
-  --titanium-specular: #C7CAD1;
-  --champagne: #D9BF8C;
-  --champagne-light: #F2E3C2;
-  --champagne-deep: #9C8355;
-  --electric-blue: #3D8BFF;
-  --electric-blue-glow: #6FA8FF;
-  --mint: #3DDC97;
-  --amber: #FFB020;
-  --alarm-red: #FF453A;
-  --health: #FF6B8B;
-  --booked: #8FB8FF; /* prenotato: electric-blue schiarito, distinto da mint/amber/red */
-  --text-primary: #F5F5F7;
-  --text-secondary: #A1A1A6;
-  --text-tertiary: #6E6E73; /* solo testo grande o decorativo: sotto AA per testo piccolo */
-
-  /* Stato → colore */
-  --status-ok: var(--mint);
-  --status-warning: var(--amber);
-  --status-critical: var(--alarm-red);
-  --status-overdue: var(--alarm-red);
-  --status-booked: var(--booked);
-  --status-booking-past: var(--amber);
-  --status-unknown: var(--titanium);
-  --status-unknown-text: var(--titanium-light); /* variante leggibile (AA) per il testo */
-
-  /* Font */
-  --font-rounded: ui-rounded, 'SF Pro Rounded', Nunito, system-ui, sans-serif;
-  --font-serif: 'New York', ui-serif, Newsreader, Georgia, serif;
-
   --fs-xs: 0.75rem;
   --fs-sm: 0.875rem;
   --fs-md: 1rem;
@@ -46,43 +17,6 @@
   --fs-2xl: 1.75rem;
   --fs-display: clamp(2.25rem, 1.6rem + 2.6vw, 3.25rem);
 
-  /* Spaziature 4/8/12/16/24/32/48 */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-
-  /* Raggi 12/18/24/32 */
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
-  --radius-pill: 999px;
-
-  /* Ombre multistrato */
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, .30), 0 4px 8px rgba(0, 0, 0, .25);
-  --shadow-2: 0 2px 4px rgba(0, 0, 0, .25), 0 12px 24px rgba(0, 0, 0, .30);
-  --shadow-3: 0 2px 4px rgba(0, 0, 0, .25), 0 12px 24px rgba(0, 0, 0, .30), 0 32px 64px rgba(0, 0, 0, .35);
-  --shadow-inset-specular: 0 1px 0 rgba(255, 255, 255, .12) inset, 0 -1px 0 rgba(0, 0, 0, .35) inset;
-
-  /* Ricetta vetro */
-  --glass-bg: linear-gradient(155deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .03));
-  --glass-bg-strong: linear-gradient(155deg, rgba(38, 39, 46, .82), rgba(20, 20, 25, .78));
-  --glass-blur: blur(24px) saturate(160%);
-  --glass-border: 1px solid rgba(255, 255, 255, .10);
-  --glass-shadow: var(--shadow-inset-specular), var(--shadow-3);
-
-  /* Motion */
-  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
-  --ease-out: cubic-bezier(.22, .8, .24, 1);
-  --dur-spring: 450ms;
-  --dur-page: 300ms;
-  --dur-fast: 160ms;
-  --press-scale: .97;
-  --page-shift: 8px;
 
   /* Layout */
   --sidebar-w: 264px;
@@ -93,11 +27,187 @@
   --safe-right: env(safe-area-inset-right, 0px);
 }
 
+/* ---------- Stile 0 · Spatial Glass: struttura predefinita (ogni stile la ridefinisce) ---------- */
+:root, [data-style] {
+  /* Tipografia */
+  --font-ui: ui-rounded, 'SF Pro Rounded', Nunito, system-ui, sans-serif;
+  --font-display: 'New York', ui-serif, Newsreader, Georgia, serif;
+  --font-num: var(--font-ui);
+  --body-weight: 400;
+  --num-weight: 800;
+  --num-scale: 1;
+  --title-weight: 500;
+  --title-transform: none;
+  --title-tracking: -.02em;
+  --title-scale: 1;
+  --section-weight: 600;
+  --section-tracking: -.01em;
+  --btn-weight: 700;
+  --btn-tracking: .01em;
+  --btn-transform: none;
+
+  /* Spaziature 4/8/12/16/24/32/48 (Washi le allarga) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Forme: raggi 12/18/24/32 */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --badge-radius: var(--radius-pill);
+  --badge-ring: 1px;
+  --card-clip: none;   /* Cockpit: angoli smussati */
+
+  /* Materiale: vetro */
+  --glass-blur: blur(24px) saturate(160%);
+  --glare: 8%;
+  --glow: 1;          /* 0 = niente bagliori (stili piatti) */
+  --aurora-opacity: 1;
+
+  /* HudGauge */
+  --gauge-stroke: 6;
+  --gauge-cap: round;
+  --gauge-ticks: 14%;
+  --gauge-tick-w: 1;
+
+  /* Motion */
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-out: cubic-bezier(.22, .8, .24, 1);
+  --dur-spring: 450ms;
+  --dur-page: 300ms;
+  --dur-fast: 160ms;
+  --press-scale: .97;
+  --page-shift: 8px;
+
+  /* ---- Token derivati dalla palette: ricalcolati in ogni contesto con data-style ---- */
+  --status-ok: var(--green);
+  --status-warning: var(--amber);
+  --status-critical: var(--red);
+  --status-overdue: var(--red);
+  --status-booked: var(--booked);
+  --status-booking-past: var(--amber);
+  --status-unknown: var(--neutral);
+  --status-unknown-text: var(--neutral-light); /* variante leggibile (AA) per il testo */
+
+  --shadow-1: 0 1px 2px color-mix(in srgb, var(--shade) 30%, transparent), 0 4px 8px color-mix(in srgb, var(--shade) 25%, transparent);
+  --shadow-2: 0 2px 4px color-mix(in srgb, var(--shade) 25%, transparent), 0 12px 24px color-mix(in srgb, var(--shade) 30%, transparent);
+  --shadow-3: 0 2px 4px color-mix(in srgb, var(--shade) 25%, transparent), 0 12px 24px color-mix(in srgb, var(--shade) 30%, transparent), 0 32px 64px color-mix(in srgb, var(--shade) 35%, transparent);
+  --shadow-inset-specular: 0 1px 0 color-mix(in srgb, var(--ink) 12%, transparent) inset, 0 -1px 0 color-mix(in srgb, var(--shade) 35%, transparent) inset;
+
+  --glass-bg: linear-gradient(155deg, color-mix(in srgb, var(--ink) 9%, transparent), color-mix(in srgb, var(--ink) 3%, transparent));
+  --glass-bg-strong: linear-gradient(155deg, color-mix(in srgb, var(--surface) 82%, transparent), color-mix(in srgb, var(--surface-deep) 78%, transparent));
+  --glass-border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  --glass-shadow: var(--shadow-inset-specular), var(--shadow-3);
+  --bar-bg: linear-gradient(155deg, color-mix(in srgb, var(--surface) 72%, transparent), color-mix(in srgb, var(--surface-deep) 72%, transparent));
+  --page-bg: var(--bg);
+  --field-bg: color-mix(in srgb, var(--shade) var(--field-shade), transparent); /* campi incassati */
+  --title-fill: linear-gradient(180deg, var(--text-primary) 30%, var(--neutral-specular));
+  --gauge-track: var(--neutral-deep);
+  --btn-primary-bg: linear-gradient(160deg, var(--accent-light), var(--accent) 45%, var(--accent-deep));
+  --btn-primary-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 50%, transparent) inset, 0 6px 18px -6px color-mix(in srgb, var(--accent) 60%, transparent);
+  --btn-primary-shadow-hover: 0 1px 0 color-mix(in srgb, var(--ink) 50%, transparent) inset, 0 8px 26px -6px color-mix(in srgb, var(--accent) 75%, transparent);
+
+  /* Mazzo del Giardino: il colore del fiore identifica la categoria */
+  --flower-auto: var(--blue-glow);
+  --flower-affitto: var(--accent);
+  --flower-manutenzioni: var(--violet);
+  --flower-spesa: var(--amber);
+  --flower-salute: var(--pink);
+  --flower-todo: var(--teal);
+  --flower-backup: var(--pearl);
+  --flower-center: #F2E3C2;
+  --leaf-lush-1: #5BEBAE; --leaf-lush-2: #1F9E6A; --leaf-lush-3: #2FB57D;
+  --leaf-green-1: #7BD9A4; --leaf-green-2: #2E8F62; --leaf-green-3: #3C9C6E;
+  --leaf-yellow-1: #D6D66E; --leaf-yellow-2: #8E9A3A; --leaf-yellow-3: #8E9A4A;
+  --leaf-amber-1: #FFC24D; --leaf-amber-2: #B07414; --leaf-amber-3: #9C7A3C;
+  --leaf-brown-1: #A87A4C; --leaf-brown-2: #5E3F22; --leaf-brown-3: #6E5034;
+  --leaf-neutral-1: #A9ACB2; --leaf-neutral-2: #5C5F66; --leaf-neutral-3: #6E7178;
+  --wilt-1: #9C7A3C; --wilt-2: #6E5034; --wilt-3: #8A6A46;
+  --stage-sana: #7BD9A4; --stage-assetata: #D6D66E; --stage-secca: #C08A55;
+  --stone-1: var(--neutral-light); --stone-2: var(--neutral); --stone-3: var(--neutral-deep);
+  --vase-glass: var(--ink);
+  --vase-water: color-mix(in srgb, var(--blue-glow) 10%, transparent);
+  --garden-light: var(--accent-light);
+
+  /* Digital Twin (la tinta della carrozzeria è un dato del veicolo, non del tema) */
+  --twin-shadow: #000000;
+  --twin-tyre: #0F0F12;
+  --twin-tyre-wall: #25262B;
+  --twin-rim: #E6E8EC;
+  --twin-trim: #1B1C20;
+  --twin-trim-light: #3A3C42;
+  --twin-hub: #2A2C31;
+  --twin-chrome: #C7CAD1;
+  --twin-glass-1: #2B3240;
+  --twin-glass-2: #11141B;
+  --twin-glass-3: #07080B;
+  --twin-sheen: #FFFFFF;
+  --twin-rail-1: #5C5F66;
+  --twin-rail-2: #2A2C31;
+  --twin-rail-3: #8E9196;
+  --twin-light: #F2E3C2;
+  --twin-light-halo: #D9BF8C;
+  --twin-housing: #0C0D10;
+  --twin-pillar: #0A0B0E;
+  --twin-grille: #141519;
+  --twin-tail: #B3261E;
+
+  /* Marchio "N" */
+  --brand-1: #F2E3C2; --brand-2: #D9BF8C; --brand-3: #9C8355;
+  --brand-bg-1: #25221D; --brand-bg-2: #111114; --brand-bg-3: #0A0A0C;
+}
+
+/* ---------- Stile 0 · Spatial Glass · tema Obsidian ---------- */
+:root, [data-style="spatial"] {
+  color-scheme: dark;
+  --theme-color: #0A0A0C;
+  --bg: #0A0A0C;
+  --bg-elevated: #121216;
+  --bg-raised: #1A1B20;
+  --surface: #26272E;
+  --surface-deep: #141419;
+  --scrim: #050507;
+  --neutral-deep: #2A2C31;
+  --neutral: #5C5F66;
+  --neutral-light: #8E9196;
+  --neutral-specular: #C7CAD1;
+  --pearl: #E6E4EE;
+  --accent: #D9BF8C;        /* champagne */
+  --accent-light: #F2E3C2;
+  --accent-deep: #9C8355;
+  --on-accent: #1A1408;
+  --blue: #3D8BFF;          /* electric blue */
+  --blue-glow: #6FA8FF;
+  --green: #3DDC97;         /* mint */
+  --amber: #FFB020;
+  --red: #FF453A;           /* alarm red */
+  --red-light: #FF8A82;
+  --pink: #FF6B8B;          /* health */
+  --violet: #B79CFF;
+  --teal: #3FD2C7;
+  --booked: #8FB8FF;        /* prenotato: electric-blue schiarito, distinto da mint/amber/red */
+  --text-primary: #F5F5F7;
+  --text-secondary: #A1A1A6;
+  --text-tertiary: #6E6E73; /* solo testo grande o decorativo: sotto AA per testo piccolo */
+  --ink: #FFFFFF;           /* luci, bordi e riflessi del vetro */
+  --shade: #000000;         /* ombre */
+  --picker-filter: invert(.8);
+  --field-shade: 27%;
+}
+
+/* Movimento ridotto: vale in ogni stile */
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    --dur-spring: 0ms;
-    --dur-page: 0ms;
-    --dur-fast: 0ms;
-    --page-shift: 0px;
+  :root, [data-style] {
+    --dur-spring: 0ms !important;
+    --dur-page: 0ms !important;
+    --dur-fast: 0ms !important;
+    --page-shift: 0px !important;
   }
 }

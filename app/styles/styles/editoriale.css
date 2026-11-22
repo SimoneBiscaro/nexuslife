@@ -1,0 +1,114 @@
+/*
+ * Stile 2 · Editoriale — neo-brutalista da rivista: titoli enormi in Archivo Black, griglia evidente,
+ * bordi netti da 2 px, ombre piene sfalsate, raggi a zero, colori pieni e nessun bagliore.
+ */
+@font-face { font-family: 'Archivo Black'; font-style: normal; font-weight: 400; font-display: swap; src: url('../../fonts/archivo-black-latin-400-normal.woff2') format('woff2'); }
+
+[data-style="editoriale"] {
+  --font-ui: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  --font-display: 'Archivo Black', 'Helvetica Neue', Arial, sans-serif;
+  --font-num: 'Archivo Black', 'Helvetica Neue', Arial, sans-serif;
+  --body-weight: 500;
+  --num-weight: 400;
+  --num-scale: 1.05;
+  --title-weight: 400;
+  --title-transform: uppercase;
+  --title-tracking: -.025em;
+  --title-scale: 1.22;
+  --section-weight: 400;
+  --section-tracking: -.01em;
+  --btn-weight: 800;
+  --btn-tracking: .08em;
+  --btn-transform: uppercase;
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-pill: 0px;
+  --badge-ring: 2px;
+
+  --glass-blur: none;
+  --glare: 0%;
+  --glow: 0;
+  --aurora-opacity: 0;
+  --gauge-stroke: 11;
+  --gauge-cap: butt;
+  --gauge-ticks: 0%;
+
+  --dur-spring: 220ms;
+  --ease-spring: cubic-bezier(.2, 0, 0, 1);
+  --press-scale: .98;
+  --page-shift: 0px;
+
+  --glass-bg: var(--bg-elevated);
+  --glass-bg-strong: var(--bg-elevated);
+  --glass-border: 2px solid var(--text-primary);
+  --glass-shadow: 6px 6px 0 var(--text-primary);
+  --bar-bg: var(--bg-elevated);
+  --page-bg: var(--bg);
+  --title-fill: linear-gradient(var(--text-primary), var(--text-primary));
+  --gauge-track: color-mix(in srgb, var(--text-primary) 14%, transparent);
+  --btn-primary-bg: var(--accent);
+  --btn-primary-shadow: 3px 3px 0 var(--text-primary);
+  --btn-primary-shadow-hover: 5px 5px 0 var(--text-primary);
+  --shadow-inset-specular: 0 0 0 transparent;
+  --vase-glass: var(--text-primary);
+  --twin-shadow: var(--shade);
+}
+
+[data-style="editoriale"][data-theme="carta"] {
+  color-scheme: light;
+  --theme-color: #F4F1EA;
+  --bg: #F4F1EA; --bg-elevated: #FFFFFF; --bg-raised: #FFFDF8;
+  --surface: #FFFFFF; --surface-deep: #ECE7DC; --scrim: #111111;
+  --neutral-deep: #D9D3C6; --neutral: #9A9486; --neutral-light: #5E594F; --neutral-specular: #2B2924; --pearl: #6E6A86;
+  --accent: #BE221B; --accent-light: #AB3B37; --accent-deep: #A51A14; --on-accent: #FFFFFF;
+  --blue: #1D3FC4; --blue-glow: #1D3FC4; --green: #0A7038; --amber: #8F5200; --red: #C01B12; --red-light: #A8160E;
+  --pink: #B02A63; --violet: #5B3FC4; --teal: #0B6E68; --booked: #1F55D6;
+  --text-primary: #111111; --text-secondary: #4A4741; --text-tertiary: #8F8A80;
+  --ink: #111111; --shade: #111111; --picker-filter: none;
+  --field-shade: 7%;
+}
+
+[data-style="editoriale"][data-theme="inchiostro"] {
+  color-scheme: dark;
+  --theme-color: #111111;
+  --bg: #111111; --bg-elevated: #1B1B1B; --bg-raised: #222222;
+  --surface: #1B1B1B; --surface-deep: #0A0A0A; --scrim: #000000;
+  --neutral-deep: #333333; --neutral: #6B6B6B; --neutral-light: #A8A8A8; --neutral-specular: #DADADA; --pearl: #EDEBF2;
+  --accent: #FFE14A; --accent-light: #FFEC8A; --accent-deep: #D9BA1A; --on-accent: #111111;
+  --blue: #7DA6FF; --blue-glow: #7DA6FF; --green: #4EE39B; --amber: #FFA24A; --red: #FF5A4E; --red-light: #FF8C84;
+  --pink: #FF7BB0; --violet: #B9A2FF; --teal: #4FDCCF; --booked: #A6B8FF;
+  --text-primary: #F5F5F0; --text-secondary: #B5B5AE; --text-tertiary: #777773;
+  --ink: #F5F5F0; --shade: #000000; --picker-filter: invert(.85);
+  --field-shade: 27%;
+}
+
+[data-style="editoriale"][data-theme="klein"] {
+  color-scheme: dark;
+  --theme-color: #14209A;
+  --bg: #14209A; --bg-elevated: #0F1984; --bg-raised: #1A27A8;
+  --surface: #0F1984; --surface-deep: #0B1270; --scrim: #050938;
+  --neutral-deep: #2F3BB4; --neutral: #6670CF; --neutral-light: #C2C7F2; --neutral-specular: #E3E6FB; --pearl: #F2F0FA;
+  --accent: #FFE14A; --accent-light: #FFEC8A; --accent-deep: #E0C22A; --on-accent: #0B1270;
+  --blue: #A9D4FF; --blue-glow: #A9D4FF; --green: #6FF2B4; --amber: #FFB86B; --red: #FFA19A; --red-light: #FFC2BD;
+  --pink: #FF9ED0; --violet: #D6C8FF; --teal: #72F0E4; --booked: #E3A8FF;
+  --text-primary: #FFFFFF; --text-secondary: #D4D8FA; --text-tertiary: #9AA2E6;
+  --ink: #FFFFFF; --shade: #03063A; --picker-filter: invert(1);
+  --field-shade: 27%;
+}
+
+[data-style="editoriale"][data-theme="rosa"] {
+  color-scheme: light;
+  --theme-color: #FFD9E1;
+  --bg: #FFD9E1; --bg-elevated: #FFF0F3; --bg-raised: #FFE6EB;
+  --surface: #FFF0F3; --surface-deep: #F7C6D1; --scrim: #1A0A10;
+  --neutral-deep: #EDB3C0; --neutral: #A0707C; --neutral-light: #6A3E4A; --neutral-specular: #3A1E26; --pearl: #5E4E72;
+  --accent: #1A0A10; --accent-light: #3D2129; --accent-deep: #000000; --on-accent: #FFD9E1;
+  --blue: #1A3FB0; --blue-glow: #1A3FB0; --green: #0A6733; --amber: #7F4800; --red: #B0101A; --red-light: #9A0E16;
+  --pink: #A3124F; --violet: #5534B8; --teal: #0A615C; --booked: #3A2FC0;
+  --text-primary: #1A0A10; --text-secondary: #5A3440; --text-tertiary: #A0707C;
+  --ink: #1A0A10; --shade: #1A0A10; --picker-filter: none;
+  --field-shade: 7%;
+}

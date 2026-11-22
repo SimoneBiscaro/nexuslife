@@ -14,11 +14,11 @@ import { EmptyNote } from '../../ui/Page.js';
 
 const COPY = {
   homeMaintenance: {
-    title: 'Manutenzioni', art: 'manutenzioni', accent: 'var(--mint)',
+    title: 'Manutenzioni', art: 'manutenzioni', accent: 'var(--green)',
     empty: 'Caldaia, filtri del condizionatore, una stanza da imbiancare: periodiche o una tantum, tienile qui.',
   },
   vehicleMaintenance: {
-    title: 'Manutenzioni auto', art: 'manutenzioni', accent: 'var(--electric-blue-glow)',
+    title: 'Manutenzioni auto', art: 'manutenzioni', accent: 'var(--blue-glow)',
     empty: 'Cambio olio, liquido freni, batteria: a mesi, a km o una volta sola.',
   },
 };

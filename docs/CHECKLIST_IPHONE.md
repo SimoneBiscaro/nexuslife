@@ -24,7 +24,7 @@ App: **https://simonebiscaro.github.io/nexuslife/**
 - Hai a portata di mano email, password e una passphrase nuova (almeno 12 caratteri).
 - Per i punti con due dispositivi servono iPhone **e** Mac con l'app installata.
 
-## Checklist di collaudo (25 punti)
+## Checklist di collaudo (30 punti)
 
 Spunta ogni riga solo se il risultato è esattamente quello descritto.
 
@@ -64,6 +64,13 @@ Spunta ogni riga solo se il risultato è esattamente quello descritto.
 - [ ] **23. Calendario.** Nello Sheet del tagliando **Aggiungi al Calendario**: l'evento è all'ora dell'appuntamento, con il luogo, e avvisa il giorno prima e il giorno stesso.
 - [ ] **24. "Fatto?".** Prenota il cambio gomme per ieri (o aspetta il giorno dopo): l'anello è ambra con "Fatto?"; toccandolo lo Sheet si apre su "Cambio fatto" con la data dell'appuntamento. Confermando, le gomme si invertono e la prenotazione sparisce.
 - [ ] **25. Revisione e annullamento.** Prenota la revisione, poi **Annulla prenotazione** (e prova "Annulla" nel toast). Rifai la prenotazione e registra **Fatta**: la nuova scadenza proposta è a fine mese + 24 mesi.
+
+### Aspetto: stili e temi (Fase 12)
+- [ ] **26. Galleria.** Impostazioni → **Aspetto**: sei miniature (Spatial Glass, Vetro liquido, Editoriale, Washi, Cockpit, Clay) con card e gauge veri, diverse tra loro; sotto ogni stile i suoi temi.
+- [ ] **27. Prova e ritorno.** Tocca Washi: tutta l'app cambia e in alto compare "Stai provando Washi · Kinari" con il conto alla rovescia. Non toccare nulla: dopo 15 secondi torna com'era. Riprova e premi **Torna indietro**.
+- [ ] **28. Mantieni.** Scegli Cockpit · Artico e premi **Mantieni**. Chiudi del tutto l'app e riaprila dall'icona: si apre già in Cockpit, senza lampo dello sfondo nero originale; anche la barra di stato di iOS prende il colore del tema.
+- [ ] **29. Temi chiari.** Prova Vetro liquido · Giorno, Washi · Kinari e Clay · Pesca: testi, avvisi e gauge si leggono bene alla luce del giorno; ok verde, in avvicinamento ambra, urgente rosso e prenotato blu/viola restano distinguibili. Apri un campo data: il selettore è leggibile.
+- [ ] **30. Sincronizzazione.** Con il sync attivo, scegli uno stile sul Mac e premi **Sincronizza ora** sull'iPhone: dopo qualche secondo anche l'iPhone cambia aspetto.
 
 ## Se qualcosa non va
 - **Puntino ambra "Passphrase richiesta"**: Impostazioni → Account e sync → inserisci la passphrase (con "Ricorda su questo dispositivo" non la richiede più).

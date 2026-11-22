@@ -1,5 +1,5 @@
 /* NexusLife — service worker. Incrementare CACHE_VERSION a ogni modifica dell'app shell. */
-const CACHE_VERSION = 'v12';
+const CACHE_VERSION = 'v13';
 const SHELL_CACHE = `nexuslife-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = 'nexuslife-runtime';
 
@@ -17,13 +17,21 @@ const SHELL = [
   './fonts/newsreader-latin-500-normal.woff2',
   './fonts/newsreader-latin-600-normal.woff2',
   './fonts/newsreader-latin-400-italic.woff2',
+  './fonts/archivo-black-latin-400-normal.woff2',
+  './fonts/barlow-condensed-latin-600-normal.woff2',
   './vendor/preact.mjs',
   './vendor/preact-hooks.mjs',
   './vendor/htm.mjs',
   './styles/tokens.css',
   './styles/base.css',
   './styles/components.css',
+  './styles/styles/liquid.css',
+  './styles/styles/editoriale.css',
+  './styles/styles/washi.css',
+  './styles/styles/cockpit.css',
+  './styles/styles/clay.css',
   './src/main.js',
+  './src/appearance-boot.js',
   './src/router.js',
   './src/pwa.js',
   './src/version.js',
@@ -75,6 +83,9 @@ const SHELL = [
   './src/ui/NeonBadge.js',
   './src/ui/Sheet.js',
   './src/ui/Toast.js',
+  './src/ui/appearance.js',
+  './src/ui/AppearanceTrial.js',
+  './src/ui/StylePreview.js',
   './src/ui/Banner.js',
   './src/ui/TabBar.js',
   './src/ui/Sidebar.js',
@@ -140,6 +151,7 @@ const SHELL = [
   './src/views/impostazioni/RestoreSheet.js',
   './src/views/impostazioni/PinCheckSheet.js',
   './src/views/impostazioni/AccountCard.js',
+  './src/views/impostazioni/AppearanceCard.js',
 ];
 
 const scopeUrl = (p) => new URL(p, self.registration.scope).href;
