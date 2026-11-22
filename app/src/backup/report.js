@@ -7,7 +7,7 @@ import { BILL_KIND_LABEL, billTotals, sortHomePurchases } from '../domain/home.j
 import { paymentStatus } from '../domain/rent.js';
 import { deadlineStatus } from '../domain/deadlines.js';
 import { openVisitPlans, STATUS_IT, splitVisits, visitPlanLabel } from '../domain/health.js';
-import { tyreChange, TYRE_LABEL } from '../domain/tyres.js';
+import { TYRE_LABEL } from '../domain/tyres.js';
 import { recurrenceLabel, sortMaintenancePlans } from '../domain/maintenance.js';
 import { repeatLabel, sortTodos } from '../domain/todos.js';
 
@@ -31,6 +31,15 @@ function table(headers, rows, empty) {
 }
 
 const badge = (status) => `<span class="b b-${status}">${e(STATUS_IT[status] ?? status)}</span>`;
+
+/** Stato di una scadenza auto; con una prenotazione: "Prenotato 28/11/2026 · ore 9:00 · Officina", poi lo stato originale. */
+function statusCell(x) {
+  if (!x) return badge('unknown');
+  if (!x.booking) return badge(x.status ?? 'unknown');
+  const b = x.booking;
+  const when = [d(b.date), b.time ? `ore ${b.time}` : '', b.place ? e(b.place) : ''].filter(Boolean).join(' · ');
+  return `${badge(x.status)} ${when}<br><small>scadenza: ${e(STATUS_IT[x.originalStatus] ?? '—')}</small>`;
+}
 
 /** Manutenzioni (casa o auto), periodiche e una tantum. */
 function maintTable(plans) {
@@ -57,12 +66,12 @@ export function buildReport(records, { today, now, appVersion, excludeHealth = f
     const ov = vehicleOverview(v, { deadlines: of('vehicleDeadline'), readings: of('mileageReading') }, today);
     const rows = DEADLINE_TYPES.map((t) => {
       const x = ov.deadlines[t];
-      return [e(DEADLINE_LABEL[t]), d(x?.record.dueDate), badge(x?.status ?? 'unknown'), money(x?.record.amount)];
+      return [e(DEADLINE_LABEL[t]), d(x?.record.dueDate), statusCell(x), money(x?.record.amount)];
     });
     const s = ov.service;
-    rows.push(['Tagliando', d(s.nextDate) + (s.nextKm ? ` · ${int.format(s.nextKm)} km` : ''), badge(s.status), '—']);
-    const tc = tyreChange(v, today);
-    if (tc) rows.push([`Cambio gomme (${e(TYRE_LABEL[tc.target].toLowerCase())})`, d(tc.due), badge(tc.status), '—']);
+    rows.push(['Tagliando', d(s.nextDate) + (s.nextKm ? ` · ${int.format(s.nextKm)} km` : ''), statusCell(s), '—']);
+    const tc = ov.tyres;
+    if (tc) rows.push([`Cambio gomme (${e(TYRE_LABEL[tc.target].toLowerCase())})`, d(tc.due), statusCell(tc), '—']);
     else if (v.tyreType) rows.push(['Gomme', e(TYRE_LABEL[v.tyreType] ?? v.tyreType), '—', '—']);
     const maint = sortMaintenancePlans(of('vehicleMaintenance').filter((m) => m.vehicleId === v.id), today,
       { currentKm: ov.currentKm, kmPerDay: ov.kmPerDay.kmPerDay });
@@ -137,7 +146,7 @@ export function buildReport(records, { today, now, appVersion, excludeHealth = f
   td.n { text-align: right; font-variant-numeric: tabular-nums; }
   .empty { color: #6e6e73; font-style: italic; }
   .b { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid; }
-  .b-ok { color: #11734b; } .b-warning { color: #8a5a00; } .b-critical, .b-overdue { color: #b3261e; } .b-unknown { color: #6e6e73; }
+  .b-ok { color: #11734b; } .b-warning { color: #8a5a00; } .b-critical, .b-overdue { color: #b3261e; } .b-unknown { color: #6e6e73; } .b-booked { color: #1f4fbf; } .b-bookingPast { color: #8a5a00; }
   footer { margin-top: 32px; color: #6e6e73; font-size: 12px; }
   @media print { body { padding: 0; } section { break-inside: avoid-page; } h2 { break-after: avoid; } }
 </style></head>

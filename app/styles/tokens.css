@@ -19,6 +19,7 @@
   --amber: #FFB020;
   --alarm-red: #FF453A;
   --health: #FF6B8B;
+  --booked: #8FB8FF; /* prenotato: electric-blue schiarito, distinto da mint/amber/red */
   --text-primary: #F5F5F7;
   --text-secondary: #A1A1A6;
   --text-tertiary: #6E6E73; /* solo testo grande o decorativo: sotto AA per testo piccolo */
@@ -28,6 +29,8 @@
   --status-warning: var(--amber);
   --status-critical: var(--alarm-red);
   --status-overdue: var(--alarm-red);
+  --status-booked: var(--booked);
+  --status-booking-past: var(--amber);
   --status-unknown: var(--titanium);
   --status-unknown-text: var(--titanium-light); /* variante leggibile (AA) per il testo */
 

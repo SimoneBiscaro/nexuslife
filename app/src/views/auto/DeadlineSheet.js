@@ -8,7 +8,10 @@ import { showToast } from '../../ui/Toast.js';
 import { Icon } from '../../ui/icons.js';
 import { formatEuro, formatLongDate, parseDecimal } from '../../ui/format.js';
 import { getRepo } from '../../store/repo.js';
-import { deadlineStatus, proposeRenewal } from '../../domain/deadlines.js';
+import { deadlineStatus, proposeRenewal, proposeRevisionAfter } from '../../domain/deadlines.js';
+import { bookingSnapshot, clearBookingPatch, proposedDoneDate, readBooking } from '../../domain/booking.js';
+import { BookingForm } from './BookingForm.js';
+import { useFocusDone } from './useFocusDone.js';
 import { daysBetween, isDateKey } from '../../domain/dates.js';
 import { DEADLINE_LABEL, daysLabel } from '../../domain/overview.js';
 
@@ -22,22 +25,38 @@ const formFrom = (r) => ({
 
 /**
  * Dettaglio di una scadenza auto (bollo, assicurazione, revisione).
- * @param {{ open: boolean, onClose: () => void, type: string, record?: object, vehicle: object, today: string }} props
+ * Solo la revisione si può prenotare: con una prenotazione "Segna come rinnovato" diventa "Revisione fatta",
+ * con la data dell'appuntamento proposta e la nuova scadenza a fine mese + 24 mesi da quella data.
+ * @param {{ open: boolean, onClose: () => void, type: string, record?: object, vehicle: object, today: string, focus?: 'done' }} props
  */
-export function DeadlineSheet({ open, onClose, type, record, vehicle, today }) {
+export function DeadlineSheet({ open, onClose, type, record, vehicle, today, focus }) {
   const label = DEADLINE_LABEL[type] ?? type;
+  const booking = type === 'revisione' ? readBooking(record, 'revisione') : null;
   const [editing, setEditing] = useState(!record);
   const [form, setForm] = useState(formFrom(record));
   const [renewDate, setRenewDate] = useState('');
+  const [doneDate, setDoneDate] = useState(today);
   const [errors, setErrors] = useState({});
+  const doneRef = useFocusDone(open && focus === 'done' && Boolean(record));
 
   useEffect(() => {
     if (!open) return;
     setEditing(!record);
     setForm(formFrom(record));
     setErrors({});
-    setRenewDate((record && proposeRenewal(record, vehicle)) || '');
+    if (booking) {
+      const done = proposedDoneDate(booking, today);
+      setDoneDate(done);
+      setRenewDate(proposeRevisionAfter(done));
+    } else {
+      setRenewDate((record && proposeRenewal(record, vehicle)) || '');
+    }
   }, [open, record?.id, record?.updatedAt]);
+
+  const changeDoneDate = (v) => {
+    setDoneDate(v);
+    if (isDateKey(v)) setRenewDate(proposeRevisionAfter(v));
+  };
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -64,17 +83,22 @@ export function DeadlineSheet({ open, onClose, type, record, vehicle, today }) {
   }
 
   async function renew() {
+    if (booking && (!isDateKey(doneDate) || doneDate > today)) {
+      setErrors({ done: 'Data non valida' });
+      return;
+    }
     if (!isDateKey(renewDate)) {
       setErrors({ renew: 'Data non valida' });
       return;
     }
     const repo = await getRepo();
-    const previous = record.dueDate;
-    await repo.update('vehicleDeadline', record.id, { dueDate: renewDate });
+    const previous = { dueDate: record.dueDate, ...(booking ? bookingSnapshot(record, 'revisione') : {}) };
+    // la revisione fatta chiude anche la prenotazione
+    await repo.update('vehicleDeadline', record.id, { dueDate: renewDate, ...(booking ? clearBookingPatch('revisione') : {}) });
     onClose();
     showToast({
-      message: `${label} rinnovato fino al ${formatLongDate(renewDate)}`,
-      onAction: () => repo.update('vehicleDeadline', record.id, { dueDate: previous }),
+      message: booking ? `Revisione registrata: prossima entro il ${formatLongDate(renewDate)}` : `${label} rinnovato fino al ${formatLongDate(renewDate)}`,
+      onAction: () => repo.update('vehicleDeadline', record.id, previous),
     });
   }
 
@@ -90,6 +114,7 @@ export function DeadlineSheet({ open, onClose, type, record, vehicle, today }) {
   return html`
     <${Sheet} open=${open} onClose=${onClose} title=${label} footer=${footer}>
       ${!editing && record && html`
+        ${booking && html`<p class="detail-original">Scadenza della revisione (la prenotazione non la sposta):</p>`}
         <div class="detail-hero" data-status=${status}>
           <p class="detail-hero__date">${formatLongDate(record.dueDate)}</p>
           <${NeonBadge} status=${status}>${daysLabel(days)}<//>
@@ -100,12 +125,16 @@ export function DeadlineSheet({ open, onClose, type, record, vehicle, today }) {
           ${type === 'assicurazione' && html`<div><dt>Durata</dt><dd>${record.recurrenceMonths === 6 ? '6 mesi' : '12 mesi'}</dd></div>`}
           <div class="detail-list__wide"><dt>Note</dt><dd>${record.notes || '—'}</dd></div>
         </dl>
-        ${record.dueDate >= today && html`<div class="sheet-actions"><${CalendarButton} uid=${`vehicleDeadline-${record.id}`} /></div>`}
-        <div class="renew">
-          <h3 class="renew__title">Segna come rinnovato</h3>
+        ${!booking && record.dueDate >= today && html`<div class="sheet-actions"><${CalendarButton} uid=${`vehicleDeadline-${record.id}`} /></div>`}
+        ${type === 'revisione' && html`<${BookingForm} kind="revisione" entity="vehicleDeadline" record=${record} booking=${booking}
+          today=${today} open=${open} uid=${`vehicleDeadline-${record.id}`} label="Revisione" />`}
+        <div class="renew" ref=${doneRef}>
+          <h3 class="renew__title">${booking ? 'Revisione fatta' : 'Segna come rinnovato'}</h3>
           <div class="renew__row">
-            <${TextField} label="Nuova scadenza" type="date" value=${renewDate} onValue=${setRenewDate} error=${errors.renew} />
-            <button class="btn btn--primary" type="button" onClick=${renew}><${Icon} name="check" /> Rinnovato</button>
+            ${booking && html`<${TextField} label="Fatta il" type="date" value=${doneDate} max=${today} onValue=${changeDoneDate} error=${errors.done} />`}
+            <${TextField} label="Nuova scadenza" type="date" value=${renewDate} onValue=${setRenewDate} error=${errors.renew}
+              hint=${booking ? 'Fine mese della revisione + 24 mesi' : undefined} />
+            <button class="btn btn--primary" type="button" onClick=${renew}><${Icon} name="check" /> ${booking ? 'Fatta' : 'Rinnovato'}</button>
           </div>
         </div>`}
       ${editing && html`

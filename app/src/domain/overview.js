@@ -6,6 +6,7 @@ import { tyreChange, TYRE_LABEL } from './tyres.js';
 import { maintenancePlan } from './maintenance.js';
 import { openVisitPlans } from './health.js';
 import { sortTodos } from './todos.js';
+import { applyBooking, readBooking } from './booking.js';
 
 export const DEADLINE_TYPES = ['bollo', 'assicurazione', 'revisione'];
 export const DEADLINE_LABEL = { bollo: 'Bollo', assicurazione: 'Assicurazione', revisione: 'Revisione', tagliando: 'Tagliando' };
@@ -29,31 +30,52 @@ export function daysLabel(days) {
   return days > 0 ? `tra ${days} giorni` : `${-days} giorni fa`;
 }
 
+/**
+ * Voce prenotata per banner e "prossime scadenze": alla data dell'appuntamento.
+ * booked → "Appuntamento · Tagliando · T-Cross"; bookingPast → "Tagliando · T-Cross: l'hai fatto?".
+ */
+function bookedItem(keyBase, kind, label, name, x) {
+  const b = x.booking;
+  const past = x.status === 'bookingPast';
+  return {
+    key: `${keyBase}:booking:${b.date}${b.time ? `T${b.time}` : ''}`,
+    section: 'auto', kind, booked: true, booking: b, originalStatus: x.originalStatus,
+    title: past ? `${label} · ${name}: l'hai fatto?` : `Appuntamento · ${label} · ${name}`,
+    date: b.date, status: x.status, href: '#/auto',
+  };
+}
+
 /** Stato di un pagamento non saldato come scadenza (scaduto se la data è passata). */
 function paymentDeadlineStatus(dueDate, today) {
   return deadlineStatus(dueDate, today);
 }
 
 /**
- * Stato completo del veicolo: le tre scadenze e il tagliando.
- * @returns {{ deadlines: Record<string, object|null>, service: object, kmPerDay: object, currentKm: number }}
+ * Stato completo del veicolo: le tre scadenze, il tagliando e il cambio gomme.
+ * Revisione, tagliando e gomme tengono conto della prenotazione (CLAUDE.md §7): con una
+ * prenotazione `status` è 'booked' o 'bookingPast' e lo stato della scadenza resta in `originalStatus`.
+ * @returns {{ deadlines: Record<string, object|null>, service: object, tyres: object|null, kmPerDay: object, currentKm: number }}
  */
 export function vehicleOverview(vehicle, { deadlines = [], readings = [] }, today) {
   const mine = live(deadlines).filter((d) => d.vehicleId === vehicle.id);
   const myReadings = live(readings).filter((r) => r.vehicleId === vehicle.id);
   const currentKm = latestKm(vehicle, myReadings);
   const kmPerDay = estimateKmPerDay(myReadings, today);
-  const service = serviceStatus({ ...vehicle, currentKm }, today, { kmPerDay: kmPerDay.kmPerDay });
+  const service = applyBooking(serviceStatus({ ...vehicle, currentKm }, today, { kmPerDay: kmPerDay.kmPerDay }),
+    readBooking(vehicle, 'tagliando'), today);
   const byType = {};
   for (const type of DEADLINE_TYPES) {
     const d = mine.find((x) => x.type === type) || null;
-    byType[type] = d && {
+    const base = d && {
       record: d,
       status: deadlineStatus(d.dueDate, today),
       days: d.dueDate ? daysBetween(today, d.dueDate) : null,
     };
+    byType[type] = base && type === 'revisione' ? applyBooking(base, readBooking(d, 'revisione'), today) : base;
   }
-  return { deadlines: byType, service, kmPerDay, currentKm };
+  const tc = tyreChange(vehicle, today);
+  const tyres = tc ? applyBooking(tc, readBooking(vehicle, 'gomme'), today) : null;
+  return { deadlines: byType, service, tyres, kmPerDay, currentKm };
 }
 
 /**
@@ -70,18 +92,26 @@ export function collectDeadlines(data, today) {
     const name = v.name || v.model || 'Auto';
     for (const type of DEADLINE_TYPES) {
       const d = ov.deadlines[type];
+      if (d?.booking) {
+        push(bookedItem(`vehicleDeadline:${d.record.id}`, type, DEADLINE_LABEL[type], name, d));
+        continue;
+      }
       if (!d?.record.dueDate) continue;
       push({ key: `vehicleDeadline:${d.record.id}:${d.record.dueDate}`, section: 'auto', kind: type,
         title: `${DEADLINE_LABEL[type]} · ${name}`, date: d.record.dueDate, status: d.status, href: '#/auto' });
     }
     const s = ov.service;
     const date = s.effectiveDate || s.nextDate;
-    if (date || s.status !== 'unknown') {
+    if (s.booking) {
+      push(bookedItem(`service:${v.id}`, 'tagliando', 'Tagliando', name, s));
+    } else if (date || s.status !== 'unknown') {
       push({ key: `service:${v.id}:${s.nextDate}:${s.nextKm}`, section: 'auto', kind: 'tagliando',
         title: `Tagliando · ${name}`, date: date || todayKey, status: s.status, href: '#/auto' });
     }
-    const tc = tyreChange(v, todayKey);
-    if (tc) {
+    const tc = ov.tyres;
+    if (tc?.booking) {
+      push(bookedItem(`tyres:${v.id}`, 'gomme', `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()}`, name, tc));
+    } else if (tc) {
       push({ key: `tyres:${v.id}:${tc.due}`, section: 'auto', kind: 'gomme',
         title: `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()} · ${name}`, date: tc.due, status: tc.status, href: '#/auto' });
     }

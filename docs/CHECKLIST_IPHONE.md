@@ -24,7 +24,7 @@ App: **https://simonebiscaro.github.io/nexuslife/**
 - Hai a portata di mano email, password e una passphrase nuova (almeno 12 caratteri).
 - Per i punti con due dispositivi servono iPhone **e** Mac con l'app installata.
 
-## Checklist di collaudo (20 punti)
+## Checklist di collaudo (25 punti)
 
 Spunta ogni riga solo se il risultato è esattamente quello descritto.
 
@@ -57,6 +57,13 @@ Spunta ogni riga solo se il risultato è esattamente quello descritto.
 - [ ] **18. Calendario.** Impostazioni → Promemoria → **Esporta tutti i promemoria** → apri il file con Calendario → **Aggiungi tutto**: trovi le scadenze con gli avvisi (es. bollo 30, 7 e 1 giorno prima alle 09:00). Riesportando e reimportando non si creano doppioni.
 - [ ] **19. Pacchetto di backup.** Impostazioni → Backup → **Scarica pacchetto di oggi** → **Salva su File**. In File apri lo .zip: dentro ci sono `nexuslife.json`, `riepilogo.html` (stampabile), `manifest.json` e la cartella `csv` (un CSV apre correttamente colonne e accenti in Numbers o Excel).
 - [ ] **20. Ripristino cifrato.** Scarica il pacchetto con **Proteggi con passphrase** (.nxbak). In **Ripristina da pacchetto** scegli il file: con una passphrase sbagliata viene rifiutato; con quella giusta compare "Integrità verificata" e l'anteprima per sezione; **Unisci** non crea doppioni.
+
+### Prenotazioni auto (Fase 11)
+- [ ] **21. Prenota il tagliando.** Auto → Tagliando → **Segna come prenotato**: data tra qualche giorno, ora 9:00, officina. L'anello diventa blu a trattini con il calendario, mostra i giorni all'appuntamento, sotto "prenotato GG/MM · ore 9:00" e in piccolo la scadenza originale. Con VoiceOver il gauge legge "prenotato tra N giorni…".
+- [ ] **22. Oggi.** L'avviso di scadenza del tagliando sparisce; entro 7 giorni dall'appuntamento compare l'avviso blu "Appuntamento · Tagliando".
+- [ ] **23. Calendario.** Nello Sheet del tagliando **Aggiungi al Calendario**: l'evento è all'ora dell'appuntamento, con il luogo, e avvisa il giorno prima e il giorno stesso.
+- [ ] **24. "Fatto?".** Prenota il cambio gomme per ieri (o aspetta il giorno dopo): l'anello è ambra con "Fatto?"; toccandolo lo Sheet si apre su "Cambio fatto" con la data dell'appuntamento. Confermando, le gomme si invertono e la prenotazione sparisce.
+- [ ] **25. Revisione e annullamento.** Prenota la revisione, poi **Annulla prenotazione** (e prova "Annulla" nel toast). Rifai la prenotazione e registra **Fatta**: la nuova scadenza proposta è a fine mese + 24 mesi.
 
 ## Se qualcosa non va
 - **Puntino ambra "Passphrase richiesta"**: Impostazioni → Account e sync → inserisci la passphrase (con "Ricorda su questo dispositivo" non la richiede più).

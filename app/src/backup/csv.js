@@ -6,6 +6,8 @@ import { formatDateKey, isDateKey } from '../domain/dates.js';
 
 const BOM = '﻿';
 const ISO_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+/** Data e ora locali senza fuso (prenotazioni): "AAAA-MM-GGTHH:mm". */
+const LOCAL_DATETIME = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/;
 const dateTimeFmt = new Intl.DateTimeFormat('it-IT', {
   timeZone: 'Europe/Rome', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
 });
@@ -17,6 +19,8 @@ export function formatCell(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? String(value).replace('.', ',') : '';
   if (typeof value === 'string') {
     if (isDateKey(value)) return formatDateKey(value);
+    const local = LOCAL_DATETIME.exec(value);
+    if (local && isDateKey(local[1])) return `${formatDateKey(local[1])} ${local[2]}`;
     if (ISO_DATETIME.test(value) && Number.isFinite(Date.parse(value))) return dateTimeFmt.format(new Date(value)).replace(',', '');
     return value;
   }

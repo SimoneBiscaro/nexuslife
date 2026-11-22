@@ -18,6 +18,23 @@ export const formatLongDate = (key) => (key ? longDate.format(utc(key)) : '—')
 export const formatShortDate = (key) => (key ? shortDate.format(utc(key)) : '—');
 export const formatWeekdayDate = (key) => (key ? weekdayDate.format(utc(key)) : '—');
 
+/** "28/11" (con l'anno se diverso da quello di `today`: "28/11/2027"). */
+export function formatDayMonth(key, today) {
+  if (!key) return '—';
+  const { year, month, day } = parseDateKey(key);
+  const withYear = today && String(year) !== String(today).slice(0, 4);
+  return `${day}/${month}${withYear ? `/${year}` : ''}`;
+}
+
+/** "09:00" → "9:00". */
+export const formatTime = (hhmm) => (hhmm ? hhmm.replace(/^0(\d)/, '$1') : '');
+
+/** "prenotato 28/11 · ore 9:00" (senza ora: "prenotato 28/11"). */
+export function bookingLabel(booking, today, prefix = 'prenotato') {
+  if (!booking) return '';
+  return `${prefix} ${formatDayMonth(booking.date, today)}${booking.time ? ` · ore ${formatTime(booking.time)}` : ''}`;
+}
+
 /**
  * Numero scritto all'italiana: "1.234,50", "12,5", "15000". null se vuoto o non valido.
  */

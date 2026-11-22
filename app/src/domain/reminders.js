@@ -6,6 +6,7 @@ import { tyreChange, TYRE_LABEL } from './tyres.js';
 import { maintenancePlan } from './maintenance.js';
 import { openVisitPlans } from './health.js';
 import { sortTodos } from './todos.js';
+import { readBooking, bookingState } from './booking.js';
 
 /** Preavvisi per tipo: giorni prima (alle `reminderHour`) oppure ore prima (visite). */
 export const REMINDER_RULES = {
@@ -17,7 +18,11 @@ export const REMINDER_RULES = {
   vaccine: { days: [30, 7] },
   visitPlan: { days: [30, 7] },
   todo: { days: [1, 0] },
+  booking: { days: [1, 0] },
 };
+
+/** Il preavviso "il giorno stesso" di un appuntamento con l'ora che cade prima delle reminderHour. */
+const EARLY_APPOINTMENT_LEAD_MIN = 60;
 
 const DEADLINE_LABEL = { bollo: 'Bollo', assicurazione: 'Assicurazione', revisione: 'Revisione' };
 const BILL_LABEL = { luce: 'luce', gas: 'gas', internet: 'internet', acqua: 'acqua', rifiuti: 'rifiuti', altro: '' };
@@ -48,6 +53,17 @@ export function reminderTimes(event, { reminderHour = 9, timeZone = TIME_ZONE } 
       minutesBefore: h * 60,
     }));
   }
+  if (event.dateTime) {
+    // Appuntamento con l'ora (prenotazioni): preavvisi a giorni alle reminderHour; quello del giorno
+    // stesso, se l'appuntamento è prima di quell'ora, scatta un'ora prima.
+    const start = Date.parse(event.dateTime);
+    const day = toDateKey(event.dateTime, timeZone);
+    return rule.days.map((d) => {
+      let at = zonedTimeToUtc(addDays(day, -d), reminderHour, 0, timeZone).getTime();
+      if (at >= start) at = start - EARLY_APPOINTMENT_LEAD_MIN * 60_000;
+      return { label: leadLabel(d), at: new Date(at).toISOString(), minutesBefore: Math.round((start - at) / 60_000) };
+    });
+  }
   if (!event.date) return [];
   const start = zonedTimeToUtc(event.date, reminderHour, 0, timeZone).getTime();
   return rule.days.map((d) => {
@@ -71,7 +87,26 @@ export function buildReminderEvents(data, { today, reminderHour = 9 }) {
   const vehicles = new Map(live(data.vehicles).map((v) => [v.id, v]));
   const vName = (id) => vehicles.get(id)?.name || vehicles.get(id)?.model || 'auto';
 
+  /** Evento alla data della prenotazione (con l'ora diventa a orario), al posto della scadenza. */
+  const bookingEvent = (uid, updatedAt, label, booking) => {
+    const [h, m] = booking.time ? booking.time.split(':').map(Number) : [];
+    return {
+      uid, updatedAt, kind: 'booking', title: `${label} (prenotato)`,
+      ...(booking.time ? { dateTime: zonedTimeToUtc(booking.date, h, m, TIME_ZONE).toISOString() } : { date: booking.date }),
+      location: booking.place || '', description: booking.notes || '',
+    };
+  };
+  const booked = (record, kind) => {
+    const b = readBooking(record, kind);
+    return bookingState(b, todayKey) === 'booked' ? b : null;
+  };
+
   for (const d of live(data.vehicleDeadlines)) {
+    const b = booked(d, 'revisione');
+    if (b) {
+      events.push(bookingEvent(`vehicleDeadline-${d.id}`, d.updatedAt, `${DEADLINE_LABEL[d.type]} – ${vName(d.vehicleId)}`, b));
+      continue;
+    }
     if (!d.dueDate) continue;
     events.push({ uid: `vehicleDeadline-${d.id}`, updatedAt: d.updatedAt, kind: 'auto', title: `${DEADLINE_LABEL[d.type] ?? d.type} – ${vName(d.vehicleId)}`, date: d.dueDate });
   }
@@ -79,9 +114,13 @@ export function buildReminderEvents(data, { today, reminderHour = 9 }) {
     const readings = live(data.mileageReadings).filter((r) => r.vehicleId === v.id);
     const km = estimateKmPerDay(readings, todayKey).kmPerDay;
     const s = serviceStatus({ ...v, currentKm: latestKm(v, readings) }, todayKey, { kmPerDay: km });
-    if (s.effectiveDate) events.push({ uid: `service-${v.id}`, updatedAt: v.updatedAt, kind: 'auto', title: `Tagliando – ${vName(v.id)}`, date: s.effectiveDate });
+    const sb = booked(v, 'tagliando');
+    if (sb) events.push(bookingEvent(`service-${v.id}`, v.updatedAt, `Tagliando – ${vName(v.id)}`, sb));
+    else if (s.effectiveDate) events.push({ uid: `service-${v.id}`, updatedAt: v.updatedAt, kind: 'auto', title: `Tagliando – ${vName(v.id)}`, date: s.effectiveDate });
     const tc = tyreChange(v, todayKey);
-    if (tc) events.push({ uid: `tyres-${v.id}`, updatedAt: v.updatedAt, kind: 'auto', title: `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()} – ${vName(v.id)}`, date: tc.due });
+    const tb = tc && booked(v, 'gomme');
+    if (tb) events.push(bookingEvent(`tyres-${v.id}`, v.updatedAt, `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()} – ${vName(v.id)}`, tb));
+    else if (tc) events.push({ uid: `tyres-${v.id}`, updatedAt: v.updatedAt, kind: 'auto', title: `Cambio gomme ${TYRE_LABEL[tc.target].toLowerCase()} – ${vName(v.id)}`, date: tc.due });
     for (const m of live(data.vehicleMaintenance).filter((x) => x.vehicleId === v.id)) {
       const p = maintenancePlan(m, todayKey, { currentKm: latestKm(v, readings), kmPerDay: km });
       if (!p.done && p.date) events.push({ uid: `vehicleMaintenance-${m.id}`, updatedAt: m.updatedAt, kind: 'auto', title: `${m.title} – ${vName(v.id)}`, date: p.date });

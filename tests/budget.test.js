@@ -38,7 +38,7 @@ const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m);
 const glass = rgb(tokens.obsidian).map((c) => 1 * 0.07 + c * 0.93);
 
 test('contrasto AA (≥ 4,5:1) dei colori usati per il testo, anche sul vetro', () => {
-  const TEXT = ['text-primary', 'text-secondary', 'titanium-light', 'champagne', 'mint', 'amber', 'alarm-red', 'health', 'electric-blue', 'electric-blue-glow'];
+  const TEXT = ['text-primary', 'text-secondary', 'titanium-light', 'champagne', 'mint', 'amber', 'alarm-red', 'health', 'electric-blue', 'electric-blue-glow', 'booked'];
   for (const name of TEXT) {
     assert.ok(tokens[name], `token ${name} mancante`);
     for (const [bgName, bg] of [['obsidian', rgb(tokens.obsidian)], ['vetro', glass], ['raised', rgb(tokens['obsidian-raised'])]]) {

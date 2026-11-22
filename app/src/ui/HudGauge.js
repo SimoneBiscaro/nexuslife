@@ -1,6 +1,7 @@
 import { useEffect, useState } from '../../vendor/preact-hooks.mjs';
 import { html } from './html.js';
 import { STATUS_LABEL, normalizeStatus } from './status.js';
+import { Icon } from './icons.js';
 
 const R = 42;
 const C = 2 * Math.PI * R;
@@ -22,12 +23,32 @@ const TICK_PATH = Array.from({ length: TICKS + 1 }, (_, i) => {
   return `M${x1.toFixed(2)} ${y1.toFixed(2)}L${x2.toFixed(2)} ${y2.toFixed(2)}`;
 }).join('');
 
+/** Trattini dell'arco prenotato: segmenti corti fino al riempimento, poi vuoto. */
+const DASH = 3.2;
+const GAP = 1.8;
+function dashedArray(length) {
+  const n = Math.max(1, Math.floor((length + GAP) / (DASH + GAP)));
+  return `${Array.from({ length: n }, () => `${DASH} ${GAP}`).join(' ')} 0 ${C.toFixed(2)}`;
+}
+
+/** Etichetta accessibile di un gauge (anche per il pulsante che lo contiene). */
+export function hudAriaLabel({ label, value, unit = '', status = 'unknown', sublabel = '', note = '', aria = '' }) {
+  if (aria) return aria;
+  const st = normalizeStatus(status);
+  const v = st === 'unknown' || value === null || value === undefined || value === '' ? '—' : value;
+  return `${label}: ${v}${unit ? ` ${unit}` : ''}, ${STATUS_LABEL[st]}${sublabel ? `, ${sublabel}` : ''}${note ? `, ${note}` : ''}`;
+}
+
 /**
  * Anello HUD a 270° che si svuota con il tempo.
- * @param {{ value: string|number, label: string, ratio: number, status: string, unit?: string, sublabel?: string, size?: number }} props
+ * @param {{ value: string|number, label: string, ratio: number, status: string, unit?: string, sublabel?: string,
+ *   note?: string, icon?: string, aria?: string, size?: number }} props
  * `ratio` = porzione di periodo rimanente (1 = pieno, 0 = vuoto).
+ * Con status "booked" l'arco è a trattini e al centro compare l'icona (di solito il calendario);
+ * `note` è una riga piccola sotto il sottotitolo (per esempio la scadenza originale);
+ * `aria` sostituisce l'etichetta accessibile generata.
  */
-export function HudGauge({ value, label, ratio = 0, status = 'unknown', unit = '', sublabel = '', size = 148 }) {
+export function HudGauge({ value, label, ratio = 0, status = 'unknown', unit = '', sublabel = '', note = '', icon = '', aria: ariaText = '', size = 148 }) {
   const st = normalizeStatus(status);
   const target = st === 'unknown' ? 0 : Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
   const [shown, setShown] = useState(0);
@@ -41,7 +62,9 @@ export function HudGauge({ value, label, ratio = 0, status = 'unknown', unit = '
   const displayValue = st === 'unknown' || value === null || value === undefined || value === '' ? '—' : value;
   const tipDeg = START_DEG + 270 * shown;
   const [tx, ty] = polar(tipDeg, R);
-  const aria = `${label}: ${displayValue}${unit ? ` ${unit}` : ''}, ${STATUS_LABEL[st]}${sublabel ? `, ${sublabel}` : ''}`;
+  const aria = hudAriaLabel({ label, value, unit, status: st, sublabel, note, aria: ariaText });
+  const word = typeof displayValue === 'string' && displayValue.length > 3 && !/^[\d.,]+$/.test(displayValue);
+  const arcDash = st === 'booked' ? dashedArray(ARC * shown) : `${(ARC * shown).toFixed(2)} ${C.toFixed(2)}`;
 
   return html`
     <div class="hud-gauge" data-status=${st} style=${`--size:${size}px`} role="img" aria-label=${aria}>
@@ -51,16 +74,18 @@ export function HudGauge({ value, label, ratio = 0, status = 'unknown', unit = '
           <circle class="hud-gauge__track" cx="50" cy="50" r=${R}
             style=${`stroke-dasharray:${ARC.toFixed(2)} ${C.toFixed(2)}`} transform=${`rotate(${START_DEG} 50 50)`} />
           <circle class="hud-gauge__arc" cx="50" cy="50" r=${R}
-            style=${`stroke-dasharray:${(ARC * shown).toFixed(2)} ${C.toFixed(2)}`} transform=${`rotate(${START_DEG} 50 50)`}
+            style=${`stroke-dasharray:${arcDash}`} transform=${`rotate(${START_DEG} 50 50)`}
             opacity=${shown > 0.001 ? 1 : 0} />
           <circle class="hud-gauge__tip" cx=${tx.toFixed(2)} cy=${ty.toFixed(2)} r="2.2" opacity=${shown > 0.001 ? 1 : 0} />
         </svg>
         <div class="hud-gauge__center" aria-hidden="true">
-          <span class="hud-gauge__value">${displayValue}</span>
+          ${icon && html`<span class="hud-gauge__icon"><${Icon} name=${icon} /></span>`}
+          <span class=${`hud-gauge__value${word ? ' hud-gauge__value--word' : ''}`}>${displayValue}</span>
           ${unit && html`<span class="hud-gauge__unit">${unit}</span>`}
         </div>
       </div>
       <div class="hud-gauge__label" aria-hidden="true">${label}</div>
       ${sublabel && html`<div class="hud-gauge__sub" aria-hidden="true">${sublabel}</div>`}
+      ${note && html`<div class="hud-gauge__note" aria-hidden="true">${note}</div>`}
     </div>`;
 }

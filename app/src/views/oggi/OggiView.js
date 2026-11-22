@@ -6,7 +6,7 @@ import { HudGauge } from '../../ui/HudGauge.js';
 import { Banner } from '../../ui/Banner.js';
 import { NeonBadge } from '../../ui/NeonBadge.js';
 import { Icon } from '../../ui/icons.js';
-import { formatDueDate, formatEuro, formatWeekdayDate } from '../../ui/format.js';
+import { formatDueDate, formatEuro, formatTime, formatWeekdayDate } from '../../ui/format.js';
 import { ALL_SECTION_ENTITIES, useEntities } from '../../store/queries.js';
 import { updateSettings } from '../../store/settings.js';
 import { DEFAULT_SETTINGS } from '../../store/seed.js';
@@ -94,6 +94,16 @@ const Placeholder = () => html`<span class="summary__placeholder">Si attiva quan
 /** Avvisi mostrati in Oggi prima di "Mostra altri". */
 const BANNER_LIMIT = 6;
 
+/** Testo sotto il titolo di un banner: scadenza, appuntamento prenotato o appuntamento da confermare. */
+function bannerText(b, today) {
+  if (b.status === 'booked') {
+    const t = b.booking?.time ? ` · ore ${formatTime(b.booking.time)}` : '';
+    return `${formatWeekdayDate(b.date)}${t}${b.booking?.place ? ` · ${b.booking.place}` : ''}`;
+  }
+  if (b.status === 'bookingPast') return `Appuntamento ${formatDueDate(b.date, today)}: segnalo come fatto in Auto, oppure spostalo.`;
+  return b.status === 'overdue' ? `Scaduto ${formatDueDate(b.date, today)}` : `Scade ${formatDueDate(b.date, today)}`;
+}
+
 export function OggiView() {
   const now = new Date();
   const today = toDateKey(now);
@@ -152,7 +162,7 @@ export function OggiView() {
           <${Banner} key=${b.key} status=${b.status} title=${b.title}
             badge=${html`<${NeonBadge} status=${b.status}>${daysLabel(b.days)}<//>`}
             onDismiss=${() => hide(b.key)}>
-            ${b.status === 'overdue' ? `Scaduto ${formatDueDate(b.date, today)}` : `Scade ${formatDueDate(b.date, today)}`}
+            ${bannerText(b, today)}
           <//>`)}
         ${banners.length > BANNER_LIMIT && html`<button class="btn btn--ghost banners__more" type="button" aria-expanded=${allBanners}
           onClick=${() => setAllBanners(!allBanners)}>
@@ -163,7 +173,8 @@ export function OggiView() {
       <${SummaryCard} section="auto" title="Auto" accent="var(--electric-blue-glow)" index=${0}>
         ${vehicle
           ? html`<span class="summary__gauges">
-              ${gauges.map((g) => html`<${HudGauge} key=${g.key} value=${g.value} unit="" label=${g.label} ratio=${g.ratio} status=${g.status} size=${76} />`)}
+              ${gauges.map((g) => html`<${HudGauge} key=${g.key} value=${g.value} unit="" label=${g.label} ratio=${g.ratio} status=${g.status}
+                icon=${g.icon} aria=${g.aria} size=${76} />`)}
             </span>`
           : html`<span class="summary__placeholder">Aggiungi la tua auto per vedere le scadenze</span>`}
       <//>
