@@ -1,0 +1,107 @@
+/*
+ * Stile 1 · Vetro liquido — lenti di vetro chiare e luminose (iOS recente):
+ * bordo speculare marcato, rifrazione con blur alto e saturazione, raggi continui ampi,
+ * ombre leggere e colorate, gauge sottili come cristallo.
+ */
+[data-style="liquid"] {
+  --font-ui: -apple-system, 'SF Pro Text', system-ui, Nunito, sans-serif;
+  --font-display: -apple-system, 'SF Pro Display', system-ui, Nunito, sans-serif;
+  --font-num: -apple-system, 'SF Pro Rounded', ui-rounded, Nunito, system-ui, sans-serif;
+  --num-weight: 700;
+  --title-weight: 700;
+  --title-tracking: -.035em;
+  --section-weight: 700;
+  --section-tracking: -.02em;
+  --btn-weight: 600;
+
+  --radius-sm: 14px;
+  --radius-md: 22px;
+  --radius-lg: 30px;
+  --radius-xl: 38px;
+
+  --glass-blur: blur(34px) saturate(190%);
+  --glare: 22%;
+  --glow: .45;
+  --aurora-opacity: 1;
+  --gauge-stroke: 7;
+  --gauge-ticks: 0%;
+
+  --dur-spring: 520ms;
+  --ease-spring: cubic-bezier(.32, 1.45, .55, 1);
+
+  --glass-bg: linear-gradient(160deg, color-mix(in srgb, var(--lens) 62%, transparent), color-mix(in srgb, var(--lens) 30%, transparent));
+  --glass-bg-strong: linear-gradient(160deg, color-mix(in srgb, var(--lens) 88%, transparent), color-mix(in srgb, var(--lens) 72%, transparent));
+  --glass-border: 1px solid color-mix(in srgb, var(--rim) 70%, transparent);
+  --glass-shadow: 0 1.5px 0 color-mix(in srgb, var(--rim) 90%, transparent) inset, 0 -1px 0 color-mix(in srgb, var(--shade) 8%, transparent) inset,
+    0 2px 6px color-mix(in srgb, var(--shade) 10%, transparent), 0 18px 40px -12px color-mix(in srgb, var(--accent) 28%, transparent);
+  --bar-bg: var(--glass-bg-strong);
+  --page-bg: radial-gradient(80% 60% at 10% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+    radial-gradient(70% 50% at 100% 100%, color-mix(in srgb, var(--blue) 18%, transparent), transparent 70%), var(--bg);
+  --title-fill: linear-gradient(180deg, var(--text-primary), var(--text-primary));
+  --gauge-track: color-mix(in srgb, var(--ink) 10%, transparent);
+  --btn-primary-bg: linear-gradient(180deg, color-mix(in srgb, var(--accent) 82%, white), var(--accent));
+  --btn-primary-shadow: 0 1px 0 color-mix(in srgb, white 60%, transparent) inset, 0 8px 20px -8px color-mix(in srgb, var(--accent) 70%, transparent);
+  --btn-primary-shadow-hover: 0 1px 0 color-mix(in srgb, white 60%, transparent) inset, 0 12px 28px -8px color-mix(in srgb, var(--accent) 80%, transparent);
+  --vase-glass: var(--rim);
+  --twin-shadow: color-mix(in srgb, var(--shade) 55%, var(--bg));
+}
+
+[data-style="liquid"][data-theme="giorno"] {
+  color-scheme: light;
+  --theme-color: #E9EEF6;
+  --bg: #E9EEF6; --bg-elevated: #F4F7FB; --bg-raised: #FFFFFF;
+  --surface: #F7F9FC; --surface-deep: #E2E8F1; --scrim: #1A2233;
+  --lens: #FFFFFF; --rim: #FFFFFF;
+  --neutral-deep: #D5DCE6; --neutral: #9AA3B1; --neutral-light: #58616F; --neutral-specular: #3A4250; --pearl: #6E6A86;
+  --accent: #095BC5; --accent-light: #3562A0; --accent-deep: #0A4CA6; --on-accent: #FFFFFF;
+  --blue: #0A5CC6; --blue-glow: #1C5CBD; --green: #0A6F44; --amber: #875500; --red: #BC241A; --red-light: #B3261E;
+  --pink: #AD2F55; --violet: #6B4FD0; --teal: #0E7C78; --booked: #3D49C9;
+  --text-primary: #0E1420; --text-secondary: #4C5565; --text-tertiary: #8A93A1;
+  --ink: #0E1A33; --shade: #1A2A4A; --picker-filter: none;
+  --field-shade: 7%;
+}
+
+[data-style="liquid"][data-theme="notte"] {
+  color-scheme: dark;
+  --theme-color: #0B1020;
+  --bg: #0B1020; --bg-elevated: #121A30; --bg-raised: #18223C;
+  --surface: #1C2642; --surface-deep: #0F172C; --scrim: #03050B;
+  --lens: #33416A; --rim: #A9B9E6;
+  --neutral-deep: #24304D; --neutral: #56628A; --neutral-light: #9AA6C8; --neutral-specular: #C9D2EC; --pearl: #E4E6F2;
+  --accent: #7EB2FF; --accent-light: #B3D1FF; --accent-deep: #4F8AE8; --on-accent: #06142E;
+  --blue: #6FA4FF; --blue-glow: #8FB9FF; --green: #4FE0A2; --amber: #FFBE45; --red: #FF6B61; --red-light: #FF9A92;
+  --pink: #FF86A3; --violet: #C2A9FF; --teal: #4FDCD0; --booked: #C2B5FF;
+  --text-primary: #F2F5FD; --text-secondary: #AAB4CF; --text-tertiary: #6C7698;
+  --ink: #FFFFFF; --shade: #000000; --picker-filter: invert(.8);
+  --field-shade: 27%;
+}
+
+[data-style="liquid"][data-theme="aurora"] {
+  color-scheme: light;
+  --theme-color: #E2F3EF;
+  --bg: #E2F3EF; --bg-elevated: #F0FAF7; --bg-raised: #FFFFFF;
+  --surface: #F4FBF9; --surface-deep: #D8EDE8; --scrim: #0F2622;
+  --lens: #FFFFFF; --rim: #FFFFFF;
+  --neutral-deep: #CFE3DE; --neutral: #93ABA6; --neutral-light: #4D6661; --neutral-specular: #2F4642; --pearl: #5E6A82;
+  --accent: #0A6D5F; --accent-light: #286A61; --accent-deep: #075C50; --on-accent: #FFFFFF;
+  --blue: #1D5FC4; --blue-glow: #1B5DBF; --green: #0A6F39; --amber: #8A5700; --red: #BC251C; --red-light: #AE231B;
+  --pink: #B0335B; --violet: #6A4CC4; --teal: #0B7064; --booked: #4A3FC8;
+  --text-primary: #0C1F1C; --text-secondary: #46605B; --text-tertiary: #84A09A;
+  --ink: #0B2A25; --shade: #0F3A33; --picker-filter: none;
+  --field-shade: 7%;
+}
+
+[data-style="liquid"][data-theme="grafite"] {
+  color-scheme: dark;
+  --theme-color: #1C1E22;
+  --bg: #1C1E22; --bg-elevated: #24272C; --bg-raised: #2B2E34;
+  --surface: #2E3238; --surface-deep: #1F2226; --scrim: #08090A;
+  --lens: #4A4F58; --rim: #C9CED6;
+  --neutral-deep: #393D44; --neutral: #6A7078; --neutral-light: #A3A9B2; --neutral-specular: #D3D7DD; --pearl: #E8E6EE;
+  --accent: #E8E2D4; --accent-light: #FFFFFF; --accent-deep: #B9B3A5; --on-accent: #1A1B1E;
+  --blue: #7AAEFF; --blue-glow: #8DB8FF; --green: #5BE0A6; --amber: #FFC04D; --red: #FF7A70; --red-light: #FFA49D;
+  --pink: #FF8FAB; --violet: #C4ADFF; --teal: #5FDAD0; --booked: #B7AEFF;
+  --text-primary: #F4F5F7; --text-secondary: #B2B7BF; --text-tertiary: #7A8088;
+  --ink: #FFFFFF; --shade: #000000; --picker-filter: invert(.8);
+  --field-shade: 27%;
+}

@@ -1,0 +1,115 @@
+/*
+ * Stile 4 · Cockpit — strumentazione automotive coerente col Digital Twin: nero opaco, linee HUD
+ * sottili, cifre condensate (Barlow Condensed), tacche marcate, angoli smussati e griglia di scansione.
+ */
+@font-face { font-family: 'Barlow Condensed'; font-style: normal; font-weight: 600; font-display: swap; src: url('../../fonts/barlow-condensed-latin-600-normal.woff2') format('woff2'); }
+
+[data-style="cockpit"] {
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-num: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --num-weight: 600;
+  --num-scale: 1.25;
+  --title-weight: 600;
+  --title-transform: uppercase;
+  --title-tracking: .03em;
+  --title-scale: 1.05;
+  --section-weight: 600;
+  --section-tracking: .06em;
+  --btn-weight: 700;
+  --btn-tracking: .1em;
+  --btn-transform: uppercase;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 4px;
+  --card-clip: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+
+  --glass-blur: blur(8px);
+  --glare: 0%;
+  --glow: 1.35;
+  --aurora-opacity: 0;
+  --gauge-stroke: 4;
+  --gauge-cap: butt;
+  --gauge-ticks: 55%;
+  --gauge-tick-w: 1.4;
+
+  --ease-spring: cubic-bezier(.2, .9, .25, 1);
+  --dur-spring: 320ms;
+  --dur-page: 220ms;
+  --press-scale: .98;
+
+  --glass-bg: linear-gradient(180deg, color-mix(in srgb, var(--bg-raised) 92%, transparent), color-mix(in srgb, var(--bg-elevated) 92%, transparent));
+  --glass-bg-strong: var(--bg-elevated);
+  --glass-border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  --glass-shadow: 0 0 0 1px color-mix(in srgb, var(--shade) 60%, transparent), 0 0 24px -12px color-mix(in srgb, var(--accent) 45%, transparent) inset;
+  --bar-bg: var(--bg-elevated);
+  /* griglia di scansione e vignettatura */
+  --page-bg: repeating-linear-gradient(0deg, color-mix(in srgb, var(--ink) 3%, transparent) 0 1px, transparent 1px 4px),
+    radial-gradient(120% 90% at 50% 20%, transparent 50%, color-mix(in srgb, var(--shade) 55%, transparent)), var(--bg);
+  --title-fill: linear-gradient(var(--text-primary), var(--text-primary));
+  --gauge-track: color-mix(in srgb, var(--accent) 16%, transparent);
+  --btn-primary-bg: linear-gradient(180deg, var(--accent-light), var(--accent));
+  --btn-primary-shadow: 0 0 18px -4px color-mix(in srgb, var(--accent) 70%, transparent);
+  --btn-primary-shadow-hover: 0 0 26px -2px color-mix(in srgb, var(--accent) 80%, transparent);
+  --twin-light: var(--accent-light);
+  --twin-light-halo: var(--accent);
+}
+
+[data-style="cockpit"][data-theme="notturno"] {
+  color-scheme: dark;
+  --theme-color: #07080A;
+  --bg: #07080A; --bg-elevated: #0E1013; --bg-raised: #14171B;
+  --surface: #14171B; --surface-deep: #090A0C; --scrim: #000000;
+  --neutral-deep: #23272D; --neutral: #4E555E; --neutral-light: #97A0AB; --neutral-specular: #C9D0D8; --pearl: #E6E4EE;
+  --accent: #FFB547; --accent-light: #FFD08A; --accent-deep: #D98B1C; --on-accent: #1A0F00;
+  --blue: #5FA2FF; --blue-glow: #7FB4FF; --green: #3DE08F; --amber: #FF8A1E; --red: #FF4A3D; --red-light: #FF8A82;
+  --pink: #FF6F96; --violet: #B29CFF; --teal: #3ED6CB; --booked: #9DB8FF;
+  --text-primary: #EEF1F4; --text-secondary: #A2ABB6; --text-tertiary: #636B75;
+  --ink: #FFFFFF; --shade: #000000; --picker-filter: invert(.8);
+  --field-shade: 27%;
+}
+
+[data-style="cockpit"][data-theme="sport"] {
+  color-scheme: dark;
+  --theme-color: #0A0707;
+  --bg: #0A0707; --bg-elevated: #120D0D; --bg-raised: #191212;
+  --surface: #191212; --surface-deep: #0C0808; --scrim: #000000;
+  --neutral-deep: #2C2222; --neutral: #5B4D4D; --neutral-light: #A9999A; --neutral-specular: #D6CACA; --pearl: #ECE6EA;
+  --accent: #FF3B2F; --accent-light: #FF7468; --accent-deep: #C9231A; --on-accent: #000000;
+  --blue: #6AA6FF; --blue-glow: #86B6FF; --green: #45E08F; --amber: #FFC23D; --red: #FF5C8A; --red-light: #FF93B0;
+  --pink: #FF7BC0; --violet: #B9A2FF; --teal: #45D9CE; --booked: #A9B2FF;
+  --text-primary: #F5EFEF; --text-secondary: #B5A6A6; --text-tertiary: #6E6060;
+  --ink: #FFFFFF; --shade: #000000; --picker-filter: invert(.8);
+  --field-shade: 27%;
+}
+
+[data-style="cockpit"][data-theme="artico"] {
+  color-scheme: dark;
+  --theme-color: #05090D;
+  --bg: #05090D; --bg-elevated: #0A1118; --bg-raised: #0F1820;
+  --surface: #0F1820; --surface-deep: #070C11; --scrim: #000000;
+  --neutral-deep: #1C2833; --neutral: #44586A; --neutral-light: #8FA6B8; --neutral-specular: #C3D3DF; --pearl: #E2E8EE;
+  --accent: #4FE3F0; --accent-light: #9AF0F7; --accent-deep: #1FB6C4; --on-accent: #001418;
+  --blue: #6E9DFF; --blue-glow: #8AAEFF; --green: #52E59A; --amber: #FFC24A; --red: #FF5A4D; --red-light: #FF928A;
+  --pink: #FF7BA4; --violet: #BBA6FF; --teal: #3FD8B8; --booked: #C4A8FF;
+  --text-primary: #EAF4FA; --text-secondary: #9CB2C2; --text-tertiary: #5B7082;
+  --ink: #FFFFFF; --shade: #000000; --picker-filter: invert(.8);
+  --field-shade: 27%;
+}
+
+[data-style="cockpit"][data-theme="giorno"] {
+  color-scheme: light;
+  --theme-color: #E8EBEF;
+  --bg: #E8EBEF; --bg-elevated: #F4F6F8; --bg-raised: #FFFFFF;
+  --surface: #F4F6F8; --surface-deep: #DADFE5; --scrim: #0B0D10;
+  --neutral-deep: #CDD3DA; --neutral: #8D96A1; --neutral-light: #535C67; --neutral-specular: #2E353D; --pearl: #5F6378;
+  --accent: #0057C2; --accent-light: #245EA6; --accent-deep: #00428F; --on-accent: #FFFFFF;
+  --blue: #0B55BE; --blue-glow: #0B55BE; --green: #0A6B3C; --amber: #8A5100; --red: #B71D14; --red-light: #A91B12;
+  --pink: #AB2959; --violet: #5940C0; --teal: #0B6B66; --booked: #5A33C2;
+  --text-primary: #0B0D10; --text-secondary: #46505B; --text-tertiary: #8A939D;
+  --ink: #0B0D10; --shade: #1A2430; --picker-filter: none;
+  --field-shade: 7%;
+}

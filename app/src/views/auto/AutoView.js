@@ -62,7 +62,7 @@ export function AutoView() {
   if (!vehicle) {
     return html`
       <${PageHeader} eyebrow="Garage" title="Auto" />
-      <${EmptyState} art="auto" accent="var(--electric-blue-glow)" title="Nessun veicolo"
+      <${EmptyState} art="auto" accent="var(--blue-glow)" title="Nessun veicolo"
         text="Il gemello digitale della tua auto terrà d'occhio bollo, assicurazione, revisione, tagliando e cambio gomme.">
         <button class="btn btn--primary empty-state__cta" type="button" onClick=${() => setWizard('create')}>
           <${Icon} name="plus" /> Aggiungi la tua auto

@@ -12,6 +12,8 @@ export const DEFAULT_SETTINGS = {
   backupHistory: [],
   backupReminderDays: 30,
   profileName: 'Simo',
+  appearanceStyle: 'spatial',
+  appearanceTheme: 'obsidian',
 };
 
 const SEED_FLAG = 'seed.v1';

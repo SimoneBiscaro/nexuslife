@@ -2,11 +2,11 @@ import { signal } from './store/state.js';
 
 /** Le 5 sezioni fisse (D3), nell'ordine delle scorciatoie 1–5. */
 export const SECTIONS = [
-  { id: 'oggi', label: 'Oggi', key: '1', accent: 'var(--champagne)' },
-  { id: 'auto', label: 'Auto', key: '2', accent: 'var(--electric-blue-glow)' },
-  { id: 'casa', label: 'Casa', key: '3', accent: 'var(--mint)' },
+  { id: 'oggi', label: 'Oggi', key: '1', accent: 'var(--accent)' },
+  { id: 'auto', label: 'Auto', key: '2', accent: 'var(--blue-glow)' },
+  { id: 'casa', label: 'Casa', key: '3', accent: 'var(--green)' },
   { id: 'spesa', label: 'Spesa', key: '4', accent: 'var(--amber)' },
-  { id: 'salute', label: 'Salute', key: '5', accent: 'var(--health)' },
+  { id: 'salute', label: 'Salute', key: '5', accent: 'var(--pink)' },
 ];
 
 /** Pagine fuori dalla TabBar raggiungibili con una scorciatoia (Sidebar e tastiera). */

@@ -129,14 +129,14 @@ function Wheel({ cx, cy, id }) {
   const spokes = [0, 72, 144, 216, 288];
   return html`
     <g class="twin__wheel">
-      <circle cx=${cx} cy=${cy} r="34" fill="#0F0F12" />
-      <circle cx=${cx} cy=${cy} r="31" fill="none" stroke="#25262B" stroke-width="2" />
+      <circle cx=${cx} cy=${cy} r="34" style="fill:var(--twin-tyre)" />
+      <circle cx=${cx} cy=${cy} r="31" fill="none" stroke-width="2" style="stroke:var(--twin-tyre-wall)" />
       <circle cx=${cx} cy=${cy} r="24" fill=${`url(#${id}-rim)`} />
       ${spokes.map((a) => html`<path key=${a} transform=${`rotate(${a} ${cx} ${cy})`}
         d=${`M${cx - 3.2} ${cy - 5}L${cx - 5.5} ${cy - 22}L${cx + 5.5} ${cy - 22}L${cx + 3.2} ${cy - 5}Z`}
-        fill="#E6E8EC" opacity=".92" />`)}
-      <circle cx=${cx} cy=${cy} r="24" fill="none" stroke="#3A3C42" stroke-width="1.5" />
-      <circle cx=${cx} cy=${cy} r="6" fill="#2A2C31" stroke="#C7CAD1" stroke-width="1.2" />
+        opacity=".92" style="fill:var(--twin-rim)" />`)}
+      <circle cx=${cx} cy=${cy} r="24" fill="none" stroke-width="1.5" style="stroke:var(--twin-trim-light)" />
+      <circle cx=${cx} cy=${cy} r="6" stroke-width="1.2" style="fill:var(--twin-hub);stroke:var(--twin-chrome)" />
     </g>`;
 }
 
@@ -157,22 +157,22 @@ function TwinSvg({ color, label }) {
           <stop offset="0" stop-color=${p[1]} /><stop offset="1" stop-color=${p[0]} />
         </linearGradient>
         <linearGradient id=${`${uid}-glass`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#2B3240" /><stop offset=".5" stop-color="#11141B" /><stop offset="1" stop-color="#07080B" />
+          <stop offset="0" style="stop-color:var(--twin-glass-1)" /><stop offset=".5" style="stop-color:var(--twin-glass-2)" /><stop offset="1" style="stop-color:var(--twin-glass-3)" />
         </linearGradient>
         <linearGradient id=${`${uid}-reflect`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset=".5" stop-color="#fff" stop-opacity=".22" />
-          <stop offset="1" stop-color="#fff" stop-opacity="0" />
+          <stop offset="0" stop-opacity="0" style="stop-color:var(--twin-sheen)" /><stop offset=".5" stop-opacity=".22" style="stop-color:var(--twin-sheen)" />
+          <stop offset="1" stop-opacity="0" style="stop-color:var(--twin-sheen)" />
         </linearGradient>
         <radialGradient id=${`${uid}-rim`}>
-          <stop offset="0" stop-color="#5C5F66" /><stop offset=".7" stop-color="#2A2C31" /><stop offset="1" stop-color="#8E9196" />
+          <stop offset="0" style="stop-color:var(--twin-rail-1)" /><stop offset=".7" style="stop-color:var(--twin-rail-2)" /><stop offset="1" style="stop-color:var(--twin-rail-3)" />
         </radialGradient>
         <radialGradient id=${`${uid}-halo`}>
-          <stop offset="0" stop-color="#F2E3C2" stop-opacity=".9" /><stop offset=".4" stop-color="#D9BF8C" stop-opacity=".35" />
-          <stop offset="1" stop-color="#D9BF8C" stop-opacity="0" />
+          <stop offset="0" stop-opacity=".9" style="stop-color:var(--twin-light)" /><stop offset=".4" stop-opacity=".35" style="stop-color:var(--twin-light-halo)" />
+          <stop offset="1" stop-opacity="0" style="stop-color:var(--twin-light-halo)" />
         </radialGradient>
         <linearGradient id=${`${uid}-sweep`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset=".5" stop-color="#fff" stop-opacity=".45" />
-          <stop offset="1" stop-color="#fff" stop-opacity="0" />
+          <stop offset="0" stop-opacity="0" style="stop-color:var(--twin-sheen)" /><stop offset=".5" stop-opacity=".45" style="stop-color:var(--twin-sheen)" />
+          <stop offset="1" stop-opacity="0" style="stop-color:var(--twin-sheen)" />
         </linearGradient>
         <filter id=${`${uid}-blur`} x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="7" /></filter>
         <clipPath id=${`${uid}-clip`}><path d=${BODY} /><path d=${FRONT} /><path d=${HOOD} /></clipPath>
@@ -180,16 +180,16 @@ function TwinSvg({ color, label }) {
 
       <!-- 1. Ombra a terra -->
       <g class="twin__shadow">
-        <ellipse cx="220" cy="222" rx="200" ry="12" fill="#000" opacity=".7" filter=${`url(#${uid}-blur)`} />
-        <ellipse cx="128" cy="224" rx="40" ry="5" fill="#000" opacity=".8" />
-        <ellipse cx="334" cy="223" rx="40" ry="5" fill="#000" opacity=".8" />
+        <ellipse cx="220" cy="222" rx="200" ry="12" opacity=".7" filter=${`url(#${uid}-blur)`} style="fill:var(--twin-shadow)" />
+        <ellipse cx="128" cy="224" rx="40" ry="5" opacity=".8" style="fill:var(--twin-shadow)" />
+        <ellipse cx="334" cy="223" rx="40" ry="5" opacity=".8" style="fill:var(--twin-shadow)" />
       </g>
 
       <g class="twin__car">
         <!-- 2. Barre portapacchi -->
-        <path d="M226 64L346 62" stroke="#1B1C20" stroke-width="5" stroke-linecap="round" />
-        <path d="M226 62.5L346 60.5" stroke="#8E9196" stroke-width="1" stroke-linecap="round" opacity=".7" />
-        <path d="M236 64v4M336 62.5v4.5" stroke="#1B1C20" stroke-width="4" />
+        <path d="M226 64L346 62" stroke-width="5" stroke-linecap="round" style="stroke:var(--twin-trim)" />
+        <path d="M226 62.5L346 60.5" stroke-width="1" stroke-linecap="round" opacity=".7" style="stroke:var(--twin-rail-3)" />
+        <path d="M236 64v4M336 62.5v4.5" stroke-width="4" style="stroke:var(--twin-trim)" />
 
         <!-- 3. Carrozzeria -->
         <path d=${FRONT} fill=${`url(#${uid}-front)`} />
@@ -199,32 +199,32 @@ function TwinSvg({ color, label }) {
         <!-- 4. Vetri scuri con riflesso -->
         <path d="M168 112L210 74L198 72L156 104Z" fill=${`url(#${uid}-glass)`} />
         <path d="M180 112L214 79C216 76 219 75 223 75L340 74C347 74 351 76 355 81L377 108C379 111 378 113 374 113Z" fill=${`url(#${uid}-glass)`} />
-        <path d="M262 75h7l-2 38h-7Z M328 74h9l12 39h-12Z" fill="#0A0B0E" />
+        <path d="M262 75h7l-2 38h-7Z M328 74h9l12 39h-12Z" style="fill:var(--twin-pillar)" />
         <path d="M196 98L222 78L250 78L214 106Z" fill=${`url(#${uid}-reflect)`} />
 
         <!-- 5. Linea di cintura e nervature -->
-        <path d="M168 115L388 117" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" fill="none" />
-        <path d="M100 142C200 136 300 136 399 142" stroke="#fff" stroke-opacity=".22" stroke-width="1" fill="none" />
-        <path d="M265 117L263 186M338 118L340 184" stroke="#000" stroke-opacity=".28" stroke-width="1" />
-        <path d="M232 130h16M306 130h16" stroke="#1B1C20" stroke-width="2.5" stroke-linecap="round" />
+        <path d="M168 115L388 117" stroke-opacity=".35" stroke-width="1.2" fill="none" style="stroke:var(--twin-sheen)" />
+        <path d="M100 142C200 136 300 136 399 142" stroke-opacity=".22" stroke-width="1" fill="none" style="stroke:var(--twin-sheen)" />
+        <path d="M265 117L263 186M338 118L340 184" stroke-opacity=".28" stroke-width="1" style="stroke:var(--twin-shadow)" />
+        <path d="M232 130h16M306 130h16" stroke-width="2.5" stroke-linecap="round" style="stroke:var(--twin-trim)" />
 
         <!-- 6. Paraurti, griglia e protezioni passaruota -->
-        <path d="M38 160L87 153L87 170L38 175Z" fill="#141519" />
-        <path d="M41 164L86 158M41 168.5L86 163" stroke="#3A3C42" stroke-width="1" />
-        <path d="M34 178L88 179L88 196L48 197C40 196 34 192 34 184Z" fill="#1B1C20" />
-        <path d="M170 195L292 194L292 186L170 188Z" fill="#1B1C20" />
-        <path d="M86 195A42 42 0 0 1 170 195" fill="none" stroke="#1B1C20" stroke-width="7" />
-        <path d="M292 194A42 42 0 0 1 376 194" fill="none" stroke="#1B1C20" stroke-width="7" />
-        <path d="M392 120L400 122L400 132L393 130Z" fill="#B3261E" />
+        <path d="M38 160L87 153L87 170L38 175Z" style="fill:var(--twin-grille)" />
+        <path d="M41 164L86 158M41 168.5L86 163" stroke-width="1" style="stroke:var(--twin-trim-light)" />
+        <path d="M34 178L88 179L88 196L48 197C40 196 34 192 34 184Z" style="fill:var(--twin-trim)" />
+        <path d="M170 195L292 194L292 186L170 188Z" style="fill:var(--twin-trim)" />
+        <path d="M86 195A42 42 0 0 1 170 195" fill="none" stroke-width="7" style="stroke:var(--twin-trim)" />
+        <path d="M292 194A42 42 0 0 1 376 194" fill="none" stroke-width="7" style="stroke:var(--twin-trim)" />
+        <path d="M392 120L400 122L400 132L393 130Z" style="fill:var(--twin-tail)" />
 
         <!-- 7. Specchietto -->
-        <path d="M180 112C176 104 182 100 190 101L199 103C201 108 197 113 189 114Z" fill=${`url(#${uid}-front)`} stroke="#1B1C20" stroke-width=".8" />
+        <path d="M180 112C176 104 182 100 190 101L199 103C201 108 197 113 189 114Z" fill=${`url(#${uid}-front)`} stroke-width=".8" style="stroke:var(--twin-trim)" />
 
         <!-- 8. Fari LED con alone champagne -->
         <ellipse class="twin__halo" cx="64" cy="146" rx="46" ry="16" fill=${`url(#${uid}-halo)`} />
-        <path d="M40 142L88 134L90 146L42 152Z" fill="#0C0D10" />
-        <path d="M92 132L114 127L112 136L91 140Z" fill="#0C0D10" />
-        <path class="twin__led" d="M44 147L87 140M93 136L110 132" stroke="#F2E3C2" stroke-width="2" stroke-linecap="round" />
+        <path d="M40 142L88 134L90 146L42 152Z" style="fill:var(--twin-housing)" />
+        <path d="M92 132L114 127L112 136L91 140Z" style="fill:var(--twin-housing)" />
+        <path class="twin__led" d="M44 147L87 140M93 136L110 132" stroke-width="2" stroke-linecap="round" style="stroke:var(--twin-light)" />
 
         <!-- 9. Cerchi a razze -->
         <${Wheel} cx=${128} cy=${190} id=${uid} />

@@ -14,6 +14,9 @@ import { Sidebar } from './ui/Sidebar.js';
 import { Topbar } from './ui/Topbar.js';
 import { TabBar } from './ui/TabBar.js';
 import { ToastHost } from './ui/Toast.js';
+import { AppearanceTrialBar, savedAppearance, trial } from './ui/AppearanceTrial.js';
+import { syncAppearanceFromSettings } from './ui/appearance.js';
+import { entityVersion } from './store/state.js';
 import { OggiView } from './views/oggi/OggiView.js';
 import { AutoView } from './views/auto/AutoView.js';
 import { CasaView } from './views/casa/CasaView.js';
@@ -129,9 +132,16 @@ render(html`<${App} />`, root);
 // ToastHost resta fuori da #app: così non diventa inerte quando uno Sheet è aperto.
 const toastRoot = document.createElement('div');
 document.body.appendChild(toastRoot);
-render(html`<${ToastHost} />`, toastRoot);
+render(html`<${ToastHost} /><${AppearanceTrialBar} />`, toastRoot);
 
 registerServiceWorker();
+
+/* ---------- Aspetto (stile e tema) ---------- */
+// appearance-boot.js l'ha già applicato da localStorage prima del primo disegno; qui vale la scelta salvata.
+function applySavedAppearance(settings) {
+  if (trial.value) return; // una prova in corso decide da sé
+  savedAppearance.value = syncAppearanceFromSettings(settings);
+}
 
 /* ---------- Dati locali ---------- */
 async function initData() {
@@ -139,7 +149,11 @@ async function initData() {
     const repo = await getRepo();
     await seedDefaults(repo);
     await startupMaintenance(repo);
-    lockEnabled = (await loadSettings()).healthLockEnabled !== false;
+    const settings = await loadSettings();
+    lockEnabled = settings.healthLockEnabled !== false;
+    applySavedAppearance(settings);
+    // anche quando la scelta arriva da un altro dispositivo con il sync
+    entityVersion('settings').subscribe(() => loadSettings().then(applySavedAppearance).catch(() => {}));
   } catch (err) {
     if (err?.name === 'VersionError') {
       // L'archivio è stato aggiornato da una versione più nuova dell'app (es. un'altra scheda).

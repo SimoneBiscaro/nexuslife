@@ -73,7 +73,7 @@ export function GiardinoView() {
     ${!garden && html`<${Skeleton} cards=${1} rows=${4} label="Caricamento del giardino" />`}
 
     ${garden && !garden.hasData && html`<${GlassCard} class="spring-in">
-      <${EmptyState} art="giardino" accent="var(--mint)" title="Il giardino aspetta i primi semi"
+      <${EmptyState} art="giardino" accent="var(--green)" title="Il giardino aspetta i primi semi"
         text="Aggiungi l'auto, l'affitto, la spesa o una visita: ogni sezione aggiungerà un fiore al mazzo. Più le cose sono in ordine, più fiorisce.">
         <a class="btn btn--primary" href="#/oggi">Vai a Oggi</a>
       <//>

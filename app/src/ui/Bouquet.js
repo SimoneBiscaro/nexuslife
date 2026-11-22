@@ -7,26 +7,20 @@ import { html } from './html.js';
  * piegatura, foglie, apertura del fiore e petali caduti. viewBox 400×340, terra a y=318.
  */
 
-/** Colore del fiore per categoria (lo stesso nella legenda). */
+/** Colore del fiore per categoria (lo stesso nella legenda): token del tema (styles/tokens.css). */
 export const PLANT_COLORS = {
-  auto: '#6FA8FF',
-  affitto: '#D9BF8C',
-  manutenzioni: '#B79CFF',
-  spesa: '#FFB020',
-  salute: '#FF6B8B',
-  todo: '#3FD2C7',
-  backup: '#E6E4EE',
+  auto: 'var(--flower-auto)',
+  affitto: 'var(--flower-affitto)',
+  manutenzioni: 'var(--flower-manutenzioni)',
+  spesa: 'var(--flower-spesa)',
+  salute: 'var(--flower-salute)',
+  todo: 'var(--flower-todo)',
+  backup: 'var(--flower-backup)',
 };
 
 /** Tonalità delle foglie: [chiaro, scuro, stelo]. */
-const TONES = {
-  lush: ['#5BEBAE', '#1F9E6A', '#2FB57D'],
-  green: ['#7BD9A4', '#2E8F62', '#3C9C6E'],
-  yellow: ['#D6D66E', '#8E9A3A', '#8E9A4A'],
-  amber: ['#FFC24D', '#B07414', '#9C7A3C'],
-  brown: ['#A87A4C', '#5E3F22', '#6E5034'],
-  neutral: ['#A9ACB2', '#5C5F66', '#6E7178'],
-};
+const TONES = Object.fromEntries(['lush', 'green', 'yellow', 'amber', 'brown', 'neutral']
+  .map((t) => [t, [1, 2, 3].map((k) => `var(--leaf-${t}-${k})`)]));
 
 const CX = 200;
 const NECK_Y = 214;
@@ -82,8 +76,8 @@ function Head({ stage, color, at, uid }) {
         ${stage.id === 'fiorita' && html`<circle r=${r * 2.2} fill=${`url(#bq-glow-${uid})`} style=${`color:${color}`} />`}
         ${Array.from({ length: n }, (_, k) => html`<ellipse key=${k} cx="0" cy=${-r * 0.9} rx=${r * 0.5} ry=${r}
           style=${`fill:${color}`} transform=${`rotate(${(360 / n) * k})`} />`)}
-        <circle r=${r * 0.42} fill="#F2E3C2" />
-        <circle r=${r * 0.42} fill="none" stroke="rgba(0,0,0,.18)" />
+        <circle r=${r * 0.42} style="fill:var(--flower-center)" />
+        <circle r=${r * 0.42} fill="none" style="stroke:var(--shade)" stroke-opacity=".18" />
       </g>`;
     }
     case 'assetata':
@@ -98,18 +92,18 @@ function Head({ stage, color, at, uid }) {
       return html`<g transform=${`${pos} rotate(${45 * (at.dir < 0 ? -1 : 1)})`} class="bq__head">
         ${[-50, -10, 30].map((a) => html`<ellipse key=${a} cx="0" cy="-8" rx="4.5" ry="9" style=${`fill:${color}`} opacity=".55"
           transform=${`rotate(${a})`} />`)}
-        <circle r="4" fill="#9C7A3C" />
+        <circle r="4" style="fill:var(--wilt-1)" />
       </g>`;
     case 'secca':
       return html`<g transform=${pos} class="bq__head">
-        <circle r="4.5" fill="#6E5034" />
-        <path d="M-2-4l-3-6M2-4l3-6M0-4v-7" stroke="#8a6a46" stroke-width="1.2" stroke-linecap="round" />
+        <circle r="4.5" style="fill:var(--wilt-2)" />
+        <path d="M-2-4l-3-6M2-4l3-6M0-4v-7" stroke-width="1.2" stroke-linecap="round" style="stroke:var(--wilt-3)" />
       </g>`;
     default:
       // germoglio: bocciolo chiuso grigio
       return html`<g transform=${pos} class="bq__head">
-        <path d="M0 2C-5-1-5-9 0-15C5-9 5-1 0 2Z" fill="#8E9196" />
-        <path d="M0 2C-2-3-2-9 0-13" stroke="#C7CAD1" stroke-width=".8" fill="none" opacity=".6" />
+        <path d="M0 2C-5-1-5-9 0-15C5-9 5-1 0 2Z" style="fill:var(--leaf-neutral-1)" />
+        <path d="M0 2C-2-3-2-9 0-13" stroke-width=".8" fill="none" opacity=".6" style="stroke:var(--neutral-specular)" />
       </g>`;
   }
 }
@@ -133,11 +127,11 @@ function Stem({ plant, g, color, uid, onSelect, active, still }) {
     <g class=${`bq__stem${dim ? ' is-dim' : ''}${active === plant.id ? ' is-active' : ''}`} data-id=${plant.id}
       onClick=${onSelect ? () => onSelect(plant.id) : undefined}
       style=${`transform-origin:${f1(g.neck.x)}px ${NECK_Y}px;--sway:${f1(sway)}deg;--sway-dur:${(7 + (jitter(plant.id, 4) + 0.5) * 3).toFixed(1)}s;--sway-delay:-${((jitter(plant.id, 5) + 0.5) * 6).toFixed(1)}s`}>
-      <path class="bq__stalk" stroke=${stemColor}
+      <path class="bq__stalk" style=${`stroke:${stemColor}`}
         d=${`M${f1(g.base.x)} ${g.base.y}L${f1(g.neck.x)} ${g.neck.y}Q${f1(g.ctrl.x)} ${f1(g.ctrl.y)} ${f1(g.tip.x)} ${f1(g.tip.y)}`} />
       ${leaves.map((l) => html`<g key=${l.k} transform=${`translate(${f1(l.x)} ${f1(l.y)}) rotate(${f1(l.angle)}) scale(${l.flip ? '.78 -.78' : '.78'})`}>
         <path d=${LEAF} fill=${`url(#bq-leaf-${uid}-${stage.tone})`} />
-        <path d="M1.5 0C8-1.4 15-2 22-1.4" class="bq__vein" stroke=${dark} />
+        <path d="M1.5 0C8-1.4 15-2 22-1.4" class="bq__vein" style=${`stroke:${dark}`} />
       </g>`)}
       <${Head} stage=${stage} color=${color} at=${head} uid=${uid} />
       <title>${plant.summary}</title>
@@ -161,7 +155,7 @@ export function Bouquet({ plants, onSelect, active = null, size = 'lg', still = 
   const tones = [...new Set(plants.map((p) => p.stage.tone))];
   // petali caduti sulla ghiaia, nel colore della categoria
   const fallen = plants.flatMap((p, i) => Array.from({ length: Math.min(4, p.stage.fallen) }, (_, k) => ({
-    key: `${p.id}${k}`, color: PLANT_COLORS[p.id] || '#C7CAD1',
+    key: `${p.id}${k}`, color: PLANT_COLORS[p.id] || 'var(--neutral-specular)',
     x: CX + (geoms[i].t || jitter(p.id, 7)) * 70 + jitter(p.id, 10 + k) * 60 + (k % 2 ? 1 : -1) * 18,
     y: GROUND - 2 + (jitter(p.id, 20 + k) + 0.5) * 12, rot: (jitter(p.id, 30 + k) + 0.5) * 360,
   })));
@@ -170,18 +164,18 @@ export function Bouquet({ plants, onSelect, active = null, size = 'lg', still = 
     <svg class=${`bouquet bouquet--${size}`} viewBox="0 0 400 340" aria-hidden="true" focusable="false">
       <defs>
         ${tones.map((tone) => html`<linearGradient key=${tone} id=${`bq-leaf-${uid}-${tone}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color=${(TONES[tone] || TONES.neutral)[0]} /><stop offset="1" stop-color=${(TONES[tone] || TONES.neutral)[1]} />
+          <stop offset="0" style=${`stop-color:${(TONES[tone] || TONES.neutral)[0]}`} /><stop offset="1" style=${`stop-color:${(TONES[tone] || TONES.neutral)[1]}`} />
         </linearGradient>`)}
         <radialGradient id=${`bq-glow-${uid}`}><stop offset="0" stop-color="currentColor" stop-opacity=".35" /><stop offset="1" stop-color="currentColor" stop-opacity="0" /></radialGradient>
         <radialGradient id=${`bq-light-${uid}`} cx=".5" cy=".4" r=".5">
-          <stop offset="0" stop-color="#F2E3C2" stop-opacity=".16" /><stop offset="1" stop-color="#F2E3C2" stop-opacity="0" />
+          <stop offset="0" stop-opacity=".16" style="stop-color:var(--garden-light)" /><stop offset="1" stop-opacity="0" style="stop-color:var(--garden-light)" />
         </radialGradient>
         <linearGradient id=${`bq-glass-${uid}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#fff" stop-opacity=".16" /><stop offset=".35" stop-color="#fff" stop-opacity=".05" />
-          <stop offset=".75" stop-color="#fff" stop-opacity=".03" /><stop offset="1" stop-color="#fff" stop-opacity=".12" />
+          <stop offset="0" stop-opacity=".16" style="stop-color:var(--vase-glass)" /><stop offset=".35" stop-opacity=".05" style="stop-color:var(--vase-glass)" />
+          <stop offset=".75" stop-opacity=".03" style="stop-color:var(--vase-glass)" /><stop offset="1" stop-opacity=".12" style="stop-color:var(--vase-glass)" />
         </linearGradient>
         <radialGradient id=${`bq-stone-${uid}`} cx=".35" cy=".3" r=".8">
-          <stop offset="0" stop-color="#8E9196" /><stop offset=".55" stop-color="#5C5F66" /><stop offset="1" stop-color="#2A2C31" />
+          <stop offset="0" style="stop-color:var(--stone-1)" /><stop offset=".55" style="stop-color:var(--stone-2)" /><stop offset="1" style="stop-color:var(--stone-3)" />
         </radialGradient>
         <clipPath id=${`bq-water-${uid}`}><rect x="140" y="246" width="120" height="70" /></clipPath>
       </defs>
@@ -190,7 +184,7 @@ export function Bouquet({ plants, onSelect, active = null, size = 'lg', still = 
       <g class="bq__raked">
         ${[150, 122, 94, 68].map((rx, k) => html`<ellipse key=${rx} cx=${CX} cy=${GROUND + 2} rx=${rx} ry=${13 - k * 2} />`)}
       </g>
-      <ellipse cx=${CX} cy=${GROUND - 4} rx="56" ry="7" fill="rgba(0,0,0,.55)" />
+      <ellipse cx=${CX} cy=${GROUND - 4} rx="56" ry="7" style="fill:var(--shade)" fill-opacity=".55" />
       <g class="bq__stones">
         <ellipse cx="300" cy=${GROUND - 1} rx="20" ry="10" fill=${`url(#bq-stone-${uid})`} />
         <ellipse cx="96" cy=${GROUND + 2} rx="13" ry="7" fill=${`url(#bq-stone-${uid})`} />
@@ -199,14 +193,14 @@ export function Bouquet({ plants, onSelect, active = null, size = 'lg', still = 
       ${fallen.map((p) => html`<ellipse key=${p.key} cx=${f1(p.x)} cy=${f1(p.y)} rx="3" ry="5.5" style=${`fill:${p.color}`} opacity=".55"
         transform=${`rotate(${f1(p.rot)} ${f1(p.x)} ${f1(p.y)})`} />`)}
 
-      ${plants.map((p, i) => html`<${Stem} key=${p.id} plant=${p} g=${geoms[i]} color=${PLANT_COLORS[p.id] || '#C7CAD1'}
+      ${plants.map((p, i) => html`<${Stem} key=${p.id} plant=${p} g=${geoms[i]} color=${PLANT_COLORS[p.id] || 'var(--neutral-specular)'}
         uid=${uid} onSelect=${onSelect} active=${active} still=${still} />`)}
 
       <g class="bq__vase">
         <path d="M168 214C166 240 150 252 152 280C154 304 172 312 200 312C228 312 246 304 248 280C250 252 234 240 232 214Z"
           fill=${`url(#bq-glass-${uid})`} />
         <path d="M168 214C166 240 150 252 152 280C154 304 172 312 200 312C228 312 246 304 248 280C250 252 234 240 232 214Z"
-          clip-path=${`url(#bq-water-${uid})`} fill="rgba(111,168,255,.10)" />
+          clip-path=${`url(#bq-water-${uid})`} style="fill:var(--vase-water)" />
         <path d="M153 247C175 251 225 251 247 247" class="bq__waterline" />
         <path d="M168 214C166 240 150 252 152 280C154 304 172 312 200 312C228 312 246 304 248 280C250 252 234 240 232 214" class="bq__glass-edge" />
         <ellipse cx=${CX} cy=${NECK_Y} rx="32" ry="5" class="bq__rim" />

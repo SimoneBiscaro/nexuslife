@@ -1,0 +1,109 @@
+/*
+ * Stile 5 · Clay — forme in argilla: raggi molto ampi, pastelli, ombre tattili doppie
+ * (luce in alto a sinistra, rilievo in basso a destra), Nunito 800 e pressioni che rimbalzano.
+ */
+[data-style="clay"] {
+  --font-ui: Nunito, ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  --font-display: Nunito, ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  --font-num: Nunito, ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  --body-weight: 600;
+  --num-weight: 800;
+  --title-weight: 800;
+  --title-tracking: -.02em;
+  --section-weight: 800;
+  --section-tracking: -.01em;
+  --btn-weight: 800;
+
+  --radius-sm: 18px;
+  --radius-md: 26px;
+  --radius-lg: 34px;
+  --radius-xl: 42px;
+
+  --glass-blur: none;
+  --glare: 0%;
+  --glow: .25;
+  --aurora-opacity: .6;
+  --gauge-stroke: 10;
+  --gauge-cap: round;
+  --gauge-ticks: 0%;
+
+  --ease-spring: cubic-bezier(.3, 1.9, .5, 1);
+  --dur-spring: 560ms;
+  --press-scale: .94;
+
+  --glass-bg: var(--bg-elevated);
+  --glass-bg-strong: var(--bg-elevated);
+  --glass-border: 1px solid transparent;
+  --glass-shadow: inset 3px 3px 6px color-mix(in srgb, var(--clay-hi) 70%, transparent), inset -4px -4px 8px color-mix(in srgb, var(--shade) 9%, transparent),
+    -6px -6px 16px color-mix(in srgb, var(--clay-hi) 75%, transparent), 10px 12px 24px color-mix(in srgb, var(--shade) 18%, transparent);
+  --bar-bg: var(--bg-elevated);
+  --page-bg: radial-gradient(70% 50% at 15% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%), var(--bg);
+  --title-fill: linear-gradient(var(--text-primary), var(--text-primary));
+  --gauge-track: color-mix(in srgb, var(--shade) 10%, var(--bg));
+  --btn-primary-bg: linear-gradient(160deg, var(--accent-light), var(--accent));
+  --btn-primary-shadow: inset 2px 2px 4px color-mix(in srgb, var(--clay-hi) 45%, transparent), 6px 8px 16px color-mix(in srgb, var(--accent-deep) 35%, transparent);
+  --btn-primary-shadow-hover: inset 2px 2px 4px color-mix(in srgb, var(--clay-hi) 45%, transparent), 8px 12px 22px color-mix(in srgb, var(--accent-deep) 45%, transparent);
+  --shadow-inset-specular: inset 2px 2px 4px color-mix(in srgb, var(--clay-hi) 60%, transparent);
+  --vase-glass: var(--clay-hi);
+  --twin-shadow: color-mix(in srgb, var(--shade) 40%, var(--bg));
+}
+
+[data-style="clay"][data-theme="pesca"] {
+  color-scheme: light;
+  --theme-color: #F6E5DA;
+  --bg: #F6E5DA; --bg-elevated: #FBEEE6; --bg-raised: #FFF5EF;
+  --surface: #FBEEE6; --surface-deep: #EED6C7; --scrim: #2A1A12;
+  --clay-hi: #FFFFFF;
+  --neutral-deep: #EAD2C3; --neutral: #B39787; --neutral-light: #6C5244; --neutral-specular: #3E2C22; --pearl: #6A5E7C;
+  --accent: #994323; --accent-light: #81503B; --accent-deep: #8F3A1C; --on-accent: #FFFFFF;
+  --blue: #2F5BB0; --blue-glow: #2F5BB0; --green: #1E6B43; --amber: #865000; --red: #B0291F; --red-light: #9E241B;
+  --pink: #A3325B; --violet: #6446B8; --teal: #1D6B64; --booked: #4A44C4;
+  --text-primary: #2A1A12; --text-secondary: #634A3D; --text-tertiary: #A88E80;
+  --ink: #2A1A12; --shade: #7A4A30; --picker-filter: none;
+  --field-shade: 7%;
+}
+
+[data-style="clay"][data-theme="lavanda"] {
+  color-scheme: light;
+  --theme-color: #EAE5F6;
+  --bg: #EAE5F6; --bg-elevated: #F2EFFA; --bg-raised: #F8F6FD;
+  --surface: #F2EFFA; --surface-deep: #DCD4EF; --scrim: #1D1830;
+  --clay-hi: #FFFFFF;
+  --neutral-deep: #D8D0EC; --neutral: #9C93B6; --neutral-light: #574E72; --neutral-specular: #342C4C; --pearl: #6E5E7A;
+  --accent: #6141C2; --accent-light: #625292; --accent-deep: #4A2E9C; --on-accent: #FFFFFF;
+  --blue: #2A55B2; --blue-glow: #2A55B2; --green: #1B6843; --amber: #855100; --red: #B02622; --red-light: #9A211D;
+  --pink: #A2306A; --violet: #5838B6; --teal: #1B6866; --booked: #2A59AD;
+  --text-primary: #1D1830; --text-secondary: #554C6E; --text-tertiary: #9C93B6;
+  --ink: #1D1830; --shade: #4A3A80; --picker-filter: none;
+  --field-shade: 7%;
+}
+
+[data-style="clay"][data-theme="menta"] {
+  color-scheme: light;
+  --theme-color: #DFF1E8;
+  --bg: #DFF1E8; --bg-elevated: #EAF7F0; --bg-raised: #F3FBF7;
+  --surface: #EAF7F0; --surface-deep: #CBE6D8; --scrim: #10241B;
+  --clay-hi: #FFFFFF;
+  --neutral-deep: #C8E2D5; --neutral: #8EAA9C; --neutral-light: #46604F; --neutral-specular: #2A3E32; --pearl: #5F6278;
+  --accent: #166E4C; --accent-light: #366952; --accent-deep: #0F5539; --on-accent: #FFFFFF;
+  --blue: #255AAE; --blue-glow: #255AAE; --green: #146838; --amber: #7F5000; --red: #AC2820; --red-light: #96221B;
+  --pink: #9E3060; --violet: #5B43B0; --teal: #126660; --booked: #5638B8;
+  --text-primary: #10241B; --text-secondary: #43594D; --text-tertiary: #87A194;
+  --ink: #10241B; --shade: #2E6A4E; --picker-filter: none;
+  --field-shade: 7%;
+}
+
+[data-style="clay"][data-theme="notte"] {
+  color-scheme: dark;
+  --theme-color: #27242F;
+  --bg: #27242F; --bg-elevated: #302C3A; --bg-raised: #373242;
+  --surface: #302C3A; --surface-deep: #211E28; --scrim: #0C0A10;
+  --clay-hi: #4A4458;
+  --neutral-deep: #403A4E; --neutral: #6E6782; --neutral-light: #ADA5C2; --neutral-specular: #D6D0E6; --pearl: #EAE6F2;
+  --accent: #F2A98C; --accent-light: #FFC9B4; --accent-deep: #D68668; --on-accent: #2A1510;
+  --blue: #8DB4FF; --blue-glow: #9EBFFF; --green: #6EE0A8; --amber: #FFC766; --red: #FF8378; --red-light: #FFA9A1;
+  --pink: #FF9BB8; --violet: #C7B4FF; --teal: #6FDCD2; --booked: #C9C2FF;
+  --text-primary: #F4F1FA; --text-secondary: #BDB5D0; --text-tertiary: #827A96;
+  --ink: #F4F1FA; --shade: #000000; --picker-filter: invert(.8);
+  --field-shade: 27%;
+}

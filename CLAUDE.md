@@ -34,10 +34,12 @@ NexusLife è una suite personale di Simo, in italiano, con 5 sezioni fisse: **Og
 │   ├── icons/                # icone PWA generate in SVG/PNG
 │   ├── vendor/               # preact, htm (ESM)
 │   ├── styles/
-│   │   ├── tokens.css        # variabili colore, spaziature, raggi, ombre, motion
+│   │   ├── tokens.css        # token: struttura predefinita (stile 0) + palette Obsidian + token derivati
 │   │   ├── base.css
-│   │   └── components.css
+│   │   ├── components.css    # solo var(--…): nessun colore fisso
+│   │   └── styles/           # liquid.css editoriale.css washi.css cockpit.css clay.css (struttura + temi)
 │   └── src/
+│       ├── appearance-boot.js # script classico nel <head>: stile/tema prima del primo disegno
 │       ├── main.js           # bootstrap, router, registrazione SW
 │       ├── router.js         # hash router: #/oggi #/auto #/casa #/spesa #/salute #/todo #/giardino #/impostazioni
 │       ├── store/            # db.js (IndexedDB), repo.js (CRUD + tombstone), state.js (segnali)
@@ -71,20 +73,22 @@ Usa sempre **percorsi relativi** (`./src/...`): il sito vive sotto `https://<ute
 8. Messaggi di commit in italiano, brevi, all'imperativo.
 
 ## 5. Design system "Super WOW"
-Dark mode unico. Stile: Spatial Glassmorphism + card "Digital Twin". Livello Apple Design Award.
+Stile predefinito (stile 0): Spatial Glassmorphism scuro + card "Digital Twin". Livello Apple Design Award. Dalla Fase 12 l'aspetto ha **due livelli** (vedi "Stili e temi" in fondo a questa sezione): `data-style` (struttura) e `data-theme` (palette).
 
-**Colori (`tokens.css`)**
+**Colori (`tokens.css`, tema Obsidian dello stile 0)** — nomi semantici dalla Fase 12 (tra parentesi il nome storico)
 ```
---obsidian:#0A0A0C; --obsidian-elevated:#121216; --obsidian-raised:#1A1B20;
---titanium-deep:#2A2C31; --titanium:#5C5F66; --titanium-light:#8E9196; --titanium-specular:#C7CAD1;
---champagne:#D9BF8C; --champagne-light:#F2E3C2; --champagne-deep:#9C8355;   /* accento principale */
---electric-blue:#3D8BFF; --electric-blue-glow:#6FA8FF;
---mint:#3DDC97; --amber:#FFB020; --alarm-red:#FF453A; --health:#FF6B8B;
+--bg:#0A0A0C (obsidian); --bg-elevated:#121216; --bg-raised:#1A1B20; --surface:#26272E; --surface-deep:#141419;
+--neutral-deep:#2A2C31 (titanium-deep); --neutral:#5C5F66; --neutral-light:#8E9196; --neutral-specular:#C7CAD1;
+--accent:#D9BF8C (champagne, accento principale); --accent-light:#F2E3C2; --accent-deep:#9C8355; --on-accent:#1A1408;
+--blue:#3D8BFF (electric-blue); --blue-glow:#6FA8FF;
+--green:#3DDC97 (mint); --amber:#FFB020; --red:#FF453A (alarm-red); --red-light:#FF8A82; --pink:#FF6B8B (health);
+--violet:#B79CFF; --teal:#3FD2C7; --pearl:#E6E4EE; --booked:#8FB8FF;
 --text-primary:#F5F5F7; --text-secondary:#A1A1A6; --text-tertiary:#6E6E73;
+--ink:#FFFFFF (luci, bordi e riflessi: color-mix con trasparenza); --shade:#000000 (ombre)
 ```
-Stato → colore: `ok` mint · `warning` amber · `critical` alarm-red · `overdue` alarm-red con pulsazione · `unknown` titanium · `booked` (prenotato) `--booked` #8FB8FF con arco a trattini e icona calendario · `bookingPast` (appuntamento passato da confermare) amber.
+Stato → colore: `ok` green · `warning` amber · `critical` red · `overdue` red con pulsazione · `unknown` neutral · `booked` (prenotato) `--booked` #8FB8FF con arco a trattini e icona calendario · `bookingPast` (appuntamento passato da confermare) amber.
 
-**Font**: `--font-rounded: ui-rounded,'SF Pro Rounded',Nunito,system-ui,sans-serif;` per UI e numeri; `--font-serif:'New York',ui-serif,Newsreader,Georgia,serif;` per titoli di sezione. Nunito e Newsreader self-hosted in `app/fonts/` (woff2), nessuna richiesta a Google a runtime. Numeri con `font-variant-numeric: tabular-nums`.
+**Font**: `--font-ui: ui-rounded,'SF Pro Rounded',Nunito,system-ui,sans-serif;` per UI (e `--font-num` per i numeri); `--font-display:'New York',ui-serif,Newsreader,Georgia,serif;` per titoli di sezione. Nunito, Newsreader, Archivo Black (Editoriale) e Barlow Condensed 600 (Cockpit) self-hosted in `app/fonts/` (woff2, licenze OFL), nessuna richiesta a Google a runtime. Numeri con `font-variant-numeric: tabular-nums`.
 
 **Sfondo**: base obsidian + 2–3 gradienti radiali molto morbidi (champagne 6%, electric-blue 5%) che si spostano lentamente (animazione 40 s, disattivata con reduced-motion).
 
@@ -110,6 +114,14 @@ Più un riflesso radente: pseudo-elemento `::before` con gradiente lineare diago
 - **Giardino zen** (`#/giardino`): fuori dalla TabBar (D3 invariata). Ci si arriva dalla card "Giardino" in Oggi, dalla voce in Sidebar, dall'icona nella barra superiore su mobile e con `G`. È un **mazzo** in un vaso di vetro su ghiaia rastrellata (`ui/Bouquet.js`, SVG disegnato a mano): uno stelo per categoria, il colore del fiore identifica la categoria (Auto blu, Affitto e bollette champagne, Manutenzioni lilla, Spesa ambra, Salute rosa, To Do turchese, Backup perla); lo stadio decide altezza, piegatura, foglie, apertura del fiore e petali a terra. Sotto, la legenda (colore, nome, stadio, cose in sospeso): è il controllo accessibile, evidenzia lo stelo e apre lo Sheet con le cause e i link alla sezione. Oscillazione e petali che cadono disattivati con reduced-motion.
 - **Sheet**: pannello modale dal basso su mobile, dialog centrato su desktop.
 
+**Stili e temi (Fase 12)**
+- `<html data-style data-theme>`. Selettori su attributo, mai solo `:root`: un contenitore con `data-style`/`data-theme` (le miniature della galleria) applica lo stile solo al suo interno. Per questo gli stili cambiano **solo token**, non regole sui componenti.
+- `tokens.css`: `:root, [data-style]` = struttura predefinita (font, raggi, spaziature, vetro, `--glow` 0–1, gauge `--gauge-stroke`/`--gauge-cap`/`--gauge-ticks`, titoli `--title-*`, pulsanti `--btn-*`, motion) **e token derivati** (stati, ombre, vetro, `--page-bg`, fiori `--flower-*` e foglie `--leaf-*` del mazzo, `--twin-*` del Digital Twin, `--brand-*`), ricalcolati in ogni contesto; `:root, [data-style="spatial"]` = palette Obsidian. Ogni stile in `styles/styles/<id>.css`: `[data-style="id"]` struttura, `[data-style="id"][data-theme="t"]` palette completa (con `color-scheme` e `--theme-color`).
+- **Niente colori fissi nei componenti** (`components.css`, `base.css`, HudGauge, Bouquet, DigitalTwin, NeonBadge, Banner, icone, Aspetto): solo `var(--…)`, anche negli SVG (attributo `style`). Unica eccezione: la tinta della carrozzeria del Digital Twin (`PAINTS`, è un dato del veicolo). Verificato da `tests/themes.test.js`, che controlla anche per ogni tema i token completi, l'AA (≥ 4,5:1) dei colori di testo e di stato su fondo, card, superfici e vetro, il testo sul pulsante primario e la distinguibilità (ΔE ≥ 20) di ok/warning/critical/booked/unknown.
+- Catalogo in `src/ui/appearance.js` (`STYLES`): 0 **Spatial Glass** (Obsidian) · 1 **Vetro liquido**: lenti chiare e luminose, bordo speculare, raggi ampi, font di sistema (Giorno, Notte, Aurora, Grafite) · 2 **Editoriale**: neo-brutalista, Archivo Black maiuscolo, bordi 2 px, ombre piene sfalsate, raggi 0, nessun bagliore (Carta, Inchiostro, Klein, Rosa) · 3 **Washi**: carta giapponese con fibra (SVG in linea), linee sottili, spaziature ampie, Newsreader, motion lento senza rimbalzi (Kinari, Sumi, Sakura, Matcha) · 4 **Cockpit**: strumentazione auto, Barlow Condensed maiuscolo, angoli smussati (`--card-clip`), griglia di scansione, tacche marcate (Notturno, Sport, Artico, Giorno) · 5 **Clay**: argilla, raggi molto ampi, ombre tattili doppie (`--clay-hi`), Nunito 800, pressioni che rimbalzano (Pesca, Lavanda, Menta, Notte).
+- Scelta in `settings.appearanceStyle`/`appearanceTheme` (sincronizzata) e copiata in `localStorage['nexus.appearance']`; `src/appearance-boot.js` (script classico, non modulo, prima dei CSS) la applica prima del primo disegno: nessun lampo del tema vecchio. Impostazioni → **Aspetto**: galleria con miniature reali (card Oggi + HudGauge veri, `ui/StylePreview.js`); un tocco **prova** lo stile/tema su tutta l'app con la barra "Mantieni" / "Torna indietro" e ripristino automatico dopo 15 s (`ui/AppearanceTrial.js`). Lo stesso selettore è nel catalogo `#/impostazioni/design`, che legge la palette dai token calcolati.
+- Nuovo stile o tema: aggiungerlo a `STYLES`, al CSS, a `index.html` e allo SHELL di `sw.js`; il test lo controlla in automatico.
+
 ## 6. Modello dati
 Ogni record: `{ id (UUID v4), entity, createdAt, updatedAt (ISO), deleted (bool), ...campi }`. Le eliminazioni sono **tombstone** (`deleted:true`), eliminate davvero dopo 180 giorni.
 
@@ -134,7 +146,7 @@ Ogni record: `{ id (UUID v4), entity, createdAt, updatedAt (ISO), deleted (bool)
 | `visitPlan` | type, doctor?, intervalMonths? (periodica), dueBy? (entro quando / prima scadenza), notes, doneAt? (singola già fatta) |
 | `vaccine` | name, date, lot?, boosterDate?, notes |
 | `todo` | title, dueDate?, notes, doneAt? (fatta), repeatEvery? e repeatUnit? (`giorni`/`settimane`/`mesi`), lastDoneAt? |
-| `settings` | (record unico id fisso `settings`) healthLockEnabled (true, D7), reminderHour (9), dismissedBanners, lastBackupAt |
+| `settings` | (record unico id fisso `settings`) healthLockEnabled (true, D7), reminderHour (9), dismissedBanners, lastBackupAt, appearanceStyle (`spatial`), appearanceTheme (`obsidian`) |
 
 Categorie spesa predefinite (D6): Freschi, Dispensa, Bevande, Cura Casa, Altro + personalizzate. Nessun allegato (D9).
 Tutte le entità stanno nello stesso archivio IndexedDB (`records`, chiave [entity, id]): aggiungere entità o campi facoltativi non cambia lo schema IndexedDB. `visitPlan` è un dato sanitario (esclusa con "Escludi Salute"). Pacchetto di backup `schemaVersion` 3 (Fase 10, entità `todo`): un pacchetto più recente dell'app viene rifiutato. Prenotazioni (Fase 11): `…BookedFor` = `AAAA-MM-GG` o `AAAA-MM-GGTHH:mm` (ora locale di Roma, senza fuso), `…BookedOn` = giorno in cui si è prenotato (automatico); campi facoltativi, schema e `schemaVersion` invariati.

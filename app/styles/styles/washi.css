@@ -1,0 +1,114 @@
+/*
+ * Stile 3 · Washi — carta giapponese minimal: fondo con fibra leggera, linee d'inchiostro sottili,
+ * tanto spazio, Newsreader per titoli e cifre, motion lento e senza rimbalzi. Il critico è un timbro rosso.
+ */
+[data-style="washi"] {
+  --font-ui: 'Avenir Next', Avenir, 'Segoe UI', system-ui, sans-serif;
+  --font-display: Newsreader, 'New York', ui-serif, Georgia, serif;
+  --font-num: Newsreader, 'New York', ui-serif, Georgia, serif;
+  --num-weight: 500;
+  --num-scale: 1.1;
+  --title-weight: 500;
+  --title-tracking: -.01em;
+  --section-weight: 500;
+  --section-tracking: 0;
+  --btn-weight: 600;
+  --btn-tracking: .04em;
+
+  --space-4: 18px;
+  --space-5: 30px;
+  --space-6: 40px;
+  --space-7: 64px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-pill: 6px;
+
+  --glass-blur: none;
+  --glare: 0%;
+  --glow: 0;
+  --aurora-opacity: 0;
+  --gauge-stroke: 2.5;
+  --gauge-cap: round;
+  --gauge-ticks: 0%;
+
+  --ease-spring: cubic-bezier(.25, .7, .2, 1);
+  --dur-spring: 650ms;
+  --dur-page: 520ms;
+  --press-scale: .99;
+  --page-shift: 4px;
+
+  --glass-bg: color-mix(in srgb, var(--bg-elevated) 86%, transparent);
+  --glass-bg-strong: var(--bg-elevated);
+  --glass-border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent);
+  --glass-shadow: 0 1px 0 color-mix(in srgb, var(--shade) 4%, transparent);
+  --bar-bg: var(--bg-elevated);
+  /* fibra della carta: rumore SVG in linea, nessuna richiesta di rete */
+  --page-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .35 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"), var(--bg);
+  --title-fill: linear-gradient(var(--text-primary), var(--text-primary));
+  --gauge-track: color-mix(in srgb, var(--text-primary) 12%, transparent);
+  --btn-primary-bg: var(--accent);
+  --btn-primary-shadow: none;
+  --btn-primary-shadow-hover: 0 2px 0 var(--accent-deep);
+  --shadow-inset-specular: 0 0 0 transparent;
+  --vase-glass: var(--text-primary);
+  --twin-shadow: color-mix(in srgb, var(--text-primary) 45%, var(--bg));
+}
+
+[data-style="washi"][data-theme="kinari"] {
+  color-scheme: light;
+  --theme-color: #F3EEE3;
+  --bg: #F3EEE3; --bg-elevated: #FAF7F0; --bg-raised: #FFFDF8;
+  --surface: #FAF7F0; --surface-deep: #EAE3D4; --scrim: #1F1B16;
+  --neutral-deep: #DED6C5; --neutral: #A59C8A; --neutral-light: #625A4C; --neutral-specular: #3A342A; --pearl: #67627A;
+  --accent: #A8341F; --accent-light: #9D4937; --accent-deep: #82271A; --on-accent: #FFF8EE;
+  --blue: #2B4E8C; --blue-glow: #2B4E8C; --green: #3B6B2A; --amber: #865710; --red: #B02A1A; --red-light: #9A2416;
+  --pink: #A23C5A; --violet: #5E4A8C; --teal: #2C6660; --booked: #3E54A8;
+  --text-primary: #1F1B16; --text-secondary: #5A5246; --text-tertiary: #9A9080;
+  --ink: #1F1B16; --shade: #3A2E1E; --picker-filter: none;
+  --field-shade: 7%;
+}
+
+[data-style="washi"][data-theme="sumi"] {
+  color-scheme: dark;
+  --theme-color: #17150F;
+  --bg: #17150F; --bg-elevated: #1E1B15; --bg-raised: #25221B;
+  --surface: #1E1B15; --surface-deep: #12100B; --scrim: #050403;
+  --neutral-deep: #34302A; --neutral: #6D665A; --neutral-light: #A8A090; --neutral-specular: #D8D0C0; --pearl: #E8E2D6;
+  --accent: #E58A6C; --accent-light: #F0AC95; --accent-deep: #C26A4D; --on-accent: #1A1009;
+  --blue: #8EAEE0; --blue-glow: #8EAEE0; --green: #9CC98A; --amber: #E3B25E; --red: #F07A66; --red-light: #F5A090;
+  --pink: #E89AB0; --violet: #B9A6E0; --teal: #85CFC6; --booked: #B4B8F0;
+  --text-primary: #EDE6D6; --text-secondary: #B4AB99; --text-tertiary: #7C7466;
+  --ink: #EDE6D6; --shade: #000000; --picker-filter: invert(.85);
+  --field-shade: 27%;
+}
+
+[data-style="washi"][data-theme="sakura"] {
+  color-scheme: light;
+  --theme-color: #F7EBEC;
+  --bg: #F7EBEC; --bg-elevated: #FCF5F5; --bg-raised: #FFFBFB;
+  --surface: #FCF5F5; --surface-deep: #EEDCDE; --scrim: #23181A;
+  --neutral-deep: #E6D2D5; --neutral: #A8939A; --neutral-light: #66535A; --neutral-specular: #3C2E33; --pearl: #6A6280;
+  --accent: #A3385F; --accent-light: #954864; --accent-deep: #7E2847; --on-accent: #FFF7F9;
+  --blue: #34508E; --blue-glow: #34508E; --green: #36692E; --amber: #87570E; --red: #AE2A1F; --red-light: #982418;
+  --pink: #95325A; --violet: #5D4890; --teal: #2C655E; --booked: #4352A8;
+  --text-primary: #23181A; --text-secondary: #5E4A50; --text-tertiary: #A08A90;
+  --ink: #23181A; --shade: #3A2228; --picker-filter: none;
+  --field-shade: 7%;
+}
+
+[data-style="washi"][data-theme="matcha"] {
+  color-scheme: light;
+  --theme-color: #EDF0E1;
+  --bg: #EDF0E1; --bg-elevated: #F6F8EE; --bg-raised: #FCFDF7;
+  --surface: #F6F8EE; --surface-deep: #DFE4CC; --scrim: #181C12;
+  --neutral-deep: #D4DABF; --neutral: #9AA287; --neutral-light: #575F45; --neutral-specular: #33392A; --pearl: #646680;
+  --accent: #46642A; --accent-light: #516737; --accent-deep: #33491E; --on-accent: #F7FAEE;
+  --blue: #2F4F86; --blue-glow: #2F4F86; --green: #2E6A33; --amber: #845808; --red: #AA2B1C; --red-light: #942316;
+  --pink: #9A3558; --violet: #5A4A8A; --teal: #22655D; --booked: #4150A6;
+  --text-primary: #181C12; --text-secondary: #4F5640; --text-tertiary: #949C82;
+  --ink: #181C12; --shade: #2A3418; --picker-filter: none;
+  --field-shade: 7%;
+}

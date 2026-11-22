@@ -72,13 +72,13 @@ export function BrandMark({ class: cls = 'brand-mark' }) {
   return html`<svg class=${cls} viewBox="0 0 64 64" aria-hidden="true" focusable="false">
     <defs>
       <linearGradient id=${gold} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#F2E3C2" /><stop offset=".55" stop-color="#D9BF8C" /><stop offset="1" stop-color="#9C8355" />
+        <stop offset="0" style="stop-color:var(--brand-1)" /><stop offset=".55" style="stop-color:var(--brand-2)" /><stop offset="1" style="stop-color:var(--brand-3)" />
       </linearGradient>
       <radialGradient id=${bg} cx=".3" cy=".2" r=".95">
-        <stop offset="0" stop-color="#25221D" /><stop offset=".6" stop-color="#111114" /><stop offset="1" stop-color="#0A0A0C" />
+        <stop offset="0" style="stop-color:var(--brand-bg-1)" /><stop offset=".6" style="stop-color:var(--brand-bg-2)" /><stop offset="1" style="stop-color:var(--brand-bg-3)" />
       </radialGradient>
     </defs>
-    <rect x=".5" y=".5" width="63" height="63" rx="15" fill=${`url(#${bg})`} stroke="rgba(255,255,255,.12)" />
+    <rect x=".5" y=".5" width="63" height="63" rx="15" fill=${`url(#${bg})`} style="stroke:var(--ink)" stroke-opacity=".12" />
     <path d="M22 44V20l20 24V20" fill="none" stroke=${`url(#${gold})`} stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" />
   </svg>`;
 }

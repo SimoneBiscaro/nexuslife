@@ -111,7 +111,7 @@ export function TodoView() {
     ${header}
     <div class="quick-add-wrap"><${TodoQuickAdd} today=${today} autoFocus /></div>
     ${open.length === 0 && done.length === 0
-      ? html`<${GlassCard} class="spring-in"><${EmptyState} art="oggi" accent="var(--champagne)" title="Niente da fare"
+      ? html`<${GlassCard} class="spring-in"><${EmptyState} art="oggi" accent="var(--accent)" title="Niente da fare"
           text="Qui vanno le scadenze che non stanno in Auto, Casa, Spesa o Salute: chiamare il barbiere, pagare una multa, un regalo.">
           <button class="btn btn--primary empty-state__cta" type="button" onClick=${() => setEditing(null)}><${Icon} name="plus" /> Nuovo To Do</button>
         <//><//>`
@@ -126,7 +126,7 @@ export function TodoView() {
           </div>
           ${open.length
             ? html`<${ProgressiveList} class="item-list" items=${open} renderItem=${(x) => html`<${TodoRow} key=${x.todo.id} x=${x} today=${today} onOpen=${setEditing} />`} />`
-            : html`<${EmptyNote} art="oggi" accent="var(--champagne)">Nessuna voce aperta. Aggiungine una qui sopra.<//>`}
+            : html`<${EmptyNote} art="oggi" accent="var(--accent)">Nessuna voce aperta. Aggiungine una qui sopra.<//>`}
           ${done.length > 0 && html`
             <button class="btn btn--ghost todo-done-toggle" type="button" aria-expanded=${showDone} onClick=${() => setShowDone(!showDone)}>
               <${Icon} name=${showDone ? 'up' : 'down'} /> Fatte (${done.length})

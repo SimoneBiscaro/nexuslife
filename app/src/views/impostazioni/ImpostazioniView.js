@@ -24,6 +24,7 @@ import { CategoryEditor } from '../spesa/CategoryEditor.js';
 import { RestoreSheet } from './RestoreSheet.js';
 import { PinCheckSheet } from './PinCheckSheet.js';
 import { AccountCard } from './AccountCard.js';
+import { AppearanceCard } from './AppearanceCard.js';
 
 const TAPS_TO_UNLOCK = 5;
 const ENTITIES = ['settings', 'groceryCategory', 'groceryItem', 'groceryPurchase'];
@@ -269,6 +270,7 @@ export function ImpostazioniView() {
     ${!data && html`<${Skeleton} cards=${3} label="Caricamento delle impostazioni" />`}
     ${data && html`<div class="settings-grid">
       <${ProfileCard} settings=${settings} />
+      <${AppearanceCard} settings=${settings} index=${1} />
       <${AccountCard} index=${1} />
       <${HealthLockCard} settings=${settings} />
       <${RemindersCard} settings=${settings} />
